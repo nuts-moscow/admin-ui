@@ -1,23 +1,23 @@
 import { Environment } from '@/core/states/environment/Environment';
 import { MakeTournamentRequest, Tournament } from './types';
+import { securedFetch } from '@/core/utils/misc/securedFetch';
 
 export const makeTournament = async (
   environment: Environment,
   request: MakeTournamentRequest,
 ): Promise<Tournament[]> => {
-  const response = await fetch(`${environment.apiUrl}/v1/tournaments/make`, {
+  return securedFetch<MakeTournamentRequest, Tournament[]>({
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
+    host: environment.apiUrl,
+    path: '/v1/tournaments/make',
+    withCredentials: false,
+    body: request,
+    mapping: {
+      success: (res) => res.toJson(),
+      400: () => new Error('Invalid tournament data'),
+      404: () => new Error('Tournament not found'),
+      500: () => new Error('Server error'),
     },
-    body: JSON.stringify(request),
   });
-
-  if (response.ok) {
-    const data: Tournament[] = await response.json();
-    return data;
-  } else {
-    throw new Error(`Failed to make tournament: ${response.statusText}`);
-  }
 };
 

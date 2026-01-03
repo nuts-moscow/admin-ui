@@ -1,26 +1,24 @@
 import { Environment } from '@/core/states/environment/Environment';
+import { securedFetch } from '@/core/utils/misc/securedFetch';
 
 export const addPlayerToTournament = async (
   environment: Environment,
   tournamentId: string,
   playerId: number,
 ): Promise<object> => {
-  const url = new URL(
-    `${environment.apiUrl}/v1/tournaments/add-player-to-tournament`,
-  );
-  url.searchParams.set('tournamentId', tournamentId);
-  url.searchParams.set('playerId', playerId.toString());
-
-  const response = await fetch(url.toString(), {
+  return securedFetch<undefined, object>({
     method: 'POST',
+    host: environment.apiUrl,
+    path: `/v1/tournaments/add-player-to-tournament?tournamentId=${tournamentId}&playerId=${playerId}`,
+    withCredentials: false,
+    body: undefined,
+    mapping: {
+      success: (res) => res.toJson(),
+      400: () => new Error('Invalid tournament or player ID'),
+      404: () => new Error('Tournament or player not found'),
+      500: () => new Error('Server error'),
+    },
   });
-
-  if (response.ok) {
-    const data: object = await response.json();
-    return data;
-  } else {
-    throw new Error(`Failed to add player to tournament: ${response.statusText}`);
-  }
 };
 
 export const removePlayerFromTournament = async (
@@ -28,23 +26,18 @@ export const removePlayerFromTournament = async (
   tournamentId: string,
   playerId: number,
 ): Promise<object> => {
-  const url = new URL(
-    `${environment.apiUrl}/v1/tournaments/remove-player-from-tournament`,
-  );
-  url.searchParams.set('tournamentId', tournamentId);
-  url.searchParams.set('playerId', playerId.toString());
-
-  const response = await fetch(url.toString(), {
-    method: 'DELETE',
+  return securedFetch<undefined, object>({
+    method: 'GET',
+    host: environment.apiUrl,
+    path: `/v1/tournaments/remove-player-from-tournament?tournamentId=${tournamentId}&playerId=${playerId}`,
+    withCredentials: false,
+    body: undefined,
+    mapping: {
+      success: (res) => res.toJson(),
+      400: () => new Error('Invalid tournament or player ID'),
+      404: () => new Error('Tournament or player not found'),
+      500: () => new Error('Server error'),
+    },
   });
-
-  if (response.ok) {
-    const data: object = await response.json();
-    return data;
-  } else {
-    throw new Error(
-      `Failed to remove player from tournament: ${response.statusText}`,
-    );
-  }
 };
 

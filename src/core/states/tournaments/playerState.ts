@@ -2,47 +2,45 @@ import { queryState } from '@/core/stateManager/factories/queryState';
 import { useEnvironment } from '@/core/states/environment/useEnvironment';
 import { Environment } from '@/core/states/environment/Environment';
 import { InGamePlayerState, UpdatePlayerStateRequest } from './types';
+import { securedFetch } from '@/core/utils/misc/securedFetch';
 
 export const getPlayerState = async (
   environment: Environment,
   tournamentId: string,
 ): Promise<InGamePlayerState[]> => {
-  const url = new URL(
-    `${environment.apiUrl}/v1/tournaments/get-tournament-player-state`,
-  );
-  url.searchParams.set('tournamentId', tournamentId);
-
-  const response = await fetch(url.toString());
-
-  if (response.ok) {
-    const data: InGamePlayerState[] = await response.json();
-    return data;
-  } else {
-    return [];
-  }
+  return securedFetch<undefined, InGamePlayerState[]>({
+    method: 'GET',
+    host: environment.apiUrl,
+    path: `/v1/tournaments/get-tournament-player-state?tournamentId=${tournamentId}`,
+    withCredentials: false,
+    body: undefined,
+    mapping: {
+      success: (res) => res.toJson(),
+      400: () => [],
+      404: () => [],
+      500: () => [],
+      unknownError: () => [],
+    },
+  });
 };
 
 export const updatePlayerState = async (
   environment: Environment,
   request: UpdatePlayerStateRequest,
 ): Promise<InGamePlayerState> => {
-  const response = await fetch(
-    `${environment.apiUrl}/v1/tournaments/update-player-state`,
-    {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(request),
+  return securedFetch<UpdatePlayerStateRequest, InGamePlayerState>({
+    method: 'POST',
+    host: environment.apiUrl,
+    path: '/v1/tournaments/update-player-state',
+    withCredentials: false,
+    body: request,
+    mapping: {
+      success: (res) => res.toJson(),
+      400: () => new Error('Invalid player state data'),
+      404: () => new Error('Player or tournament not found'),
+      500: () => new Error('Server error'),
     },
-  );
-
-  if (response.ok) {
-    const data: InGamePlayerState = await response.json();
-    return data;
-  } else {
-    throw new Error(`Failed to update player state: ${response.statusText}`);
-  }
+  });
 };
 
 export const usePlayerState = (tournamentId: string) =>
