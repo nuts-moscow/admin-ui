@@ -1,19 +1,19 @@
-import { queryState } from '@/core/stateManager/factories/queryState';
-import { useEnvironment } from '@/core/states/environment/useEnvironment';
-import { Environment } from '@/core/states/environment/Environment';
-import { Tournament, TournamentStatus } from './types';
-import { securedFetch } from '@/core/utils/misc/securedFetch';
+import { queryState } from "@/core/stateManager/factories/queryState";
+import { useEnvironment } from "@/core/states/environment/useEnvironment";
+import { Environment } from "@/core/states/environment/Environment";
+import { Tournament, TournamentStatus } from "./types";
+import { securedFetch } from "@/core/utils/misc/securedFetch";
 
 export const getTournamentsList = async (
   environment: Environment,
-  status?: TournamentStatus,
+  status?: TournamentStatus
 ): Promise<Tournament[]> => {
   const path = status
     ? `/v1/tournaments/list?tournament-status=${status}`
-    : '/v1/tournaments/list';
+    : "/v1/tournaments/list";
 
   return securedFetch<undefined, Tournament[]>({
-    method: 'GET',
+    method: "GET",
     host: environment.apiUrl,
     path,
     withCredentials: false,
@@ -39,4 +39,3 @@ export const useTournamentsList = (status?: TournamentStatus) =>
       environment: useEnvironment,
     },
   });
-

@@ -1,16 +1,16 @@
-import { queryState } from '@/core/stateManager/factories/queryState';
-import { useEnvironment } from '@/core/states/environment/useEnvironment';
-import { Environment } from '@/core/states/environment/Environment';
-import { TournamentStructure } from './types';
-import { securedFetch } from '@/core/utils/misc/securedFetch';
+import { queryState } from "@/core/stateManager/factories/queryState";
+import { useEnvironment } from "@/core/states/environment/useEnvironment";
+import { Environment } from "@/core/states/environment/Environment";
+import { TournamentStructure } from "./types";
+import { securedFetch } from "@/core/utils/misc/securedFetch";
 
 export const getTournamentStructures = async (
-  environment: Environment,
+  environment: Environment
 ): Promise<TournamentStructure[]> => {
   return securedFetch<undefined, TournamentStructure[]>({
-    method: 'GET',
+    method: "GET",
     host: environment.apiUrl,
-    path: '/v1/tournaments-structure/list',
+    path: "/v1/tournaments-structure/list",
     withCredentials: false,
     body: undefined,
     mapping: {
@@ -24,10 +24,10 @@ export const getTournamentStructures = async (
 
 export const getTournamentStructure = async (
   environment: Environment,
-  id: number,
+  id: number
 ): Promise<TournamentStructure | null> => {
   return securedFetch<undefined, TournamentStructure | null>({
-    method: 'GET',
+    method: "GET",
     host: environment.apiUrl,
     path: `/v1/tournaments-structure/get?id=${id}`,
     withCredentials: false,
@@ -65,4 +65,3 @@ export const useTournamentStructure = (id: number) =>
       environment: useEnvironment,
     },
   });
-
