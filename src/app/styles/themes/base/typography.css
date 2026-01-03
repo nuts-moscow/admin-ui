@@ -1,0 +1,112 @@
+html {
+    /* font */
+    --primary-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --titan-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+    /* gutter */
+    --base-gutter: 4px;
+
+    /* weight */
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-bold: 700;
+    --font-weight-black: 900;
+
+    /* text size */
+    --font-size-large: 20px;
+    --font-size-medium: 16px;
+    --font-size-small: 14px;
+    --font-size-x-small: 12px;
+    --font-size-xx-small: 10px;
+
+    /* text line-height */
+    --line-height-large: 26px;
+    --line-height-medium: 22px;
+    --line-height-small: 20px;
+    --line-height-x-small: 16px;
+    --line-height-xx-small: 14px;
+
+    /* title size */
+    --h1-font-size: 50px;
+    --h2-font-size: 24px;
+    --h3-font-size: 20px;
+    --h4-font-size: 32px;
+
+    /* title line-height */
+    --h1-line-height: 60px;
+    --h2-line-height: 28px;
+    --h3-line-height: 34px;
+    --h4-line-height: 22px;
+
+    /* H1 */
+    --h1-font: var(--font-weight-bold) var(--h1-font-size) /
+    var(--h1-line-height) var(--primary-font-family);
+
+    /* H2 */
+    --h2-font: var(--font-weight-bold) var(--h2-font-size) /
+    var(--h2-line-height) var(--primary-font-family);
+
+    /* H3 */
+    --h3-font: var(--font-weight-bold) var(--h3-font-size) /
+    var(--h3-line-height) var(--primary-font-family);
+
+    /* H4 */
+    --h4-font: var(--font-weight-bold) var(--h4-font-size) /
+    var(--h4-line-height) var(--primary-font-family);
+
+    /* large */
+    --font-large: var(--font-weight-black)
+    var(--font-size-large) / var(--line-height-large)
+    var(--primary-font-family);
+    --font-large-regular: var(--font-weight-regular)
+    var(--font-size-large) / var(--line-height-large)
+    var(--primary-font-family);
+    --font-large-medium: var(--font-weight-medium)
+    var(--font-size-large) / var(--line-height-large)
+    var(--primary-font-family);
+
+    /* medium */
+    --font-medium: var(--font-weight-black)
+    var(--font-size-medium) / var(--line-height-medium)
+    var(--primary-font-family);
+    --font-medium-regular: var(--font-weight-regular)
+    var(--font-size-medium) / var(--line-height-medium)
+    var(--primary-font-family);
+    --font-medium-medium: var(--font-weight-medium)
+    var(--font-size-medium) / var(--line-height-medium)
+    var(--primary-font-family);
+
+    /* small */
+    --font-small: var(--font-weight-medium)
+    var(--font-size-small) / var(--line-height-small)
+    var(--primary-font-family);
+    --font-small-regular: var(--font-weight-regular)
+    var(--font-size-small) / var(--line-height-small)
+    var(--primary-font-family);
+    --font-small-medium: var(--font-weight-medium)
+    var(--font-size-small) / var(--line-height-small)
+    var(--primary-font-family);
+
+    /* xSmall */
+    --font-x-small: var(--font-weight-regular)
+    var(--font-size-x-small) / var(--line-height-x-small)
+    var(--primary-font-family);
+    --font-x-small-regular: var(--font-weight-regular)
+    var(--font-size-x-small) / var(--line-height-x-small)
+    var(--primary-font-family);
+    --font-x-small-medium: var(--font-weight-medium)
+    var(--font-size-x-small) / var(--line-height-x-small)
+    var(--primary-font-family);
+
+    /* xxSmall */
+    --font-xx-small: var(--font-weight-regular)
+    var(--font-size-xx-small) / var(--line-height-xx-small)
+    var(--primary-font-family);
+    --font-xx-small-regular: var(--font-weight-regular)
+    var(--font-size-xx-small) / var(--line-height-xx-small)
+    var(--primary-font-family);
+    --font-xx-small-medium: var(--font-weight-medium)
+    var(--font-size-xx-small) / var(--line-height-xx-small)
+    var(--primary-font-family);
+}
+
