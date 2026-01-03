@@ -1,5 +1,5 @@
-import { HomePageView } from "./HomePageView/HomePageView";
+import { TournamentsPageView } from "@/app/TournamentsPageView/TournamentsPageView";
 
 export default function Home() {
-  return <HomePageView />;
+  return <TournamentsPageView />;
 }

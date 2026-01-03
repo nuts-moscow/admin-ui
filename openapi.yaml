@@ -1,0 +1,716 @@
+openapi: 3.0.3
+info:
+  title: nuts.family API Provider v1
+  version: "1.0"
+paths:
+  /v1/tournaments/list:
+    get:
+      description: Returns list of tournaments by status
+      operationId: Get tournaments list by status
+      parameters:
+        - name: tournament-status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - RegistrationOpen
+              - InProgress
+              - Completed
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TournamentsListApiResponse"
+        "400":
+          description: "Invalid value for: query parameter tournament-status"
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFound"
+        "500":
+          description: unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unknown"
+  /v1/tournaments/make:
+    post:
+      description: Returns list of opened tournaments
+      operationId: Make tournament
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MakeTournamentRequest"
+        required: true
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TournamentsListApiResponse"
+        "400":
+          description: "Invalid value for: body"
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFound"
+        "500":
+          description: unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unknown"
+  /v1/tournaments/update:
+    put:
+      description: Returns list of opened tournaments
+      operationId: Update tournament
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTournamentRequest"
+        required: true
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TournamentsListApiResponse"
+        "400":
+          description: "Invalid value for: body"
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFound"
+        "500":
+          description: unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unknown"
+  /v1/tournaments/update-player-state:
+    put:
+      description: Returns player state
+      operationId: Update player state
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePlayerStaterequest"
+        required: true
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InGamePlayerState"
+        "400":
+          description: "Invalid value for: body"
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFound"
+        "500":
+          description: unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unknown"
+  /v1/tournaments/get-tournament-player-state:
+    get:
+      description: Returns player state
+      operationId: Get tournament player state
+      parameters:
+        - name: tournamentId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InGamePlayerState"
+        "400":
+          description: "Invalid value for: query parameter tournamentId"
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFound"
+        "500":
+          description: unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unknown"
+  /v1/tournaments/add-player-to-tournament:
+    post:
+      description: Adds player to tournament
+      operationId: Add player to tournament
+      parameters:
+        - name: tournamentId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: playerId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: object
+        "400":
+          description:
+            "Invalid value for: query parameter tournamentId, Invalid value
+            for: query parameter playerId"
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFound"
+        "500":
+          description: unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unknown"
+  /v1/tournaments/remove-player-from-tournament:
+    delete:
+      description: Removes player from tournament
+      operationId: Remove player from tournament
+      parameters:
+        - name: tournamentId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: playerId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: object
+        "400":
+          description:
+            "Invalid value for: query parameter tournamentId, Invalid value
+            for: query parameter playerId"
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFound"
+        "500":
+          description: unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unknown"
+  /v1/tournaments-structure/make:
+    post:
+      description: Returns list of tournaments structures
+      operationId: Make tournament structure
+      parameters:
+        - name: Content-Type
+          in: header
+          description: Must be application/json
+          required: true
+          schema:
+            type: string
+            enum:
+              - application/json
+      requestBody:
+        content:
+          application/json:
+            schema: {}
+        required: true
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TournamentsStructureResponse"
+        "400":
+          description:
+            "Invalid value for: header Content-Type, Invalid value for:
+            body"
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFound"
+        "500":
+          description: unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unknown"
+  /v1/tournaments-structure/update:
+    post:
+      description: Returns list of tournaments structures
+      operationId: Update tournament structure
+      parameters:
+        - name: Content-Type
+          in: header
+          description: Must be application/json
+          required: true
+          schema:
+            type: string
+            enum:
+              - application/json
+      requestBody:
+        content:
+          application/json:
+            schema: {}
+        required: true
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TournamentsStructureResponse"
+        "400":
+          description:
+            "Invalid value for: header Content-Type, Invalid value for:
+            body"
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFound"
+        "500":
+          description: unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unknown"
+  /v1/tournaments-structure/list:
+    get:
+      description: Returns list of tournaments structures
+      operationId: Get tournament structures
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TournamentsStructureResponse"
+        "404":
+          description: not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFound"
+        "500":
+          description: unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unknown"
+  /v1/tournaments-structure/get:
+    get:
+      description: Returns tournament structure by id
+      operationId: Get tournament structure by id
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TournamentsStructureResponse"
+        "400":
+          description: "Invalid value for: query parameter id"
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFound"
+        "500":
+          description: unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unknown"
+components:
+  schemas:
+    Blind:
+      required:
+        - level
+        - id
+        - smallBlind
+        - bigBlind
+        - ante
+        - duration
+      type: object
+      properties:
+        level:
+          type: integer
+          format: int64
+        id:
+          type: integer
+          format: int64
+        smallBlind:
+          type: integer
+          format: int64
+        bigBlind:
+          type: integer
+          format: int64
+        ante:
+          type: boolean
+        duration:
+          type: integer
+          format: int64
+    BlindType:
+      oneOf:
+        - $ref: "#/components/schemas/Blind"
+        - $ref: "#/components/schemas/Break"
+    Break:
+      required:
+        - id
+        - duration
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        duration:
+          type: integer
+          format: int64
+    InGameBonusUpdateRequest:
+      required:
+        - bonus
+        - count
+      type: object
+      properties:
+        bonus:
+          type: string
+          enum:
+            - EarlyBird
+            - Hookah
+            - Diller
+        count:
+          type: integer
+          format: int64
+    InGamePlayerState:
+      required:
+        - playerId
+        - status
+        - reentryCount
+        - bountyCount
+        - paidReentryCount
+      type: object
+      properties:
+        playerId:
+          type: integer
+          format: int64
+        status:
+          type: string
+          enum:
+            - Registered
+            - InGamePaid
+            - InGameNotPaid
+            - Out
+        tableId:
+          type: integer
+          format: int64
+        entyPaymentMethod:
+          type: string
+          enum:
+            - Cache
+            - CreditCard
+            - Free
+        reentryCount:
+          type: integer
+          format: int64
+        reentyPaymentMethod:
+          type: string
+          enum:
+            - Cache
+            - CreditCard
+            - Free
+        bountyCount:
+          type: integer
+          format: int64
+        paidReentryCount:
+          type: integer
+          format: int64
+        bonuses:
+          type: array
+          items:
+            $ref: "#/components/schemas/Tuple2_A_B"
+    MakeTournamentRequest:
+      required:
+        - name
+        - date
+        - structure
+      type: object
+      properties:
+        name:
+          type: string
+        date:
+          type: integer
+          format: int64
+        structure:
+          $ref: "#/components/schemas/MakeTournamentStructureRequest"
+    MakeTournamentStructureRequest:
+      required:
+        - name
+        - playersLimit
+        - stackSize
+        - freezeOutEnabled
+      type: object
+      properties:
+        name:
+          type: string
+        playersLimit:
+          type: integer
+          format: int64
+        stackSize:
+          type: integer
+          format: int64
+        freezeOutEnabled:
+          type: boolean
+        blinds:
+          type: array
+          items:
+            $ref: "#/components/schemas/BlindType"
+    NotFound:
+      required:
+        - what
+      type: object
+      properties:
+        what:
+          type: string
+    TournamentsListApiResponse:
+      required:
+        - id
+        - name
+        - date
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        date:
+          type: integer
+          format: int64
+    TournamentsStructureResponse:
+      required:
+        - id
+        - name
+        - playersLimit
+        - bigBlindOnStart
+        - smallBlindOnStart
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        playersLimit:
+          type: integer
+          format: int64
+        bigBlindOnStart:
+          type: integer
+          format: int64
+        smallBlindOnStart:
+          type: integer
+          format: int64
+    Tuple2_A_B:
+      required:
+        - _1
+        - _2
+      type: object
+      properties:
+        _1:
+          type: string
+          enum:
+            - EarlyBird
+            - Hookah
+            - Diller
+        _2:
+          type: integer
+          format: int64
+    Unknown:
+      required:
+        - code
+        - msg
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        msg:
+          type: string
+    UpdatePlayerStaterequest:
+      required:
+        - tournamentId
+        - playerId
+      type: object
+      properties:
+        tournamentId:
+          type: string
+        playerId:
+          type: integer
+          format: int64
+        status:
+          type: string
+          enum:
+            - Registered
+            - InGamePaid
+            - InGameNotPaid
+            - Out
+        entyPaymentMethod:
+          type: string
+          enum:
+            - Cache
+            - CreditCard
+            - Free
+        reentyPaymentMethod:
+          type: string
+          enum:
+            - Cache
+            - CreditCard
+            - Free
+        tableId:
+          type: integer
+          format: int64
+        reentryCount:
+          type: integer
+          format: int64
+        bountyCount:
+          type: integer
+          format: int64
+        paidReentryCount:
+          type: integer
+          format: int64
+        bonuses:
+          type: array
+          items:
+            $ref: "#/components/schemas/InGameBonusUpdateRequest"
+    UpdateTournamentRequest:
+      required:
+        - id
+        - name
+        - date
+        - structure
+        - status
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        date:
+          type: integer
+          format: int64
+        structure:
+          $ref: "#/components/schemas/MakeTournamentStructureRequest"
+        status:
+          type: string
+          enum:
+            - RegistrationOpen
+            - InProgress
+            - Completed
