@@ -6,9 +6,9 @@ export interface DateTimeFormatterProps {
   readonly type?: "date" | "time";
 }
 
-const formatMap: Record<"date" | "time", Intl.DateTimeFormatOptions> = {
-  date: DateTime.DATE_SHORT,
-  time: DateTime.TIME_24_WITH_SECONDS,
+const formatMap: Record<"date" | "time", string> = {
+  date: "dd.MM.yyyy",
+  time: "HH:mm",
 };
 
 export const DateTimeFormatter: FC<DateTimeFormatterProps> = ({
@@ -16,8 +16,7 @@ export const DateTimeFormatter: FC<DateTimeFormatterProps> = ({
   type = "date",
 }) => {
   const normalizedDate =
-    value instanceof DateTime ? value : DateTime.fromMillis(value);
+    value instanceof DateTime ? value : DateTime.fromSeconds(value);
 
-  return normalizedDate.toLocaleString(formatMap[type], { locale: "en-US" });
+  return normalizedDate.toLocal().toFormat(formatMap[type]);
 };
-

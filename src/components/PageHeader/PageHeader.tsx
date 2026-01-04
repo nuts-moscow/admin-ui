@@ -21,7 +21,7 @@ export const PageHeader: FC<PageHeaderProps> = ({
 }) => {
   return (
     <Box
-      flex={{ gap: 2, align: "center" }}
+      flex={{ gap: 4, align: "center" }}
       padding={4}
       className={pageHeaderCls}
       style={{ width: "100%", minHeight: "auto" }}
@@ -30,8 +30,8 @@ export const PageHeader: FC<PageHeaderProps> = ({
         <Image
           src="/nuts-logo.svg"
           alt="NUTS FAMILY Logo"
-          width={64}
-          height={24}
+          width={48}
+          height={48}
           priority
         />
       )}

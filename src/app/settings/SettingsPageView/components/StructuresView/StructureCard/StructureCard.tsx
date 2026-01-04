@@ -2,46 +2,41 @@
 
 import { FC } from "react";
 import { Typography } from "@/components/Typography/Typography";
-import { DateTimeFormatter } from "@/components/Formatter/DateTimeFormatter/DateTimeFormatter";
-import { ShortTournament } from "@/core/states/tournaments/requests/getTournaments";
+import { TournamentStructure } from "@/core/states/tournamentStructures/common/TournamentStructure";
 import { SimpleList } from "@/components/SimpleList/SimpleList";
 
-export interface TournamentCardProps {
-  readonly tournament: ShortTournament;
+export interface StructureCardProps {
+  readonly structure: TournamentStructure;
   readonly onClick?: () => void;
 }
 
-export const TournamentCard: FC<TournamentCardProps> = ({
-  tournament,
+export const StructureCard: FC<StructureCardProps> = ({
+  structure,
   onClick,
 }) => {
-  const { name, date } = tournament;
-
   return (
     <SimpleList.Card onClick={onClick}>
       <SimpleList.Column>
         <Typography.Text size="small" type="secondary">
-          Дата
+          Название
         </Typography.Text>
-        <Typography.Text>
-          <DateTimeFormatter value={date} type="date" />
+        <Typography.Text>{structure.name}</Typography.Text>
+      </SimpleList.Column>
+
+      <SimpleList.Column>
+        <Typography.Text size="small" type="secondary">
+          Старт
+        </Typography.Text>
+        <Typography.Text size="small">
+          {structure.smallBlindOnStart}/{structure.bigBlindOnStart}
         </Typography.Text>
       </SimpleList.Column>
 
       <SimpleList.Column>
         <Typography.Text size="small" type="secondary">
-          Время
+          Игроков
         </Typography.Text>
-        <Typography.Text>
-          <DateTimeFormatter value={date} type="time" />
-        </Typography.Text>
-      </SimpleList.Column>
-
-      <SimpleList.Column>
-        <Typography.Text size="small" type="secondary">
-          Название турнира
-        </Typography.Text>
-        <Typography.Text>{name}</Typography.Text>
+        <Typography.Text size="small">{structure.playersLimit}</Typography.Text>
       </SimpleList.Column>
     </SimpleList.Card>
   );

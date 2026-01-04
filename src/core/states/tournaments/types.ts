@@ -1,10 +1,14 @@
-export type TournamentStatus = 'RegistrationOpen' | 'InProgress' | 'Completed';
+import { TournamentStatus } from "./common/TournamentStatus";
 
-export type PlayerStatus = 'Registered' | 'InGamePaid' | 'InGameNotPaid' | 'Out';
+export type PlayerStatus =
+  | "Registered"
+  | "InGamePaid"
+  | "InGameNotPaid"
+  | "Out";
 
-export type PaymentMethod = 'Cache' | 'CreditCard' | 'Free';
+export type PaymentMethod = "Cache" | "CreditCard" | "Free";
 
-export type Bonus = 'EarlyBird' | 'Hookah' | 'Diller';
+export type Bonus = "EarlyBird" | "Hookah" | "Diller";
 
 export interface Tournament {
   readonly id: string;
@@ -81,4 +85,3 @@ export interface Unknown {
   readonly code: number;
   readonly msg: string;
 }
-

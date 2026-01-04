@@ -6,22 +6,10 @@ import { Button } from "@/components/Button/Button";
 import { PageHeader } from "@/components/PageHeader/PageHeader";
 import { PageLayout } from "@/components/PageLayout/PageLayout";
 import { SearchInput } from "@/components/SearchInput/SearchInput";
-import { StructureCard } from "@/components/StructureCard/StructureCard";
-import { PlayerCard } from "@/components/PlayerCard/PlayerCard";
-import { ToggleGroup } from "@/components/ToggleGroup/ToggleGroup";
-import { useModal } from "@/components/Modal/Modal";
 import { Home } from "lucide-react";
 import Link from "next/link";
-import { CreateStructureModalContent } from "@/app/settings/SettingsPageView/CreateStructureModal/CreateStructureModal";
-
-interface StructureMock {
-  readonly id: number;
-  readonly name: string;
-  readonly duration: string;
-  readonly smallBlind: number;
-  readonly bigBlind: number;
-  readonly playersLimit: number;
-}
+import { StructuresView } from "./components/StructuresView/StructuresView";
+import { TournamentStructure } from "@/core/states/tournamentStructures/common/TournamentStructure";
 
 interface PlayerMock {
   readonly id: number;
@@ -29,49 +17,6 @@ interface PlayerMock {
   readonly phone?: string;
   readonly gamesPlayed: number;
 }
-
-const MOCK_STRUCTURES: StructureMock[] = [
-  {
-    id: 1,
-    name: "Стандартный",
-    duration: "20 мин",
-    smallBlind: 25,
-    bigBlind: 50,
-    playersLimit: 6,
-  },
-  {
-    id: 2,
-    name: "Супер-турбо",
-    duration: "20 мин",
-    smallBlind: 25,
-    bigBlind: 50,
-    playersLimit: 10,
-  },
-  {
-    id: 3,
-    name: "6-Max",
-    duration: "20 мин",
-    smallBlind: 25,
-    bigBlind: 50,
-    playersLimit: 6,
-  },
-  {
-    id: 4,
-    name: "Турбо",
-    duration: "20 мин",
-    smallBlind: 25,
-    bigBlind: 50,
-    playersLimit: 8,
-  },
-  {
-    id: 5,
-    name: "Deep Stack",
-    duration: "20 мин",
-    smallBlind: 25,
-    bigBlind: 50,
-    playersLimit: 9,
-  },
-];
 
 const MOCK_PLAYERS: PlayerMock[] = [
   { id: 1, name: "Игрок 1", phone: "+7 (999) 123-45-67", gamesPlayed: 45 },
@@ -82,20 +27,17 @@ const MOCK_PLAYERS: PlayerMock[] = [
   { id: 6, name: "Игрок 6", phone: "+7 (999) 567-89-01", gamesPlayed: 89 },
 ];
 
-export const SettingsPageView: FC = () => {
+export interface SettingsPageViewProps {
+  readonly initialTournamentStructures: TournamentStructure[];
+}
+
+export const SettingsPageView: FC<SettingsPageViewProps> = ({
+  initialTournamentStructures,
+}) => {
   const [activeTab, setActiveTab] = useState<"structures" | "players">(
     "structures"
   );
   const [searchQuery, setSearchQuery] = useState("");
-  const [CreateStructureModal, openCreateStructureModal] = useModal(
-    CreateStructureModalContent
-  );
-
-  const filteredStructures = useMemo(() => {
-    return MOCK_STRUCTURES.filter((s) =>
-      s.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [searchQuery]);
 
   const filteredPlayers = useMemo(() => {
     return MOCK_PLAYERS.filter((p) =>
@@ -105,7 +47,6 @@ export const SettingsPageView: FC = () => {
 
   return (
     <>
-      <CreateStructureModal />
       <Box
         flex={{ col: true }}
         style={{ minHeight: "100vh", backgroundColor: "var(--bg-primary)" }}
@@ -113,19 +54,48 @@ export const SettingsPageView: FC = () => {
         <PageHeader
           title="Турниры"
           extra={
-            <Link href="/">
-              <Button
-                type="ghost"
-                size="small"
-                iconRight={<Home size={16} />}
+            <Box flex={{ gap: 2, align: "center" }}>
+              <SearchInput
+                value={searchQuery}
+                onChange={(term) => setSearchQuery(term)}
               />
-            </Link>
+              <Link href="/">
+                <Button
+                  type="accent"
+                  size="small"
+                  iconRight={<Home size={32} />}
+                />
+              </Link>
+            </Box>
           }
         />
 
         <PageLayout>
-          <Box flex={{ col: true, gap: 12, width: "100%" }}>
-            <Box
+          <Box
+            width="100%"
+            onTabChange={(tabKey) =>
+              setActiveTab(tabKey as "structures" | "players")
+            }
+            tabsType="tab"
+            tabs={[
+              {
+                title: "Структура турниров",
+                key: "structures",
+                content: (
+                  <StructuresView
+                    initialTournamentStructures={initialTournamentStructures}
+                    searchQuery={searchQuery}
+                  />
+                ),
+              },
+              {
+                title: "База игроков",
+                key: "players",
+                content: "456",
+              },
+            ]}
+          >
+            {/* <Box
               flex={{
                 justify: "space-between",
                 align: "center",
@@ -197,7 +167,7 @@ export const SettingsPageView: FC = () => {
                   ))}
                 </Box>
               </Box>
-            )}
+            )} */}
           </Box>
         </PageLayout>
       </Box>

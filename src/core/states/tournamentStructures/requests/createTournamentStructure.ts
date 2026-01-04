@@ -1,12 +1,21 @@
 import { Environment } from "@/core/states/environment/Environment";
-import { MakeTournamentStructureRequest, TournamentStructure } from "./types";
 import { securedFetch } from "@/core/utils/misc/securedFetch";
+import { BlindType } from "../common/BlindType";
+import { TournamentStructure } from "../common/TournamentStructure";
 
-export const makeTournamentStructure = async (
+export interface CreateTournamentStructureRequest {
+  readonly name: string;
+  readonly playersLimit: number;
+  readonly stackSize: number;
+  readonly freezeOutEnabled: boolean;
+  readonly blinds?: BlindType[];
+}
+
+export const createTournamentStructure = async (
   environment: Environment,
-  request: MakeTournamentStructureRequest
+  request: CreateTournamentStructureRequest
 ): Promise<TournamentStructure[]> => {
-  return securedFetch<MakeTournamentStructureRequest, TournamentStructure[]>({
+  return securedFetch<CreateTournamentStructureRequest, TournamentStructure[]>({
     method: "POST",
     host: environment.apiUrl,
     path: "/v1/tournaments-structure/make",

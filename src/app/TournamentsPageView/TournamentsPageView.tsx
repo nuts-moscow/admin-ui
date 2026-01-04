@@ -1,5 +1,5 @@
 "use client";
-import { FC, useMemo, useState } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 import { Box } from "@/components/Box/Box";
 import { Button } from "@/components/Button/Button";
 import { PageHeader } from "@/components/PageHeader/PageHeader";
@@ -9,110 +9,28 @@ import { TournamentCard } from "@/app/TournamentsPageView/TournamentCard/Tournam
 import { ToggleGroup } from "@/components/ToggleGroup/ToggleGroup";
 import { useModal } from "@/components/Modal/Modal";
 import { CreateTournamentModalContent } from "@/app/TournamentsPageView/CreateTournamentModal/CreateTournamentModal";
-import { Info } from "lucide-react";
-import { TournamentStatus } from "@/core/states/tournaments/types";
+import { Settings } from "lucide-react";
+import { TournamentStatus } from "@/core/states/tournaments/common/TournamentStatus";
+import { useTournaments } from "@/core/states/tournaments/hooks/useTournaments";
+import { SimpleList } from "@/components/SimpleList/SimpleList";
+import { ShortTournament } from "@/core/states/tournaments/requests/getTournaments";
+import Link from "next/link";
 
-interface TournamentMock {
-  readonly id: string;
-  readonly name: string;
-  readonly date: number;
-  readonly time: string;
-  readonly structureName: string;
-  readonly status: TournamentStatus;
+export interface TournamentsPageViewProps {
+  readonly initialTournaments: ShortTournament[];
 }
 
-const MOCK_TOURNAMENTS: TournamentMock[] = [
-  {
-    id: "1",
-    name: "Название турнира",
-    date: new Date("2025-10-01").getTime(),
-    time: "18.00",
-    structureName: "Тип турнира",
-    status: "RegistrationOpen",
-  },
-  {
-    id: "2",
-    name: "Название турнира",
-    date: new Date("2025-10-01").getTime(),
-    time: "18.00",
-    structureName: "Тип турнира",
-    status: "RegistrationOpen",
-  },
-  {
-    id: "3",
-    name: "Название турнира",
-    date: new Date("2025-10-01").getTime(),
-    time: "18.00",
-    structureName: "Тип турнира",
-    status: "RegistrationOpen",
-  },
-  {
-    id: "4",
-    name: "Название турнира",
-    date: new Date("2025-10-01").getTime(),
-    time: "18.00",
-    structureName: "Тип турнира",
-    status: "RegistrationOpen",
-  },
-  {
-    id: "5",
-    name: "Название турнира",
-    date: new Date("2025-10-01").getTime(),
-    time: "18.00",
-    structureName: "Тип турнира",
-    status: "InProgress",
-  },
-  {
-    id: "6",
-    name: "Название турнира",
-    date: new Date("2025-10-01").getTime(),
-    time: "18.00",
-    structureName: "Тип турнира",
-    status: "InProgress",
-  },
-  {
-    id: "7",
-    name: "Название турнира",
-    date: new Date("2025-10-01").getTime(),
-    time: "18.00",
-    structureName: "Тип турнира",
-    status: "InProgress",
-  },
-  {
-    id: "8",
-    name: "Название турнира",
-    date: new Date("2025-10-01").getTime(),
-    time: "18.00",
-    structureName: "Тип турнира",
-    status: "InProgress",
-  },
-  ...Array.from({ length: 10 }, (_, i) => ({
-    id: `archive-${i}`,
-    name: "Название турнира",
-    date: new Date("2025-10-01").getTime(),
-    time: "18.00",
-    structureName: "Тип турнира",
-    status: "Completed" as const,
-  })),
-];
-
-const formatDate = (timestamp: number): string => {
-  const date = new Date(timestamp);
-  return date.toLocaleDateString("ru-RU");
-};
-
-const getStatusCounts = (tournaments: TournamentMock[]) => {
-  return {
-    RegistrationOpen: tournaments.filter((t) => t.status === "RegistrationOpen")
-      .length,
-    InProgress: tournaments.filter((t) => t.status === "InProgress").length,
-    Completed: tournaments.filter((t) => t.status === "Completed").length,
-  };
-};
-
-export const TournamentsPageView: FC = () => {
+export const TournamentsPageView: FC<TournamentsPageViewProps> = ({
+  initialTournaments,
+}) => {
   const [activeTab, setActiveTab] =
     useState<TournamentStatus>("RegistrationOpen");
+
+  const { data: clientTournaments, refetch: refetchTournaments } =
+    useTournaments(activeTab);
+  const tournaments = useMemo(() => {
+    return clientTournaments || initialTournaments;
+  }, [initialTournaments, clientTournaments]);
 
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -120,16 +38,17 @@ export const TournamentsPageView: FC = () => {
     CreateTournamentModalContent
   );
 
-  const filteredTournaments = useMemo(() => {
-    return MOCK_TOURNAMENTS.filter(
-      (t) =>
-        t.status === activeTab &&
-        (t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          t.structureName.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
-  }, [activeTab, searchQuery]);
+  useEffect(() => {
+    refetchTournaments(activeTab);
+  }, [activeTab]);
 
-  const counts = getStatusCounts(MOCK_TOURNAMENTS);
+  const tournamentsToShow = useMemo(() => {
+    if (!tournaments) return [];
+    if (!searchQuery) return tournaments;
+    return tournaments.filter((tournament) =>
+      tournament.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [tournaments, searchQuery, activeTab]);
 
   const handleTabChange = (tabKey: string) => {
     setActiveTab(tabKey as TournamentStatus);
@@ -150,11 +69,13 @@ export const TournamentsPageView: FC = () => {
                 value={searchQuery}
                 onChange={(term) => setSearchQuery(term)}
               />
-              <Button
-                type="ghost"
-                size="small"
-                iconRight={<Info size={16} />}
-              />
+              <Link href="/settings">
+                <Button
+                  type="accent"
+                  size="small"
+                  iconRight={<Settings size={32} />}
+                />
+              </Link>
             </Box>
           }
         />
@@ -175,14 +96,12 @@ export const TournamentsPageView: FC = () => {
                 onTabChange={handleTabChange}
               >
                 <ToggleGroup.Item value="RegistrationOpen">
-                  Открыты ({counts.RegistrationOpen})
+                  Открыты
                 </ToggleGroup.Item>
                 <ToggleGroup.Item value="InProgress">
-                  Идет игра ({counts.InProgress})
+                  Идет игра
                 </ToggleGroup.Item>
-                <ToggleGroup.Item value="Completed">
-                  Архив ({counts.Completed})
-                </ToggleGroup.Item>
+                <ToggleGroup.Item value="Completed">Архив</ToggleGroup.Item>
               </ToggleGroup>
 
               <Button
@@ -194,11 +113,15 @@ export const TournamentsPageView: FC = () => {
               </Button>
             </Box>
 
-            <Box flex={{ col: true, gap: 2, width: "100%" }}>
-              {filteredTournaments.map((tournament) => (
-                <TournamentCard key={tournament.id} tournament={tournament} />
-              ))}
-            </Box>
+            {tournamentsToShow.length === 0 ? (
+              <SimpleList.EmptyState>Нет турниров</SimpleList.EmptyState>
+            ) : (
+              <Box flex={{ col: true, gap: 2, width: "100%" }}>
+                {tournamentsToShow.map((tournament) => (
+                  <TournamentCard key={tournament.id} tournament={tournament} />
+                ))}
+              </Box>
+            )}
           </Box>
         </PageLayout>
       </Box>
