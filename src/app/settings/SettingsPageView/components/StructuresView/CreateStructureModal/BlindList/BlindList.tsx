@@ -204,7 +204,10 @@ export const BlindList: FC<Control<BlindType[]>> = ({ value, onChange }) => {
         style={{ maxHeight: 332, overflowY: "auto" }}
       >
         {innerValue.map((item, index) => (
-          <Box flex={{ col: true, gap: 2, align: "center", width: "100%" }}>
+          <Box
+            flex={{ col: true, gap: 2, align: "center", width: "100%" }}
+            key={index}
+          >
             {selectedItemId === item.id && (
               <Box flex={{ gap: 2 }}>
                 <Button
