@@ -13,5 +13,5 @@ export type SyncOrAsyncDataInfer<T extends Data<any> | AsyncData<any>> =
   T extends AsyncData<infer U> ? U : T extends Data<infer U> ? U : T;
 
 export const isAsyncData = <T = any>(
-  data: Data<T> | AsyncData<T>,
+  data: Data<T> | AsyncData<T>
 ): data is AsyncData<T> => (data as any).loading !== undefined;

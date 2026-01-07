@@ -7,7 +7,7 @@ import { blindListCls, blindListInputCls } from "./BlindList.css";
 import { SimpleList } from "@/components/SimpleList/SimpleList";
 import { Typography } from "@/components/Typography/Typography";
 import { Button } from "@/components/Button/Button";
-import { Input } from "@/components/Input/Input";
+import { Checkbox } from "@/components/Checkbox/Checkbox";
 
 type ItemToAdd =
   | {
@@ -24,7 +24,7 @@ interface PartialBlind {
   readonly id: number;
   readonly smallBlind?: number;
   readonly bigBlind?: number;
-  readonly ante?: boolean;
+  readonly ante: boolean;
   readonly duration?: number;
 }
 
@@ -39,6 +39,20 @@ const isPartialBlind = (item: PartialBlindType): item is PartialBlind => {
   return "level" in item;
 };
 
+const isBlindTypeReady = (
+  blindType: PartialBlindType
+): blindType is BlindType => {
+  if (isPartialBlind(blindType)) {
+    return (
+      !!blindType.smallBlind &&
+      !!blindType.bigBlind &&
+      !!blindType.duration &&
+      blindType.ante !== undefined
+    );
+  }
+  return !!blindType.duration;
+};
+
 const incItem = (item: PartialBlindType, shouldIncrementLevel: boolean) => {
   if (isPartialBlind(item)) {
     return {
@@ -50,16 +64,69 @@ const incItem = (item: PartialBlindType, shouldIncrementLevel: boolean) => {
   return { ...item, id: item.id + 1 };
 };
 
+const decItem = (item: PartialBlindType, shouldDecrementLevel: boolean) => {
+  if (isPartialBlind(item)) {
+    return {
+      ...item,
+      id: item.id - 1,
+      level: shouldDecrementLevel ? item.level - 1 : item.level,
+    };
+  }
+  return { ...item, id: item.id - 1 };
+};
+
 export const BlindList: FC<Control<BlindType[]>> = ({ value, onChange }) => {
   const [innerValue, setInnerValue] = useState<PartialBlindType[]>(value || []);
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
+
+  useEffect(() => {
+    onChange?.(
+      innerValue.every(isBlindTypeReady) ? (innerValue as BlindType[]) : []
+    );
+  }, [innerValue]);
+
+  const changeBlindItem = (
+    index: number,
+    key: keyof PartialBlind,
+    value: PartialBlind[keyof PartialBlind]
+  ) => {
+    setInnerValue((prev) => {
+      if (!prev?.length) {
+        return [];
+      }
+      return prev.map((item, i) => {
+        if (i === index) {
+          return { ...item, [key]: value };
+        }
+        return item;
+      });
+    });
+  };
+
+  const changeBreakItem = (
+    index: number,
+    key: keyof PartialBreak,
+    value: PartialBreak[keyof PartialBreak]
+  ) => {
+    setInnerValue((prev) => {
+      if (!prev?.length) {
+        return [];
+      }
+      return prev.map((item, i) => {
+        if (i === index) {
+          return { ...item, [key]: value };
+        }
+        return item;
+      });
+    });
+  };
 
   const addItem = (item: ItemToAdd) => {
     setInnerValue((prev) => {
       if (!prev?.length) {
         setSelectedItemId(item.id);
         return item.type === "lvl"
-          ? [{ id: item.id, level: item.id }]
+          ? [{ id: item.id, level: item.id, ante: false }]
           : [{ id: item.id }];
       }
       if (item.id > prev.length) {
@@ -74,8 +141,9 @@ export const BlindList: FC<Control<BlindType[]>> = ({ value, onChange }) => {
             ? {
                 id: item.id,
                 level: maxLvl + 1,
+                ante: false,
               }
-            : { id: item.id },
+            : { id: item.id, duration: undefined },
         ];
       }
 
@@ -90,7 +158,7 @@ export const BlindList: FC<Control<BlindType[]>> = ({ value, onChange }) => {
         } else if (prevItem.id === item.id) {
           newValue.push(
             item.type === "lvl"
-              ? { id: item.id, level: currentMaxLvl }
+              ? { id: item.id, level: currentMaxLvl, ante: false }
               : { id: item.id }
           );
           newValue.push(incItem(prevItem, item.type === "lvl"));
@@ -99,6 +167,20 @@ export const BlindList: FC<Control<BlindType[]>> = ({ value, onChange }) => {
         }
       }
       return newValue;
+    });
+  };
+
+  const deleteItem = (id: number, type: "lvl" | "break") => {
+    setInnerValue((prev) => {
+      const newVal: PartialBlindType[] = [];
+      for (const item of prev) {
+        if (item.id < id) {
+          newVal.push(item);
+        } else if (item.id > id) {
+          newVal.push(decItem(item, type === "lvl"));
+        }
+      }
+      return newVal;
     });
   };
 
@@ -116,10 +198,7 @@ export const BlindList: FC<Control<BlindType[]>> = ({ value, onChange }) => {
         flex={{ col: true, align: "center", width: "100%", gap: 3 }}
       >
         {innerValue.map((item, index) => (
-          <Box
-            key={item.id}
-            flex={{ col: true, gap: 4, align: "center", width: "100%" }}
-          >
+          <Box flex={{ col: true, gap: 2, align: "center", width: "100%" }}>
             {selectedItemId === item.id && (
               <Box flex={{ gap: 2 }}>
                 <Button
@@ -141,7 +220,16 @@ export const BlindList: FC<Control<BlindType[]>> = ({ value, onChange }) => {
                 >
                   +Break
                 </Button>
-                <Button size="xxSmall" width={60} type="primary">
+                <Button
+                  size="xxSmall"
+                  width={60}
+                  type="primary"
+                  onClick={() =>
+                    isPartialBlind(item)
+                      ? deleteItem(item.id, "lvl")
+                      : deleteItem(item.id, "break")
+                  }
+                >
                   Удалить
                 </Button>
               </Box>
@@ -153,10 +241,10 @@ export const BlindList: FC<Control<BlindType[]>> = ({ value, onChange }) => {
               {isPartialBlind(item) ? (
                 <>
                   <SimpleList.Column minWidth={40}>
-                    <Box flex={{ gap: 2 }}>
+                    <Box flex={{ gap: 2, align: "center" }}>
                       <Typography.Text size="xSmall">Lvl</Typography.Text>
                       <input
-                        readOnly={true}
+                        readOnly
                         className={blindListInputCls}
                         type="number"
                         value={item.level}
@@ -164,13 +252,19 @@ export const BlindList: FC<Control<BlindType[]>> = ({ value, onChange }) => {
                     </Box>
                   </SimpleList.Column>
                   <SimpleList.Column minWidth={40}>
-                    <Box flex={{ gap: 2 }}>
+                    <Box flex={{ gap: 2, align: "center" }}>
                       <Typography.Text size="xSmall">Время</Typography.Text>
                       <input
-                        readOnly={true}
                         className={blindListInputCls}
                         type="number"
-                        value={item.duration || 0}
+                        value={item.duration || undefined}
+                        onChange={(e) =>
+                          changeBlindItem(
+                            index,
+                            "duration",
+                            e.target.value ? Number(e.target.value) : undefined
+                          )
+                        }
                       />
                     </Box>
                   </SimpleList.Column>
@@ -178,32 +272,67 @@ export const BlindList: FC<Control<BlindType[]>> = ({ value, onChange }) => {
                     <Box flex={{ gap: 2 }}>
                       <Typography.Text size="xSmall">SB</Typography.Text>
                       <input
-                        readOnly={true}
                         className={blindListInputCls}
                         type="number"
-                        value={item.smallBlind || 0}
+                        value={item.smallBlind || undefined}
+                        onChange={(e) =>
+                          changeBlindItem(
+                            index,
+                            "smallBlind",
+                            e.target.value ? Number(e.target.value) : undefined
+                          )
+                        }
                       />
                     </Box>
                   </SimpleList.Column>
                   <SimpleList.Column minWidth={40}>
-                    <Box flex={{ gap: 2 }}>
+                    <Box flex={{ gap: 2, align: "center" }}>
                       <Typography.Text size="xSmall">BB</Typography.Text>
                       <input
-                        readOnly={true}
                         className={blindListInputCls}
                         type="number"
-                        value={item.bigBlind || 0}
+                        value={item.bigBlind || undefined}
+                        onChange={(e) =>
+                          changeBlindItem(
+                            index,
+                            "bigBlind",
+                            e.target.value ? Number(e.target.value) : undefined
+                          )
+                        }
                       />
                     </Box>
                   </SimpleList.Column>
                   <SimpleList.Column minWidth={40}>
-                    <Typography.Text size="xSmall">Ante</Typography.Text>
+                    <Box flex={{ gap: 2, align: "center" }}>
+                      <Typography.Text size="xSmall">Ante</Typography.Text>
+                      <Checkbox
+                        size="small"
+                        checked={item.ante}
+                        onCheckedChange={() =>
+                          changeBlindItem(index, "ante", !item.ante)
+                        }
+                      />
+                    </Box>
                   </SimpleList.Column>
                 </>
               ) : (
                 <>
                   <SimpleList.Column minWidth={40}>
-                    <Typography.Text size="xSmall">Break</Typography.Text>
+                    <Box flex={{ gap: 2, align: "center" }}>
+                      <Typography.Text size="xSmall">Break</Typography.Text>
+                      <input
+                        className={blindListInputCls}
+                        type="number"
+                        value={item.duration || undefined}
+                        onChange={(e) =>
+                          changeBreakItem(
+                            index,
+                            "duration",
+                            e.target.value ? Number(e.target.value) : undefined
+                          )
+                        }
+                      />
+                    </Box>
                   </SimpleList.Column>
                 </>
               )}

@@ -34,6 +34,7 @@ export interface SettingsPageViewProps {
 export const SettingsPageView: FC<SettingsPageViewProps> = ({
   initialTournamentStructures,
 }) => {
+
   const [activeTab, setActiveTab] = useState<"structures" | "players">(
     "structures"
   );

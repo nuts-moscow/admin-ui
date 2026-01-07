@@ -1,43 +1,34 @@
-import { recipe } from '@vanilla-extract/recipes';
-import { getGutter } from '@/core/utils/style/gutter';
+import { recipe } from "@vanilla-extract/recipes";
+import { getGutter } from "@/core/utils/style/gutter";
 
 export const checkboxCls = recipe({
   base: {
-    display: 'flex',
-    position: 'relative',
-    justifyContent: 'center',
-    alignItems: 'center',
-    margin: '2px',
+    display: "flex",
+    position: "relative",
+    justifyContent: "center",
+    alignItems: "center",
+    margin: "2px",
     gap: getGutter(2),
-    transition: 'all 0.3s ease-in-out',
-    border: '1px solid var(--border-color)',
-    boxShadow: '0 2px 0 0 var(--border-color)',
-    color: 'var(--background-primary)',
-    borderRadius: 'var(--radius-8)',
-    cursor: 'pointer',
-    background: 'transparent',
-    width: getGutter(4),
-    height: getGutter(4),
-    selectors: {
-      '&[data-state="checked"], &[data-state="indeterminate"]': {
-        backgroundColor: 'var(--color-primary)',
-      },
-      '&:focus-visible': {
-        outline: 'none',
-      },
-    },
-    ':disabled': {
-      cursor: 'not-allowed',
-      border: '1px solid var(--text-grey)',
-      boxShadow: '0 2px 0 0 var(--text-grey)',
-      color: 'var(--text-grey)',
+    transition: "all 0.3s ease-in-out",
+    borderColor: "#EBEBEB",
+    color: "var(--color-primary)",
+    borderRadius: "var(--radius-8)",
+    outline: "none",
+    border: "none",
+    cursor: "pointer",
+    width: getGutter(5),
+    height: getGutter(5),
+
+    ":disabled": {
+      cursor: "not-allowed",
+      color: "var(--text-grey)",
     },
   },
   variants: {
     size: {
       small: {
-        height: getGutter(3.5),
-        width: getGutter(3.5),
+        height: getGutter(5),
+        width: getGutter(5),
       },
       medium: {
         height: getGutter(4),
@@ -56,12 +47,12 @@ export const checkboxCls = recipe({
 });
 
 export const checkboxIconCls = recipe({
-  base: { display: 'blocks', height: getGutter(2.5), width: getGutter(2.5) },
+  base: { display: "blocks", height: getGutter(2.5), width: getGutter(2.5) },
   variants: {
     size: {
       small: {
-        height: getGutter(2),
-        width: getGutter(2),
+        height: getGutter(4),
+        width: getGutter(4),
       },
       medium: {
         height: getGutter(2.5),
