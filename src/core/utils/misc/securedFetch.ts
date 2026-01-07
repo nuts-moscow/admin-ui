@@ -127,7 +127,7 @@ export class SecuredErrorResponse<R = any> {
  */
 export interface SecuredFetchConfig<B, JR, R = JR> {
   /** HTTP method: GET or POST */
-  readonly method: "POST" | "GET";
+  readonly method: "POST" | "GET" | "PUT" | "DELETE";
   /** API host URL (e.g., 'https://api.example.com') */
   readonly host: string;
   /** Request path (e.g., '/profile/seed/get') */
@@ -244,9 +244,9 @@ export const securedFetch = async <B, JR, R = JR>({
       : { "content-type": "application/json" };
   let response: Response;
   try {
-    if (method === "GET") {
+    if (method === "GET" || method === "DELETE") {
       response = await fetch(`${host}${path}`, {
-        method: "GET",
+        method,
         credentials: withCredentials ? "include" : undefined,
         headers: undefined,
       });
@@ -259,7 +259,7 @@ export const securedFetch = async <B, JR, R = JR>({
             ? JSON.stringify(body)
             : undefined,
         credentials: withCredentials ? "include" : undefined,
-        method: "POST",
+        method,
         headers: contentHeaders,
       });
     }
