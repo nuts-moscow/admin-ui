@@ -10,6 +10,14 @@ import { Modal, WithModalProps } from "@/components/Modal/Modal";
 import { MakeTournamentStructureRequest } from "@/core/states/tournaments/types";
 import { BlindType } from "@/core/states/tournamentStructures/common/BlindType";
 import { BlindList } from "./BlindList/BlindList";
+import { Checkbox } from "@/components/Checkbox/Checkbox";
+import { Typography } from "@/components/Typography/Typography";
+import {
+  createTournamentStructure,
+  CreateTournamentStructureRequest,
+} from "@/core/states/tournamentStructures/requests/createTournamentStructure";
+import { useEnvironment } from "@/core/states/environment/useEnvironment";
+import { refetchTournamentStructures } from "@/core/states/tournamentStructures/hooks/useTournamentStructures";
 
 export interface CreateStructureModalProps extends WithModalProps {
   readonly structureId?: number;
@@ -20,6 +28,8 @@ export const CreateStructureModal: FC<CreateStructureModalProps> = ({
   opened,
   structureId,
 }) => {
+  const environment = useEnvironment();
+  const [isLoading, setIsLoading] = useState(false);
   const [ready, setReady] = useState(false);
   const [form] = useForm<Partial<MakeTournamentStructureRequest>>({
     controls: {
@@ -51,11 +61,23 @@ export const CreateStructureModal: FC<CreateStructureModalProps> = ({
     },
   });
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (form.state === "error") {
       return;
     }
-    console.log(form.value);
+    setIsLoading(true);
+    try {
+      await createTournamentStructure(
+        environment,
+        form.value as CreateTournamentStructureRequest
+      );
+      refetchTournamentStructures();
+      close();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -72,7 +94,7 @@ export const CreateStructureModal: FC<CreateStructureModalProps> = ({
   return (
     <>
       <Modal.Title close={close}>Создать формат турнира</Modal.Title>
-      <Modal.Content minWidth={710}>
+      <Modal.Content minWidth={720}>
         {ready ? (
           <Form
             model={form}
@@ -90,6 +112,19 @@ export const CreateStructureModal: FC<CreateStructureModalProps> = ({
               )}
             </Form.Control>
 
+            <Form.Control name="freezeOutEnabled">
+              {({ value, onChange }) => (
+                <Box flex={{ gap: 2, align: "center" }}>
+                  <Typography.Text size="small">Финал игры</Typography.Text>
+                  <Checkbox
+                    size="small"
+                    checked={value}
+                    onCheckedChange={() => onChange(!value)}
+                  />
+                </Box>
+              )}
+            </Form.Control>
+
             <Box flex={{ align: "center", gap: 4, width: "100%" }}>
               <Form.Control name="playersLimit">
                 {({ value, onChange }) => (
@@ -99,7 +134,7 @@ export const CreateStructureModal: FC<CreateStructureModalProps> = ({
                     placeholder="0"
                     label="Лимит игроков"
                     value={value}
-                    onChange={(e) => onChange(e.target.value)}
+                    onChange={(e) => onChange(Number(e.target.value))}
                   />
                 )}
               </Form.Control>
@@ -111,7 +146,7 @@ export const CreateStructureModal: FC<CreateStructureModalProps> = ({
                     label="Размер стека"
                     placeholder="0"
                     value={value}
-                    onChange={(e) => onChange(e.target.value)}
+                    onChange={(e) => onChange(Number(e.target.value))}
                   />
                 )}
               </Form.Control>
@@ -125,6 +160,7 @@ export const CreateStructureModal: FC<CreateStructureModalProps> = ({
 
             <Box flex={{ width: "100%", gap: 4 }}>
               <Button
+                disabled={isLoading}
                 type="secondary"
                 onClick={close}
                 flexItem={{ flex: 1 }}
@@ -132,11 +168,16 @@ export const CreateStructureModal: FC<CreateStructureModalProps> = ({
               >
                 Отмена
               </Button>
-              <Button type="primary" htmlType="submit" flexItem={{ flex: 1 }}>
+              <Button
+                disabled={form.state === "error"}
+                type="primary"
+                htmlType="submit"
+                flexItem={{ flex: 1 }}
+                loading={isLoading}
+              >
                 Создать
               </Button>
             </Box>
-            {form.value && <pre>{JSON.stringify(form.value, null, 2)}</pre>}
           </Form>
         ) : (
           <div>Loading...</div>

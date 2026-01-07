@@ -195,7 +195,13 @@ export const BlindList: FC<Control<BlindType[]>> = ({ value, onChange }) => {
         borderRadius="xl"
         className={blindListCls}
         padding={4}
-        flex={{ col: true, align: "center", width: "100%", gap: 3 }}
+        flex={{
+          col: true,
+          align: "center",
+          width: "100%",
+          gap: 3,
+        }}
+        style={{ maxHeight: 332, overflowY: "auto" }}
       >
         {innerValue.map((item, index) => (
           <Box flex={{ col: true, gap: 2, align: "center", width: "100%" }}>
@@ -255,6 +261,7 @@ export const BlindList: FC<Control<BlindType[]>> = ({ value, onChange }) => {
                     <Box flex={{ gap: 2, align: "center" }}>
                       <Typography.Text size="xSmall">Время</Typography.Text>
                       <input
+                        key={`${item.id}-blind-duration`}
                         className={blindListInputCls}
                         type="number"
                         value={item.duration || undefined}
@@ -272,6 +279,7 @@ export const BlindList: FC<Control<BlindType[]>> = ({ value, onChange }) => {
                     <Box flex={{ gap: 2 }}>
                       <Typography.Text size="xSmall">SB</Typography.Text>
                       <input
+                        key={`${item.id}-blind-smallBlind`}
                         className={blindListInputCls}
                         type="number"
                         value={item.smallBlind || undefined}
@@ -289,6 +297,7 @@ export const BlindList: FC<Control<BlindType[]>> = ({ value, onChange }) => {
                     <Box flex={{ gap: 2, align: "center" }}>
                       <Typography.Text size="xSmall">BB</Typography.Text>
                       <input
+                        key={`${item.id}-blind-bigBlind`}
                         className={blindListInputCls}
                         type="number"
                         value={item.bigBlind || undefined}
@@ -321,6 +330,7 @@ export const BlindList: FC<Control<BlindType[]>> = ({ value, onChange }) => {
                     <Box flex={{ gap: 2, align: "center" }}>
                       <Typography.Text size="xSmall">Break</Typography.Text>
                       <input
+                        key={`${item.id}-break-duration`}
                         className={blindListInputCls}
                         type="number"
                         value={item.duration || undefined}
