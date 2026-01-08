@@ -37,7 +37,7 @@ export const PageHeader: FC<PageHeaderProps> = ({
       )}
 
       {(title || subtitle) && (
-        <Box flex={{ col: true, gap: 0 }}>
+        <Box flex={{ col: true, gap: 2 }}>
           {title && (
             <Typography.Text
               size="large"
