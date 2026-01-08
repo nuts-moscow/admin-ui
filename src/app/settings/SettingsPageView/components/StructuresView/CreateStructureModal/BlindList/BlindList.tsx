@@ -1,8 +1,11 @@
 import { Box } from "@/components/Box/Box";
 import { controlLabelCls } from "@/components/ControlUtils/ControlLabel.css";
 import { Control } from "@/components/Form/FormControlView";
-import { BlindType } from "@/core/states/tournamentStructures/common/BlindType";
-import { FC, useEffect, useState } from "react";
+import {
+  Blinds,
+  BlindType,
+} from "@/core/states/tournamentStructures/common/BlindType";
+import { FC, useEffect, useMemo, useState } from "react";
 import { blindListCls, blindListInputCls } from "./BlindList.css";
 import { SimpleList } from "@/components/SimpleList/SimpleList";
 import { Typography } from "@/components/Typography/Typography";
@@ -75,13 +78,24 @@ const decItem = (item: PartialBlindType, shouldDecrementLevel: boolean) => {
   return { ...item, id: item.id - 1 };
 };
 
-export const BlindList: FC<Control<BlindType[]>> = ({ value, onChange }) => {
-  const [innerValue, setInnerValue] = useState<PartialBlindType[]>(value || []);
+export const BlindList: FC<Control<Blinds | undefined>> = ({
+  value,
+  onChange,
+}) => {
+  const [innerValue, setInnerValue] = useState<PartialBlindType[]>(
+    value || [
+      {
+        id: 1,
+        level: 1,
+        ante: false,
+      },
+    ]
+  );
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
 
   useEffect(() => {
     onChange?.(
-      innerValue.every(isBlindTypeReady) ? (innerValue as BlindType[]) : []
+      innerValue.every(isBlindTypeReady) ? (innerValue as Blinds) : undefined
     );
   }, [innerValue]);
 
@@ -127,7 +141,7 @@ export const BlindList: FC<Control<BlindType[]>> = ({ value, onChange }) => {
         setSelectedItemId(item.id);
         return item.type === "lvl"
           ? [{ id: item.id, level: item.id, ante: false }]
-          : [{ id: item.id }];
+          : [];
       }
       if (item.id > prev.length) {
         const maxLvl =
@@ -184,10 +198,6 @@ export const BlindList: FC<Control<BlindType[]>> = ({ value, onChange }) => {
     });
   };
 
-  useEffect(() => {
-    console.log(innerValue);
-  }, [innerValue]);
-
   return (
     <Box flex={{ col: true, gap: 2, width: "100%" }}>
       <label className={controlLabelCls()}>Структура блайндов</label>
@@ -229,18 +239,16 @@ export const BlindList: FC<Control<BlindType[]>> = ({ value, onChange }) => {
                 >
                   +Break
                 </Button>
-                <Button
-                  size="xxSmall"
-                  width={60}
-                  type="primary"
-                  onClick={() =>
-                    isPartialBlind(item)
-                      ? deleteItem(item.id, "lvl")
-                      : deleteItem(item.id, "break")
-                  }
-                >
-                  Удалить
-                </Button>
+                {index > 0 && (
+                  <Button
+                    size="xxSmall"
+                    width={60}
+                    type="primary"
+                    onClick={() => deleteItem(item.id, "lvl")}
+                  >
+                    Удалить
+                  </Button>
+                )}
               </Box>
             )}
             <SimpleList.Card
@@ -365,15 +373,17 @@ export const BlindList: FC<Control<BlindType[]>> = ({ value, onChange }) => {
           >
             +LVL
           </Button>
-          <Button
-            size="xxSmall"
-            width={60}
-            onClick={() =>
-              addItem({ type: "break", id: innerValue.length + 1 })
-            }
-          >
-            +Break
-          </Button>
+          {innerValue.length !== 0 && (
+            <Button
+              size="xxSmall"
+              width={60}
+              onClick={() =>
+                addItem({ type: "break", id: innerValue.length + 1 })
+              }
+            >
+              +Break
+            </Button>
+          )}
         </Box>
       </Box>
     </Box>

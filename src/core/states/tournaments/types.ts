@@ -10,11 +10,7 @@ export type PaymentMethod = "Cache" | "CreditCard" | "Free";
 
 export type Bonus = "EarlyBird" | "Hookah" | "Diller";
 
-export interface Tournament {
-  readonly id: string;
-  readonly name: string;
-  readonly date: number;
-}
+
 
 export interface InGamePlayerState {
   readonly playerId: number;

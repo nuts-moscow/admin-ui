@@ -13,3 +13,5 @@ export interface Break {
 }
 
 export type BlindType = Blind | Break;
+
+export type Blinds = [Blind, ...BlindType[]];

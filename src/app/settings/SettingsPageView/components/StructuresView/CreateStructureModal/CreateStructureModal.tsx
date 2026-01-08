@@ -7,8 +7,10 @@ import { Input } from "@/components/Input/Input";
 import { Form } from "@/components/Form/Form";
 import { useForm, toCtrlParam } from "@/components/Form/useForm";
 import { Modal, WithModalProps } from "@/components/Modal/Modal";
-import { MakeTournamentStructureRequest } from "@/core/states/tournaments/types";
-import { BlindType } from "@/core/states/tournamentStructures/common/BlindType";
+import {
+  Blinds,
+  BlindType,
+} from "@/core/states/tournamentStructures/common/BlindType";
 import { BlindList } from "./BlindList/BlindList";
 import { Checkbox } from "@/components/Checkbox/Checkbox";
 import { Typography } from "@/components/Typography/Typography";
@@ -31,7 +33,7 @@ export const CreateStructureModal: FC<CreateStructureModalProps> = ({
   const environment = useEnvironment();
   const [isLoading, setIsLoading] = useState(false);
   const [ready, setReady] = useState(false);
-  const [form] = useForm<Partial<MakeTournamentStructureRequest>>({
+  const [form] = useForm<Partial<CreateTournamentStructureRequest>>({
     controls: {
       name: toCtrlParam<string | undefined>(undefined, [
         {
@@ -52,7 +54,7 @@ export const CreateStructureModal: FC<CreateStructureModalProps> = ({
         },
       ]),
       freezeOutEnabled: false,
-      blinds: toCtrlParam<BlindType[] | undefined>(undefined, [
+      blinds: toCtrlParam<Blinds | undefined>(undefined, [
         {
           validate: (blinds) => (blinds?.length ? undefined : "Required"),
           level: "error",

@@ -28,7 +28,8 @@ export const StructureCard: FC<StructureCardProps> = ({
           Старт
         </Typography.Text>
         <Typography.Text size="small">
-          {structure.smallBlindOnStart}/{structure.bigBlindOnStart}
+          {structure.blindsStructure[0].smallBlind}/
+          {structure.blindsStructure[0].bigBlind}
         </Typography.Text>
       </SimpleList.Column>
 

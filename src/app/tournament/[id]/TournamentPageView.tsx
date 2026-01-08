@@ -13,13 +13,14 @@ import { TournamentState } from "./components/TournamentState/TournamentState";
 import { TournamentReentries } from "./components/TournamentReentries/TournamentReentries";
 import { TournamentCash } from "./components/TournamentCash/TournamentCash";
 import { TournamentResults } from "./components/TournamentResults/TournamentResults";
+import { TournamentInfoResponse } from "@/core/states/tournaments/requests/getTournament";
 
 export interface TournamentPageViewProps {
-  readonly tournamentId: string;
+  readonly tournament: TournamentInfoResponse;
 }
 
 export const TournamentPageView: FC<TournamentPageViewProps> = ({
-  tournamentId,
+  tournament,
 }) => {
   const [activeTab, setActiveTab] = useState<string>("players");
 
@@ -55,32 +56,32 @@ export const TournamentPageView: FC<TournamentPageViewProps> = ({
               {
                 title: "Список",
                 key: "players",
-                content: <TournamentPlayers tournamentId={tournamentId} />,
+                content: <TournamentPlayers tournament={tournament} />,
               },
               {
                 title: "Столы",
                 key: "tables",
-                content: <TournamentTables tournamentId={tournamentId} />,
+                content: <TournamentTables tournament={tournament} />,
               },
               {
                 title: "Турнир",
                 key: "state",
-                content: <TournamentState tournamentId={tournamentId} />,
+                content: <TournamentState tournament={tournament} />,
               },
               {
                 title: "Рибаи",
                 key: "reentries",
-                content: <TournamentReentries tournamentId={tournamentId} />,
+                content: <TournamentReentries tournament={tournament} />,
               },
               {
                 title: "Касса",
                 key: "cash",
-                content: <TournamentCash tournamentId={tournamentId} />,
+                content: <TournamentCash tournament={tournament} />,
               },
               {
                 title: "Результаты",
                 key: "results",
-                content: <TournamentResults tournamentId={tournamentId} />,
+                content: <TournamentResults tournament={tournament} />,
               },
             ]}
           ></Box>

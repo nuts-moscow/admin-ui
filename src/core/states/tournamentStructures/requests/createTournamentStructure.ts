@@ -1,6 +1,6 @@
 import { Environment } from "@/core/states/environment/Environment";
 import { securedFetch } from "@/core/utils/misc/securedFetch";
-import { BlindType } from "../common/BlindType";
+import { Blinds } from "../common/BlindType";
 import { TournamentStructure } from "../common/TournamentStructure";
 
 export interface CreateTournamentStructureRequest {
@@ -8,7 +8,7 @@ export interface CreateTournamentStructureRequest {
   readonly playersLimit: number;
   readonly stackSize: number;
   readonly freezeOutEnabled: boolean;
-  readonly blinds?: BlindType[];
+  readonly blinds?: Blinds;
 }
 
 export const createTournamentStructure = async (
