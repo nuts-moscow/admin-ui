@@ -16,8 +16,8 @@ export const StructuresView = ({
   searchQuery,
   initialTournamentStructures,
 }: StructuresViewProps) => {
-  const [selectedStructureId, setSelectedStructureId] = useState<
-    number | undefined
+  const [selectedStructure, setSelectedStructure] = useState<
+    TournamentStructure | undefined
   >(undefined);
   const [CreateStructureModalConnect, openCreateStructureModal] =
     useModal(CreateStructureModal);
@@ -40,13 +40,13 @@ export const StructuresView = ({
   }, [searchQuery, tournamentStructures]);
 
   const openStructureModal = (structure: TournamentStructure) => {
-    setSelectedStructureId(structure.id);
+    setSelectedStructure(structure);
     openCreateStructureModal();
   };
 
   return (
     <Box flex={{ col: true, gap: 8, width: "100%" }}>
-      <CreateStructureModalConnect structureId={selectedStructureId} />
+      <CreateStructureModalConnect structure={selectedStructure} />
       <Button
         type="primary"
         size="medium"
