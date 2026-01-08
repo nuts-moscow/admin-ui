@@ -7,7 +7,7 @@ import { Typography } from "@/components/Typography/Typography";
 import { pageHeaderCls } from "@/components/PageHeader/PageHeader.css";
 
 export interface PageHeaderProps {
-  readonly title?: string;
+  readonly title?: ReactNode;
   readonly subtitle?: string;
   readonly extra?: ReactNode;
   readonly showLogo?: boolean;

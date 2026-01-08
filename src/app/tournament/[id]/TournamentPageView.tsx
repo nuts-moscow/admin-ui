@@ -14,6 +14,9 @@ import { TournamentReentries } from "./components/TournamentReentries/Tournament
 import { TournamentCash } from "./components/TournamentCash/TournamentCash";
 import { TournamentResults } from "./components/TournamentResults/TournamentResults";
 import { TournamentInfoResponse } from "@/core/states/tournaments/requests/getTournament";
+import { Typography } from "@/components/Typography/Typography";
+import { Formatter } from "@/components/Formatter/Formatter";
+import { tournamentStatusLabels } from "@/core/states/tournaments/common/TournamentStatus";
 
 export interface TournamentPageViewProps {
   readonly tournament: TournamentInfoResponse;
@@ -31,8 +34,13 @@ export const TournamentPageView: FC<TournamentPageViewProps> = ({
         style={{ minHeight: "100vh", backgroundColor: "var(--bg-primary)" }}
       >
         <PageHeader
-          title="Название турнира 01.01.2025"
-          subtitle="Статус: Завершен"
+          title={
+            <>
+              {tournament.name}{" "}
+              <Formatter.dateTime value={tournament.date} type="date" />
+            </>
+          }
+          subtitle={`Статус: ${tournamentStatusLabels[tournament.status]}`}
           extra={
             <Box flex={{ gap: 2, align: "center" }}>
               <Link href="/">
