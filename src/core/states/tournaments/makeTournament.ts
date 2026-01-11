@@ -1,12 +1,12 @@
 import { Environment } from "@/core/states/environment/Environment";
-import { MakeTournamentRequest, Tournament } from "./types";
+import { MakeTournamentRequest } from "./types";
 import { securedFetch } from "@/core/utils/misc/securedFetch";
 
 export const makeTournament = async (
   environment: Environment,
   request: MakeTournamentRequest
-): Promise<Tournament[]> => {
-  return securedFetch<MakeTournamentRequest, Tournament[]>({
+): Promise<any[]> => {
+  return securedFetch<MakeTournamentRequest, any[]>({
     method: "POST",
     host: environment.apiUrl,
     path: "/v1/tournaments/make",

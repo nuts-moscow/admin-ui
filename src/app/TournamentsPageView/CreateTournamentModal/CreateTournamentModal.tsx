@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { FC } from 'react';
-import { Box } from '@/components/Box/Box';
-import { Button } from '@/components/Button/Button';
-import { Input } from '@/components/Input/Input';
-import { Form } from '@/components/Form/Form';
-import { useForm, toCtrlParam } from '@/components/Form/useForm';
-import { Modal, WithModalProps } from '@/components/Modal/Modal';
-import { Typography } from '@/components/Typography/Typography';
+import { FC } from "react";
+import { Box } from "@/components/Box/Box";
+import { Button } from "@/components/Button/Button";
+import { Input } from "@/components/Input/Input";
+import { Form } from "@/components/Form/Form";
+import { useForm, toCtrlParam } from "@/components/Form/useForm";
+import { Modal, WithModalProps } from "@/components/Modal/Modal";
+import { Typography } from "@/components/Typography/Typography";
 
 interface CreateTournamentFormData {
   readonly name: string;
@@ -17,11 +17,11 @@ interface CreateTournamentFormData {
 }
 
 const STRUCTURES = [
-  { id: '1', name: 'Стандартный' },
-  { id: '2', name: 'Супер-турбо' },
-  { id: '3', name: '6-Max' },
-  { id: '4', name: 'Турбо' },
-  { id: '5', name: 'Deep Stack' },
+  { id: "1", name: "Стандартный" },
+  { id: "2", name: "Супер-турбо" },
+  { id: "3", name: "6-Max" },
+  { id: "4", name: "Турбо" },
+  { id: "5", name: "Deep Stack" },
 ];
 
 export const CreateTournamentModalContent: FC<WithModalProps> = ({
@@ -30,20 +30,15 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({
 }) => {
   const [form, formValue] = useForm({
     controls: {
-      name: toCtrlParam(''),
-      date: toCtrlParam(''),
-      time: toCtrlParam(''),
-      structureId: toCtrlParam(''),
+      name: toCtrlParam(""),
+      date: toCtrlParam(""),
+      time: toCtrlParam(""),
+      structureId: toCtrlParam(""),
     },
   });
 
-  const isFormValid = form.valid;
-
   const handleSubmit = () => {
-    if (isFormValid) {
-      console.log('Form submitted:', formValue);
-      close();
-    }
+    console.log("Form submitted:", formValue);
   };
 
   return (
@@ -57,7 +52,6 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({
                 label="Название турнира"
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                error={state === 'invalid'}
                 required
               />
             )}
@@ -67,10 +61,8 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({
             {({ value, onChange, state }) => (
               <Input
                 label="Дата"
-                type="date"
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                error={state === 'invalid'}
                 required
               />
             )}
@@ -80,10 +72,9 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({
             {({ value, onChange, state }) => (
               <Input
                 label="Время"
-                type="time"
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                error={state === 'invalid'}
+                error={state === "error"}
                 required
               />
             )}
@@ -91,12 +82,12 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({
 
           <Form.Control name="structureId">
             {({ value, onChange, state }) => (
-              <Box flex={{ col: true, gap: 4, width: '100%' }}>
+              <Box flex={{ col: true, gap: 4, width: "100%" }}>
                 <label
                   style={{
-                    fontSize: 'var(--font-size-small)',
+                    fontSize: "var(--font-size-small)",
                     fontWeight: 500,
-                    color: 'var(--text-secondary)',
+                    color: "var(--text-secondary)",
                   }}
                 >
                   Структура турнира
@@ -105,13 +96,13 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({
                   value={value}
                   onChange={(e) => onChange(e.target.value)}
                   style={{
-                    padding: '8px 12px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border-primary)',
-                    backgroundColor: 'var(--bg-primary)',
-                    color: 'var(--text-primary)',
-                    fontSize: 'inherit',
-                    fontFamily: 'inherit',
+                    padding: "8px 12px",
+                    borderRadius: "8px",
+                    border: "1px solid var(--border-primary)",
+                    backgroundColor: "var(--bg-primary)",
+                    color: "var(--text-primary)",
+                    fontSize: "inherit",
+                    fontFamily: "inherit",
                   }}
                 >
                   <option value="">Выберите структуру</option>
@@ -121,7 +112,7 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({
                     </option>
                   ))}
                 </select>
-                {state === 'invalid' && (
+                {state === "error" && (
                   <Typography.Text size="small" type="error">
                     Выберите структуру
                   </Typography.Text>
@@ -130,15 +121,11 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({
             )}
           </Form.Control>
 
-          <Box flex={{ gap: 8, justify: 'flex-end' }} style={{ marginTop: 16 }}>
+          <Box flex={{ gap: 8, justify: "flex-end" }} style={{ marginTop: 16 }}>
             <Button type="outline" onClick={() => close()}>
               Отмена
             </Button>
-            <Button
-              type="primary"
-              onClick={handleSubmit}
-              disabled={!isFormValid}
-            >
+            <Button type="primary" onClick={handleSubmit}>
               Создать
             </Button>
           </Box>
@@ -147,4 +134,3 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({
     </>
   );
 };
-

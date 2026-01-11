@@ -1,12 +1,12 @@
 import { Environment } from "@/core/states/environment/Environment";
-import { UpdateTournamentRequest, Tournament } from "./types";
+import { UpdateTournamentRequest } from "./types";
 import { securedFetch } from "@/core/utils/misc/securedFetch";
 
 export const updateTournament = async (
   environment: Environment,
   request: UpdateTournamentRequest
-): Promise<Tournament[]> => {
-  return securedFetch<UpdateTournamentRequest, Tournament[]>({
+): Promise<any[]> => {
+  return securedFetch<UpdateTournamentRequest, any[]>({
     method: "POST",
     host: environment.apiUrl,
     path: "/v1/tournaments/update",
