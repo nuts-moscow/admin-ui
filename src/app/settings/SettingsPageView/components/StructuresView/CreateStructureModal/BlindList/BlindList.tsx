@@ -172,7 +172,7 @@ export const BlindList: FC<Control<Blinds | undefined>> = ({
         } else if (prevItem.id === item.id) {
           newValue.push(
             item.type === "lvl"
-              ? { id: item.id, level: currentMaxLvl, ante: false }
+              ? { id: item.id, level: currentMaxLvl + 1, ante: false }
               : { id: item.id }
           );
           newValue.push(incItem(prevItem, item.type === "lvl"));
