@@ -1,6 +1,20 @@
 import { Environment } from "@/core/states/environment/Environment";
-import { MakeTournamentRequest } from "./types";
+
 import { securedFetch } from "@/core/utils/misc/securedFetch";
+import { TournamentStructure } from "../../tournamentStructures/common/TournamentStructure";
+import { Blinds } from "../../tournamentStructures/common/BlindType";
+
+export interface MakeTournamentRequest {
+  readonly name: string;
+  readonly date: number;
+  readonly structure: {
+    readonly name: string;
+    readonly playersLimit: number;
+    readonly stackSize: number;
+    readonly freezeOutEnabled: boolean;
+    readonly blinds: Blinds;
+  };
+}
 
 export const makeTournament = async (
   environment: Environment,

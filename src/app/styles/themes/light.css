@@ -1,71 +1,70 @@
 .light {
-    --color-primary: #000000;
+  --color-primary: #000000;
 
-    --text-primary: #000000;
-    --text-brand: #000000;
-    --loader-text: #000000;
-    --text-primary-button: #ffffff;
-    --text-accent-button: #ffffff;
-    --text-primary-disabled: rgba(0, 0, 0, 0.25);
-    --text-secondary: #666666;
-    --text-grey: #999999;
+  --text-primary: #000000;
+  --text-brand: #000000;
+  --loader-text: #000000;
+  --text-primary-button: #ffffff;
+  --text-accent-button: #ffffff;
+  --text-primary-disabled: rgba(0, 0, 0, 0.25);
+  --text-secondary: #666666;
+  --text-grey: #999999;
 
-    --text-outline: rgba(0, 0, 0, 0.64);
-    --text-tertiary: #ffffff;
-    --text-tertiary-disabled: rgba(255, 255, 255, 0.25);
-    --text-success: #000000;
-    --text-error: #000000;
-    --text-warning: #000000;
-    --text-accent: #000000;
-    --text-sky: #000000;
-    --text-button-secondary-disable: #cccccc;
+  --text-outline: rgba(0, 0, 0, 0.64);
+  --text-tertiary: #ffffff;
+  --text-tertiary-disabled: rgba(255, 255, 255, 0.25);
+  --text-success: #54a348;
+  --text-error: #000000;
+  --text-warning: #000000;
+  --text-accent: #000000;
+  --text-sky: #000000;
+  --text-button-secondary-disable: #cccccc;
 
-    --brand-color-1: #000000;
-    --brand-color-2: #333333;
-    --brand-color-3: #666666;
-    --brand-color-4: #999999;
+  --brand-color-1: #000000;
+  --brand-color-2: #333333;
+  --brand-color-3: #666666;
+  --brand-color-4: #999999;
 
-    --border-color: #000000;
-    --border-color-table: #e0e0e0;
-    --border-color-grey: #cccccc;
-    --border-color-warning: #000000;
-    --hover-link-color: #333333;
+  --border-color: #000000;
+  --border-color-table: #e0e0e0;
+  --border-color-grey: #cccccc;
+  --border-color-warning: #000000;
+  --hover-link-color: #333333;
 
-    --background-primary: #ffffff;
-    --background-modal-overlay: rgba(0, 0, 0, 0.5);
-    --background-token-card-hover: rgba(0, 0, 0, 0.05);
-    --background-self-order-row: rgba(0, 0, 0, 0.03);
-    --background-dev-order-row: rgba(0, 0, 0, 0.05);
+  --background-primary: #ffffff;
+  --background-modal-overlay: rgba(0, 0, 0, 0.5);
+  --background-token-card-hover: rgba(0, 0, 0, 0.05);
+  --background-self-order-row: rgba(0, 0, 0, 0.03);
+  --background-dev-order-row: rgba(0, 0, 0, 0.05);
 
-    --background-input-color: rgba(0, 0, 0, 0.05);
-    --background-successed-progress-bar-color: #000000;
-    --background-error-progress-bar-color: #000000;
-    --background-warning-progress-bar-color: #000000;
-    --background-primary-progress-bar-color: #000000;
-    --background-progress-bar-color: #e0e0e0;
-    --background-control-menu-color: #f5f5f5;
-    --background-button-disabled: #cccccc;
-    --background-dev-message: rgba(0, 0, 0, 0.02);
-    --background-user-row-leaderboard: rgba(0, 0, 0, 0.05);
+  --background-input-color: rgba(0, 0, 0, 0.05);
+  --background-successed-progress-bar-color: #000000;
+  --background-error-progress-bar-color: #000000;
+  --background-warning-progress-bar-color: #000000;
+  --background-primary-progress-bar-color: #000000;
+  --background-progress-bar-color: #e0e0e0;
+  --background-control-menu-color: #f5f5f5;
+  --background-button-disabled: #cccccc;
+  --background-dev-message: rgba(0, 0, 0, 0.02);
+  --background-user-row-leaderboard: rgba(0, 0, 0, 0.05);
 
-    --background-white-button-color: #ffffff;
-    --background-white-button-hover-color: #f5f5f5;
-    --background-white-button-disable-color: rgba(255, 255, 255, 0.25);
-    --background-green-button-color: #000000;
-    --background-green-button-hover-color: #333333;
-    --background-green-button-disabled-color: #cccccc;
-    --background-purple-button-color: #000000;
-    --background-purple-button-hover-color: #333333;
-    --background-red-button-color: #000000;
-    --background-red-button-hover-color: #333333;
+  --background-white-button-color: #ffffff;
+  --background-white-button-hover-color: #f5f5f5;
+  --background-white-button-disable-color: rgba(255, 255, 255, 0.25);
+  --background-green-button-color: #000000;
+  --background-green-button-hover-color: #333333;
+  --background-green-button-disabled-color: #cccccc;
+  --background-purple-button-color: #000000;
+  --background-purple-button-hover-color: #333333;
+  --background-red-button-color: #000000;
+  --background-red-button-hover-color: #333333;
 
-    /*Tag Type*/
-    --background-tag-success: rgba(0, 0, 0, 0.1);
-    --background-tag-warning: rgba(0, 0, 0, 0.15);
-    --background-tag-destructive: rgba(0, 0, 0, 0.2);
-    --background-tag-accent: rgba(0, 0, 0, 0.12);
-    --background-tag-tertiary: rgba(0, 0, 0, 0.08);
+  /*Tag Type*/
+  --background-tag-success: rgba(0, 0, 0, 0.1);
+  --background-tag-warning: rgba(0, 0, 0, 0.15);
+  --background-tag-destructive: rgba(0, 0, 0, 0.2);
+  --background-tag-accent: rgba(0, 0, 0, 0.12);
+  --background-tag-tertiary: rgba(0, 0, 0, 0.08);
 
-    --bottom-navigation-background: #f5f5f5;
+  --bottom-navigation-background: #f5f5f5;
 }
-

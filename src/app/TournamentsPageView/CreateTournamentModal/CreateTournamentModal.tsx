@@ -1,133 +1,177 @@
 "use client";
 
-import { FC } from "react";
+import { FC, useMemo, useState } from "react";
 import { Box } from "@/components/Box/Box";
 import { Button } from "@/components/Button/Button";
-import { Input } from "@/components/Input/Input";
-import { Form } from "@/components/Form/Form";
-import { useForm, toCtrlParam } from "@/components/Form/useForm";
+import { useForm } from "@/components/Form/useForm";
 import { Modal, WithModalProps } from "@/components/Modal/Modal";
-import { Typography } from "@/components/Typography/Typography";
+import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 
-interface CreateTournamentFormData {
+import { DateTimeStep } from "./DateTimeStep";
+import { StructureStep } from "./StructureStep";
+import { InfoStep } from "./InfoStep";
+import { Form } from "@/components/Form/Form";
+import { Typography } from "@/components/Typography/Typography";
+import { DateTime } from "luxon";
+import { TournamentStructure } from "@/core/states/tournamentStructures/common/TournamentStructure";
+import { makeTournament } from "@/core/states/tournaments/requests/makeTournament";
+import { useEnvironment } from "@/core/states/environment/useEnvironment";
+import { refetchTournaments } from "@/core/states/tournaments/hooks/useTournaments";
+
+type Step = 1 | 2 | 3;
+
+const STEP_TITLES: Record<Step, string> = {
+  1: "Дата и время",
+  2: "Структура турнира",
+  3: "Информация",
+};
+
+export interface CreateTournamentForm {
   readonly name: string;
   readonly date: string;
   readonly time: string;
-  readonly structureId: string;
+  readonly structure: TournamentStructure | undefined;
 }
 
-const STRUCTURES = [
-  { id: "1", name: "Стандартный" },
-  { id: "2", name: "Супер-турбо" },
-  { id: "3", name: "6-Max" },
-  { id: "4", name: "Турбо" },
-  { id: "5", name: "Deep Stack" },
-];
+export const CreateTournamentModalContent: FC<WithModalProps> = ({ close }) => {
+  const [step, setStep] = useState<Step>(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const environment = useEnvironment();
 
-export const CreateTournamentModalContent: FC<WithModalProps> = ({
-  close,
-  opened,
-}) => {
-  const [form, formValue] = useForm({
+  const [form] = useForm<CreateTournamentForm>({
     controls: {
-      name: toCtrlParam(""),
-      date: toCtrlParam(""),
-      time: toCtrlParam(""),
-      structureId: toCtrlParam(""),
+      name: "",
+      date: DateTime.now().toFormat("yyyy-MM-dd"),
+      time: DateTime.now().toFormat("HH:mm"),
+      structure: undefined,
     },
   });
 
-  const handleSubmit = () => {
-    console.log("Form submitted:", formValue);
+  const handleNext = () => {
+    if (step < 3) {
+      setStep((prev) => (prev + 1) as Step);
+    } else {
+      handleSubmit();
+    }
   };
+
+  const handleSubmit = async () => {
+    if (!form.value.structure) {
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const [year, month, day] = form.value.date.split("-");
+      const [hour, minute] = form.value.time.split(":");
+
+      await makeTournament(environment, {
+        name: form.value.name,
+        date: Math.floor(
+          DateTime.fromObject({
+            year: Number(year),
+            month: Number(month),
+            day: Number(day),
+            hour: Number(hour),
+            minute: Number(minute),
+          }).toSeconds()
+        ),
+        structure: {
+          name: form.value.structure.name,
+          playersLimit: form.value.structure.playersLimit,
+          stackSize: form.value.structure.stackSize,
+          freezeOutEnabled: form.value.structure.freezeOutEnabled,
+          blinds: form.value.structure.blindsStructure,
+        },
+      });
+      close();
+      refetchTournaments();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePrev = () => {
+    if (step > 1) {
+      setStep((prev) => (prev - 1) as Step);
+    }
+  };
+
+  const renderStepContent = () => {
+    switch (step) {
+      case 1:
+        return <DateTimeStep />;
+      case 2:
+        return <StructureStep />;
+      case 3:
+        return <InfoStep />;
+      default:
+        return null;
+    }
+  };
+
+  const isNextAvailable = useMemo(() => {
+    switch (step) {
+      case 1:
+        return form.value.date && form.value.time;
+      case 2:
+      case 3:
+        return (
+          form.value.structure &&
+          form.value.date &&
+          form.value.time &&
+          form.value.name
+        );
+    }
+  }, [form.value, step]);
 
   return (
     <>
-      <Modal.Title close={close}>Создать турнир</Modal.Title>
-      <Modal.Content>
-        <Form model={form} flex={{ col: true, gap: 16 }}>
-          <Form.Control name="name">
-            {({ value, onChange, state }) => (
-              <Input
-                label="Название турнира"
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                required
+      <Modal.Title showCloseButton>
+        <Typography.Title type="primary" level={2}>
+          {STEP_TITLES[step]}
+        </Typography.Title>
+      </Modal.Title>
+      <Modal.Content width={708}>
+        <Form model={form}>
+          <Box flex={{ col: true, gap: 4, width: "100%" }}>
+            {renderStepContent()}
+            <Box flex={{ justify: "center", width: "100%", gap: 6 }}>
+              <Button
+                type="outline"
+                onClick={handlePrev}
+                disabled={step === 1}
+                iconLeft={<ArrowLeft size={24} />}
+                style={{
+                  borderRadius: "50%",
+                  height: 32,
+                  width: 32,
+                  padding: 0,
+                  border: "1px solid var(--border-color-grey)",
+                }}
               />
-            )}
-          </Form.Control>
-
-          <Form.Control name="date">
-            {({ value, onChange, state }) => (
-              <Input
-                label="Дата"
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                required
+              <Button
+                type="outline"
+                onClick={handleNext}
+                disabled={!isNextAvailable}
+                loading={isLoading}
+                iconLeft={
+                  step === 3 ? (
+                    <Check color="var(--text-success)" size={24} />
+                  ) : (
+                    <ArrowRight size={24} />
+                  )
+                }
+                style={{
+                  borderRadius: "50%",
+                  height: 32,
+                  width: 32,
+                  padding: 0,
+                  border: "1px solid var(--border-color-grey)",
+                }}
               />
-            )}
-          </Form.Control>
-
-          <Form.Control name="time">
-            {({ value, onChange, state }) => (
-              <Input
-                label="Время"
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                error={state === "error"}
-                required
-              />
-            )}
-          </Form.Control>
-
-          <Form.Control name="structureId">
-            {({ value, onChange, state }) => (
-              <Box flex={{ col: true, gap: 4, width: "100%" }}>
-                <label
-                  style={{
-                    fontSize: "var(--font-size-small)",
-                    fontWeight: 500,
-                    color: "var(--text-secondary)",
-                  }}
-                >
-                  Структура турнира
-                </label>
-                <select
-                  value={value}
-                  onChange={(e) => onChange(e.target.value)}
-                  style={{
-                    padding: "8px 12px",
-                    borderRadius: "8px",
-                    border: "1px solid var(--border-primary)",
-                    backgroundColor: "var(--bg-primary)",
-                    color: "var(--text-primary)",
-                    fontSize: "inherit",
-                    fontFamily: "inherit",
-                  }}
-                >
-                  <option value="">Выберите структуру</option>
-                  {STRUCTURES.map((structure) => (
-                    <option key={structure.id} value={structure.id}>
-                      {structure.name}
-                    </option>
-                  ))}
-                </select>
-                {state === "error" && (
-                  <Typography.Text size="small" type="error">
-                    Выберите структуру
-                  </Typography.Text>
-                )}
-              </Box>
-            )}
-          </Form.Control>
-
-          <Box flex={{ gap: 8, justify: "flex-end" }} style={{ marginTop: 16 }}>
-            <Button type="outline" onClick={() => close()}>
-              Отмена
-            </Button>
-            <Button type="primary" onClick={handleSubmit}>
-              Создать
-            </Button>
+            </Box>
           </Box>
         </Form>
       </Modal.Content>

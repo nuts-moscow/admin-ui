@@ -1,4 +1,4 @@
-import { withFlex } from '@/components/Flex/Flex';
+import { withFlex } from "@/components/Flex/Flex";
 import {
   ButtonHTMLAttributes,
   cloneElement,
@@ -6,48 +6,48 @@ import {
   forwardRef,
   ReactElement,
   useMemo,
-} from 'react';
+} from "react";
 import {
   large,
   medium,
   small,
   xSmall,
   xxSmall,
-} from '@/core/utils/style/UiKitSizes';
-import { Loader2 } from 'lucide-react';
-import { buttonCls, buttonLoaderCls } from '@/components/Button/Button.css';
-import { clsx } from 'clsx';
-import mergeDeepRight from 'ramda/es/mergeDeepRight';
-import { SimpleIconProps } from '@/components/Icons/Icon/Icon';
+} from "@/core/utils/style/UiKitSizes";
+import { Loader2 } from "lucide-react";
+import { buttonCls, buttonLoaderCls } from "@/components/Button/Button.css";
+import { clsx } from "clsx";
+import mergeDeepRight from "ramda/es/mergeDeepRight";
+import { SimpleIconProps } from "@/components/Icons/Icon/Icon";
 
 export type ButtonProps = Omit<
   ButtonHTMLAttributes<HTMLButtonElement>,
-  'type'
+  "type"
 > & {
-  readonly htmlType?: ButtonHTMLAttributes<HTMLButtonElement>['type'];
+  readonly htmlType?: ButtonHTMLAttributes<HTMLButtonElement>["type"];
   readonly type?:
-    | 'primary'
-    | 'secondary'
-    | 'tertiary'
-    | 'outline'
-    | 'outline-error'
-    | 'ghost'
-    | 'link'
-    | 'destructive'
-    | 'sell'
-    | 'buy'
-    | 'success'
-    | 'error'
-    | 'warning'
-    | 'ghost-destructive'
-    | 'accent'
-    | 'none';
+    | "primary"
+    | "secondary"
+    | "tertiary"
+    | "outline"
+    | "outline-error"
+    | "ghost"
+    | "link"
+    | "destructive"
+    | "sell"
+    | "buy"
+    | "success"
+    | "error"
+    | "warning"
+    | "ghost-destructive"
+    | "accent"
+    | "none";
   readonly loading?: boolean;
   readonly loadingRight?: boolean;
   readonly size?: xxSmall | xSmall | small | medium | large;
   readonly iconLeft?: ReactElement<SimpleIconProps>;
   readonly iconRight?: ReactElement<SimpleIconProps>;
-  readonly width?: CSSProperties['width'];
+  readonly width?: CSSProperties["width"];
 };
 
 export const Button = withFlex(
@@ -62,29 +62,29 @@ export const Button = withFlex(
         iconRight,
         children,
         disabled,
-        size = 'medium',
+        size = "medium",
         type,
         className,
         width,
         style,
         ...other
       },
-      ref,
+      ref
     ) => {
       const iconSize =
-        size === 'small' || size === 'xSmall'
+        size === "small" || size === "xSmall"
           ? 16
-          : size === 'xxSmall'
-            ? 12
-            : 20;
+          : size === "xxSmall"
+          ? 12
+          : 20;
       const newIconLeft = iconLeft
         ? cloneElement(iconLeft, {
-            size: iconSize,
+            size: iconLeft.props.size || iconSize,
           })
         : iconLeft;
       const newIconRight = iconRight
         ? cloneElement(iconRight, {
-            size: iconSize,
+            size: iconRight.props.size || iconSize,
           })
         : iconRight;
 
@@ -95,27 +95,27 @@ export const Button = withFlex(
               className={buttonLoaderCls}
               size={iconSize}
               color={
-                type === 'primary'
-                  ? 'var(--text-tertiary)'
-                  : type === 'outline-error'
-                    ? 'var(--text-error)'
-                    : 'var(--text-primary)'
+                type === "primary"
+                  ? "var(--text-tertiary)"
+                  : type === "outline-error"
+                  ? "var(--text-error)"
+                  : "var(--text-primary)"
               }
             />
           ) : (
             newIconLeft
           )}
-          {children && (children || 'Loading...')}
+          {children && (children || "Loading...")}
           {loading && !!loadingRight ? (
             <Loader2
               className={buttonLoaderCls}
               size={iconSize}
               color={
-                type === 'primary'
-                  ? 'var(--text-tertiary)'
-                  : type === 'outline-error'
-                    ? 'var(--text-error)'
-                    : 'var(--text-primary)'
+                type === "primary"
+                  ? "var(--text-tertiary)"
+                  : type === "outline-error"
+                  ? "var(--text-error)"
+                  : "var(--text-primary)"
               }
             />
           ) : (
@@ -133,15 +133,15 @@ export const Button = withFlex(
           return undefined;
         }
         switch (size) {
-          case 'xxSmall':
+          case "xxSmall":
             return 24;
-          case 'xSmall':
+          case "xSmall":
             return 32;
-          case 'small':
+          case "small":
             return 40;
-          case 'medium':
+          case "medium":
             return 46;
-          case 'large':
+          case "large":
             return 54;
         }
       }, [hasNoIconOrHasChildren, width, size]);
@@ -152,32 +152,32 @@ export const Button = withFlex(
           className={clsx(
             className,
             buttonCls({
-              size: size || 'medium',
+              size: size || "medium",
               primary:
-                type === 'primary'
+                type === "primary"
                   ? loading
-                    ? 'loading'
-                    : 'active'
+                    ? "loading"
+                    : "active"
                   : undefined,
               secondary:
-                type === 'secondary'
+                type === "secondary"
                   ? loading
-                    ? 'loading'
-                    : 'active'
+                    ? "loading"
+                    : "active"
                   : undefined,
               accent:
-                type === 'accent'
+                type === "accent"
                   ? loading
-                    ? 'loading'
-                    : 'active'
+                    ? "loading"
+                    : "active"
                   : undefined,
-              outline: type === 'outline',
-              outlineError: type === 'outline-error',
-              error: type === 'error',
-              link: type === 'link',
+              outline: type === "outline",
+              outlineError: type === "outline-error",
+              error: type === "error",
+              link: type === "link",
               ghost:
-                type === 'ghost' ? (loading ? 'loading' : 'active') : undefined,
-            }),
+                type === "ghost" ? (loading ? "loading" : "active") : undefined,
+            })
           )}
           disabled={disabled || loading}
           style={mergeDeepRight({ width: buttonWidth }, style || {})}
@@ -187,6 +187,6 @@ export const Button = withFlex(
           {buttonContent}
         </button>
       );
-    },
-  ),
+    }
+  )
 );

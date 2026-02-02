@@ -3,6 +3,15 @@ import { useEnvironment } from "@/core/states/environment/useEnvironment";
 
 import { TournamentStatus } from "../common/TournamentStatus";
 import { getTournaments, ShortTournament } from "../requests/getTournaments";
+import { inMemoryState } from "@/core/stateManager/factories/inMemoryState";
+
+const useRefetchTournaments = inMemoryState({
+  defaultValue: 1,
+});
+
+export const refetchTournaments = () => {
+  useRefetchTournaments.setData(useRefetchTournaments.data + 1);
+};
 
 export const useTournaments = queryState({
   request: async (
@@ -16,6 +25,6 @@ export const useTournaments = queryState({
   cache: true,
   deps: {
     environment: useEnvironment,
+    refetch: useRefetchTournaments,
   },
 });
-

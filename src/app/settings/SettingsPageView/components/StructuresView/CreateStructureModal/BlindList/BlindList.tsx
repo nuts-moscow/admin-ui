@@ -78,10 +78,9 @@ const decItem = (item: PartialBlindType, shouldDecrementLevel: boolean) => {
   return { ...item, id: item.id - 1 };
 };
 
-export const BlindList: FC<Control<Blinds | undefined>> = ({
-  value,
-  onChange,
-}) => {
+export const BlindList: FC<
+  Control<Blinds | undefined> & { readonly readOnly?: boolean }
+> = ({ value, onChange, readOnly }) => {
   const [innerValue, setInnerValue] = useState<PartialBlindType[]>(
     value || [
       {
@@ -218,7 +217,7 @@ export const BlindList: FC<Control<Blinds | undefined>> = ({
             flex={{ col: true, gap: 2, align: "center", width: "100%" }}
             key={index}
           >
-            {selectedItemId === item.id && (
+            {selectedItemId === item.id && !readOnly && (
               <Box flex={{ gap: 2 }}>
                 <Button
                   size="xxSmall"
@@ -272,6 +271,7 @@ export const BlindList: FC<Control<Blinds | undefined>> = ({
                     <Box flex={{ gap: 2, align: "center" }}>
                       <Typography.Text size="xSmall">Время</Typography.Text>
                       <input
+                        readOnly={readOnly}
                         key={`${item.id}-blind-duration`}
                         className={blindListInputCls}
                         type="number"
@@ -290,6 +290,7 @@ export const BlindList: FC<Control<Blinds | undefined>> = ({
                     <Box flex={{ gap: 2 }}>
                       <Typography.Text size="xSmall">SB</Typography.Text>
                       <input
+                        readOnly={readOnly}
                         key={`${item.id}-blind-smallBlind`}
                         className={blindListInputCls}
                         type="number"
@@ -308,6 +309,7 @@ export const BlindList: FC<Control<Blinds | undefined>> = ({
                     <Box flex={{ gap: 2, align: "center" }}>
                       <Typography.Text size="xSmall">BB</Typography.Text>
                       <input
+                        readOnly={readOnly}
                         key={`${item.id}-blind-bigBlind`}
                         className={blindListInputCls}
                         type="number"
@@ -326,6 +328,7 @@ export const BlindList: FC<Control<Blinds | undefined>> = ({
                     <Box flex={{ gap: 2, align: "center" }}>
                       <Typography.Text size="xSmall">Ante</Typography.Text>
                       <Checkbox
+                        disabled={readOnly}
                         size="small"
                         checked={item.ante}
                         onCheckedChange={() =>
@@ -344,6 +347,7 @@ export const BlindList: FC<Control<Blinds | undefined>> = ({
                         key={`${item.id}-break-duration`}
                         className={blindListInputCls}
                         type="number"
+                        readOnly={readOnly}
                         value={item.duration || undefined}
                         onChange={(e) =>
                           changeBreakItem(
@@ -360,31 +364,33 @@ export const BlindList: FC<Control<Blinds | undefined>> = ({
             </SimpleList.Card>
           </Box>
         ))}
-        <Box flex={{ gap: 2 }}>
-          <Button
-            size="xxSmall"
-            width={60}
-            onClick={() =>
-              addItem({
-                type: "lvl",
-                id: innerValue.length + 1,
-              })
-            }
-          >
-            +LVL
-          </Button>
-          {innerValue.length !== 0 && (
+        {!readOnly && (
+          <Box flex={{ gap: 2 }}>
             <Button
               size="xxSmall"
               width={60}
               onClick={() =>
-                addItem({ type: "break", id: innerValue.length + 1 })
+                addItem({
+                  type: "lvl",
+                  id: innerValue.length + 1,
+                })
               }
             >
-              +Break
+              +LVL
             </Button>
-          )}
-        </Box>
+            {innerValue.length !== 0 && (
+              <Button
+                size="xxSmall"
+                width={60}
+                onClick={() =>
+                  addItem({ type: "break", id: innerValue.length + 1 })
+                }
+              >
+                +Break
+              </Button>
+            )}
+          </Box>
+        )}
       </Box>
     </Box>
   );
