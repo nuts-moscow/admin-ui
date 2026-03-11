@@ -40,3 +40,13 @@ export const launchTournament = async (
     status: "InProgress",
   });
 };
+
+export const completeTournament = async (
+  environment: Environment,
+  request: UpdateTournamentRequest,
+): Promise<ShortTournament[]> => {
+  return updateTournament(environment, {
+    ...request,
+    status: "Completed",
+  });
+};

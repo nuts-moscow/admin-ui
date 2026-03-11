@@ -7,7 +7,10 @@ import { Typography } from "@/components/Typography/Typography";
 import { Modal, WithModalProps, useModal } from "@/components/Modal/Modal";
 import { TournamentInfoResponse } from "@/core/states/tournaments/requests/getTournament";
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
-import { launchTournament } from "@/core/states/tournaments/requests/updateTournament";
+import {
+  completeTournament,
+  launchTournament,
+} from "@/core/states/tournaments/requests/updateTournament";
 import { refetchTournament } from "@/core/states/tournaments/hooks/useTournament";
 
 export interface TournamentStateProps {
@@ -15,6 +18,10 @@ export interface TournamentStateProps {
 }
 
 interface LaunchTournamentConfirmModalProps extends WithModalProps {
+  readonly tournament: TournamentInfoResponse;
+}
+
+interface CompleteTournamentConfirmModalProps extends WithModalProps {
   readonly tournament: TournamentInfoResponse;
 }
 
@@ -86,16 +93,88 @@ const LaunchTournamentConfirmModal: FC<LaunchTournamentConfirmModalProps> = ({
   );
 };
 
+const CompleteTournamentConfirmModal: FC<CompleteTournamentConfirmModalProps> = ({
+  close,
+  tournament,
+}) => {
+  const environment = useEnvironment();
+  const [isCompleting, setIsCompleting] = useState(false);
+
+  const handleCompleteTournament = async () => {
+    if (!tournament.structure || isCompleting) {
+      return;
+    }
+    setIsCompleting(true);
+    try {
+      await completeTournament(environment, {
+        id: tournament.id,
+        name: tournament.name,
+        date: tournament.date,
+        structure: tournament.structure,
+        status: tournament.status,
+      });
+      refetchTournament();
+      close();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsCompleting(false);
+    }
+  };
+
+  return (
+    <>
+      <Modal.Title showCloseButton>Подтверждение</Modal.Title>
+      <Modal.Content minWidth={420}>
+        <Box flex={{ col: true, gap: 4 }}>
+          <Typography.Text type="secondary" size="small">
+            Завершить турнир "{tournament.name}"?
+          </Typography.Text>
+          <Box flex={{ gap: 4, width: "100%" }}>
+            <Button
+              type="secondary"
+              htmlType="button"
+              onClick={() => close()}
+              flexItem={{ flex: 1 }}
+              disabled={isCompleting}
+            >
+              Отмена
+            </Button>
+            <Button
+              type="error"
+              htmlType="button"
+              onClick={handleCompleteTournament}
+              flexItem={{ flex: 1 }}
+              loading={isCompleting}
+              style={{
+                backgroundColor: "#dc2626",
+                color: "#ffffff",
+                border: "1px solid #dc2626",
+              }}
+            >
+              Завершить турнир
+            </Button>
+          </Box>
+        </Box>
+      </Modal.Content>
+    </>
+  );
+};
+
 export const TournamentState: FC<TournamentStateProps> = ({
   tournament,
 }) => {
   const [LaunchConfirmModal, openLaunchConfirmModal] = useModal(
     LaunchTournamentConfirmModal
   );
+  const [CompleteConfirmModal, openCompleteConfirmModal] = useModal(
+    CompleteTournamentConfirmModal
+  );
 
   return (
     <Box flex={{ col: true, gap: 8, width: "100%" }}>
       <LaunchConfirmModal tournament={tournament} />
+      <CompleteConfirmModal tournament={tournament} />
       {tournament.status === "RegistrationOpen" && (
         <Box flex={{ justify: "center", width: "100%" }}>
           <Button
@@ -109,6 +188,25 @@ export const TournamentState: FC<TournamentStateProps> = ({
             }}
           >
             Начать турнир
+          </Button>
+        </Box>
+      )}
+      {tournament.status === "InProgress" && (
+        <Box flex={{ justify: "center", width: "100%", gap: 3 }}>
+          <Button
+            type="error"
+            size="medium"
+            onClick={() => openCompleteConfirmModal()}
+            style={{
+              backgroundColor: "#dc2626",
+              color: "#ffffff",
+              border: "1px solid #dc2626",
+            }}
+          >
+            Завершить турнир
+          </Button>
+          <Button type="secondary" size="medium">
+            Пауза
           </Button>
         </Box>
       )}

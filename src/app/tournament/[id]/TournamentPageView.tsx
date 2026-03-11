@@ -32,6 +32,55 @@ export const TournamentPageView: FC<TournamentPageViewProps> = ({
     () => clientTournament || tournament,
     [clientTournament, tournament]
   );
+  const tabs = useMemo(() => {
+    if (currentTournament.status === "Completed") {
+      return [
+        {
+          title: "Касса",
+          key: "cash",
+          content: <TournamentCash tournament={currentTournament} />,
+        },
+        {
+          title: "Результаты",
+          key: "results",
+          content: <TournamentResults tournament={currentTournament} />,
+        },
+      ];
+    }
+
+    return [
+      {
+        title: "Игроки",
+        key: "players",
+        content: <TournamentPlayers tournament={currentTournament} />,
+      },
+      {
+        title: "Столы",
+        key: "tables",
+        content: <TournamentTables tournament={currentTournament} />,
+      },
+      {
+        title: "Турнир",
+        key: "state",
+        content: <TournamentState tournament={currentTournament} />,
+      },
+      {
+        title: "Рибаи",
+        key: "reentries",
+        content: <TournamentReentries tournament={currentTournament} />,
+      },
+      {
+        title: "Касса",
+        key: "cash",
+        content: <TournamentCash tournament={currentTournament} />,
+      },
+      {
+        title: "Результаты",
+        key: "results",
+        content: <TournamentResults tournament={currentTournament} />,
+      },
+    ];
+  }, [currentTournament]);
 
   return (
     <>
@@ -67,38 +116,7 @@ export const TournamentPageView: FC<TournamentPageViewProps> = ({
             tabsType="tab"
             tabsPadding={[4, 0]}
             tabsJustify
-            tabs={[
-              {
-                title: "Игроки",
-                key: "players",
-                content: <TournamentPlayers tournament={currentTournament} />,
-              },
-              {
-                title: "Столы",
-                key: "tables",
-                content: <TournamentTables tournament={currentTournament} />,
-              },
-              {
-                title: "Турнир",
-                key: "state",
-                content: <TournamentState tournament={currentTournament} />,
-              },
-              {
-                title: "Рибаи",
-                key: "reentries",
-                content: <TournamentReentries tournament={currentTournament} />,
-              },
-              {
-                title: "Касса",
-                key: "cash",
-                content: <TournamentCash tournament={currentTournament} />,
-              },
-              {
-                title: "Результаты",
-                key: "results",
-                content: <TournamentResults tournament={currentTournament} />,
-              },
-            ]}
+            tabs={tabs}
           ></Box>
         </PageLayout>
       </Box>
