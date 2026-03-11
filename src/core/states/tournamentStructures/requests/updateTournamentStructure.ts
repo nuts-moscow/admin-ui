@@ -2,7 +2,7 @@ import { Environment } from "@/core/states/environment/Environment";
 
 import { TournamentStructure } from "../common/TournamentStructure";
 import { securedFetch } from "@/core/utils/misc/securedFetch";
-import { MakeTournamentStructureRequest } from "../../tournaments/types";
+import { MakeTournamentStructureRequest } from "../../tournaments/common/UpdateTournamentRequest";
 
 export interface UpdateTournamentStructureRequest
   extends MakeTournamentStructureRequest {
