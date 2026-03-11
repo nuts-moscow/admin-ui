@@ -70,3 +70,18 @@ export const setPlayerInGamePaidStatus = async (
     freeEntryUsed: 0,
   });
 };
+
+export const setPlayerReentryPayments = async (
+  environment: Environment,
+  tournamentId: number,
+  playerId: number,
+  reentryByPaymentMethod: Array<[PaymentMethod, number]>
+): Promise<InGamePlayerState> => {
+  return updatePlayerState(environment, {
+    tournamentId,
+    playerId,
+    reentryByPaymentMethod,
+    freeReentryUsed: 0,
+    freeEntryUsed: 0,
+  });
+};

@@ -21,4 +21,5 @@ export interface InGamePlayerState {
   readonly freeEntryCount: number;
   readonly freeReentryCount: number;
   readonly placement?: number;
+  readonly unpaidReentryCount: number
 }

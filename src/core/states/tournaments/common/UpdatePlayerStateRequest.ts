@@ -13,6 +13,7 @@ export interface UpdatePlayerStateRequest {
   readonly reentyPaymentMethod?: PaymentMethod;
   readonly tableId?: number;
   readonly reentryCount?: number;
+  readonly reentryByPaymentMethod?: Array<[PaymentMethod, number]>;
   readonly bountyCount?: number;
   readonly paidReentryCount?: number;
   readonly bonuses?: InGameBonusUpdateRequest[];
