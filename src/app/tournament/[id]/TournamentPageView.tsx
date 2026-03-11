@@ -64,11 +64,15 @@ export const TournamentPageView: FC<TournamentPageViewProps> = ({
         key: "state",
         content: <TournamentState tournament={currentTournament} />,
       },
-      {
-        title: "Рибаи",
-        key: "reentries",
-        content: <TournamentReentries tournament={currentTournament} />,
-      },
+      ...(currentTournament.status !== "RegistrationOpen"
+        ? [
+            {
+              title: "Ребай",
+              key: "reentries",
+              content: <TournamentReentries tournament={currentTournament} />,
+            },
+          ]
+        : []),
       {
         title: "Касса",
         key: "cash",

@@ -10,15 +10,15 @@ export type Bonus = "EarlyBird" | "Hookah" | "Diller";
 
 export interface InGamePlayerState {
   readonly playerId: number;
+  // Kept for current UI rendering compatibility.
   readonly playerName: string;
   readonly status: PlayerStatus;
   readonly tableId?: number;
   readonly entyPaymentMethod?: PaymentMethod;
-  readonly reentryCount: number;
-  readonly reentyPaymentMethod?: PaymentMethod;
+  readonly reentryByPaymentMethod?: Array<[PaymentMethod, number]>;
   readonly bountyCount: number;
-  readonly paidReentryCount: number;
   readonly bonuses?: Array<[Bonus, number]>;
+  readonly freeEntryCount: number;
   readonly freeReentryCount: number;
-  readonly freeEntryCount?: number;
+  readonly placement?: number;
 }
