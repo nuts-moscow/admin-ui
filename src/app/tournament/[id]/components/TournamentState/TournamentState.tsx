@@ -12,6 +12,7 @@ import {
   launchTournament,
 } from "@/core/states/tournaments/requests/updateTournament";
 import { refetchTournament } from "@/core/states/tournaments/hooks/useTournament";
+import { TournamentInfoForm } from "./TournamentInfoForm";
 
 export interface TournamentStateProps {
   readonly tournament: TournamentInfoResponse;
@@ -210,7 +211,7 @@ export const TournamentState: FC<TournamentStateProps> = ({
           </Button>
         </Box>
       )}
-      <Typography.Text>Состояние турнира</Typography.Text>
+      <TournamentInfoForm tournament={tournament} />
     </Box>
   );
 };

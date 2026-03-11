@@ -2,6 +2,7 @@ import { securedFetch } from "@/core/utils/misc/securedFetch";
 import { Environment } from "../../environment/Environment";
 import { UpdateTournamentRequest } from "../common/UpdateTournamentRequest";
 import { ShortTournament } from "./getTournaments";
+import { Blinds } from "@/core/states/tournamentStructures/common/BlindType";
 
 export const updateTournament = async (
   environment: Environment,
@@ -48,5 +49,19 @@ export const completeTournament = async (
   return updateTournament(environment, {
     ...request,
     status: "Completed",
+  });
+};
+
+export const updateStructure = async (
+  environment: Environment,
+  request: UpdateTournamentRequest,
+  blindsStructure?: Blinds
+): Promise<ShortTournament[]> => {
+  return updateTournament(environment, {
+    ...request,
+    structure: {
+      ...request.structure,
+      blindsStructure,
+    },
   });
 };
