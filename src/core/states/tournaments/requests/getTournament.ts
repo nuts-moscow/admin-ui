@@ -1,12 +1,14 @@
 import { securedFetch } from "@/core/utils/misc/securedFetch";
 import { Environment } from "../../environment/Environment";
 import { TournamentStatus } from "../common/TournamentStatus";
+import { TournamentsStructureResponse } from "../common/TournamentsStructureResponse";
 
 export interface TournamentInfoResponse {
   readonly id: number;
   readonly name: string;
   readonly status: TournamentStatus;
   readonly date: number;
+  readonly structure?: TournamentsStructureResponse;
 }
 
 export const getTournament = async (

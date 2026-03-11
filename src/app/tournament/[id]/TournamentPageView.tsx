@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useState } from "react";
+import { FC, useMemo, useState } from "react";
 import { Box } from "@/components/Box/Box";
 import { PageHeader } from "@/components/PageHeader/PageHeader";
 import { PageLayout } from "@/components/PageLayout/PageLayout";
@@ -17,6 +17,7 @@ import { TournamentInfoResponse } from "@/core/states/tournaments/requests/getTo
 import { Typography } from "@/components/Typography/Typography";
 import { Formatter } from "@/components/Formatter/Formatter";
 import { tournamentStatusLabels } from "@/core/states/tournaments/common/TournamentStatus";
+import { useTournament } from "@/core/states/tournaments/hooks/useTournament";
 
 export interface TournamentPageViewProps {
   readonly tournament: TournamentInfoResponse;
@@ -26,6 +27,11 @@ export const TournamentPageView: FC<TournamentPageViewProps> = ({
   tournament,
 }) => {
   const [activeTab, setActiveTab] = useState<string>("players");
+  const { data: clientTournament } = useTournament(String(tournament.id));
+  const currentTournament = useMemo(
+    () => clientTournament || tournament,
+    [clientTournament, tournament]
+  );
 
   return (
     <>
@@ -37,10 +43,10 @@ export const TournamentPageView: FC<TournamentPageViewProps> = ({
           title={
             <>
               {tournament.name}{" "}
-              <Formatter.dateTime value={tournament.date} type="date" />
+              <Formatter.dateTime value={currentTournament.date} type="date" />
             </>
           }
-          subtitle={`Статус: ${tournamentStatusLabels[tournament.status]}`}
+          subtitle={`Статус: ${tournamentStatusLabels[currentTournament.status]}`}
           extra={
             <Box flex={{ gap: 2, align: "center" }}>
               <Link href="/">
@@ -65,32 +71,32 @@ export const TournamentPageView: FC<TournamentPageViewProps> = ({
               {
                 title: "Игроки",
                 key: "players",
-                content: <TournamentPlayers tournament={tournament} />,
+                content: <TournamentPlayers tournament={currentTournament} />,
               },
               {
                 title: "Столы",
                 key: "tables",
-                content: <TournamentTables tournament={tournament} />,
+                content: <TournamentTables tournament={currentTournament} />,
               },
               {
                 title: "Турнир",
                 key: "state",
-                content: <TournamentState tournament={tournament} />,
+                content: <TournamentState tournament={currentTournament} />,
               },
               {
                 title: "Рибаи",
                 key: "reentries",
-                content: <TournamentReentries tournament={tournament} />,
+                content: <TournamentReentries tournament={currentTournament} />,
               },
               {
                 title: "Касса",
                 key: "cash",
-                content: <TournamentCash tournament={tournament} />,
+                content: <TournamentCash tournament={currentTournament} />,
               },
               {
                 title: "Результаты",
                 key: "results",
-                content: <TournamentResults tournament={tournament} />,
+                content: <TournamentResults tournament={currentTournament} />,
               },
             ]}
           ></Box>
