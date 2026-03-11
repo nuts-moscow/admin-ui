@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useState } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 import { Box } from "@/components/Box/Box";
 import { Button } from "@/components/Button/Button";
 import { Typography } from "@/components/Typography/Typography";
@@ -29,8 +29,6 @@ interface PayPlayerModalProps extends WithModalProps {
   readonly player?: InGamePlayerState;
 }
 
-const PAYMENT_METHOD_OPTIONS: PaymentMethod[] = ["Cache", "CreditCard", "Free"];
-
 const statusLabels: Record<string, string> = {
   InGamePaid: "В игре",
   InGameNotPaid: "В игре",
@@ -45,6 +43,19 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({
   const environment = useEnvironment();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("Cache");
   const [isLoading, setIsLoading] = useState(false);
+  const paymentMethodOptions = useMemo<PaymentMethod[]>(() => {
+    const baseOptions: PaymentMethod[] = ["Cache", "CreditCard"];
+    if ((player?.freeEntryCount ?? 0) > 0) {
+      return [...baseOptions, "Free"];
+    }
+    return baseOptions;
+  }, [player?.freeEntryCount]);
+
+  useEffect(() => {
+    if (paymentMethod === "Free" && (player?.freeEntryCount ?? 0) <= 0) {
+      setPaymentMethod("Cache");
+    }
+  }, [paymentMethod, player?.freeEntryCount]);
 
   const handleSave = async () => {
     if (!player || isLoading) {
@@ -86,7 +97,7 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({
               color: "var(--text-primary)",
             }}
           >
-            {PAYMENT_METHOD_OPTIONS.map((method) => (
+            {paymentMethodOptions.map((method) => (
               <option key={method} value={method}>
                 {method}
               </option>

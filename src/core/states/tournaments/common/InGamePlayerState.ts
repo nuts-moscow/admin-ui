@@ -20,4 +20,5 @@ export interface InGamePlayerState {
   readonly paidReentryCount: number;
   readonly bonuses?: Array<[Bonus, number]>;
   readonly freeReentryCount: number;
+  readonly freeEntryCount?: number;
 }

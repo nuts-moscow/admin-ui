@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 import { Box } from "@/components/Box/Box";
 import { Button } from "@/components/Button/Button";
 import { Typography } from "@/components/Typography/Typography";
@@ -38,8 +38,6 @@ interface SetArrivedAndPaidConfirmModalProps extends WithModalProps {
 }
 
 const TABLE_OPTIONS = Array.from({ length: 10 }, (_, i) => i + 1);
-const PAYMENT_METHOD_OPTIONS: PaymentMethod[] = ["Cache", "CreditCard", "Free"];
-
 const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
   close,
   tournamentId,
@@ -51,11 +49,24 @@ const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
     undefined,
   );
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("Cache");
+  const paymentMethodOptions = useMemo<PaymentMethod[]>(() => {
+    const baseOptions: PaymentMethod[] = ["Cache", "CreditCard"];
+    if ((player?.freeEntryCount ?? 0) > 0) {
+      return [...baseOptions, "Free"];
+    }
+    return baseOptions;
+  }, [player?.freeEntryCount]);
 
   useEffect(() => {
     setSelectedTableId(undefined);
     setPaymentMethod("Cache");
   }, [player?.playerId]);
+
+  useEffect(() => {
+    if (paymentMethod === "Free" && (player?.freeEntryCount ?? 0) <= 0) {
+      setPaymentMethod("Cache");
+    }
+  }, [paymentMethod, player?.freeEntryCount]);
 
   const handleSave = async () => {
     if (!player || isLoading) {
@@ -97,7 +108,7 @@ const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
               color: "var(--text-primary)",
             }}
           >
-            {PAYMENT_METHOD_OPTIONS.map((method) => (
+            {paymentMethodOptions.map((method) => (
               <option key={method} value={method}>
                 {method}
               </option>
