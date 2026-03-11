@@ -22,6 +22,11 @@ export const tableListItemCls = style({
   minWidth: 100,
 });
 
+export const tableListItemActiveCls = style({
+  backgroundColor: "rgba(255, 196, 2, 0.22)",
+  border: "1px solid rgba(255, 196, 2, 0.55)",
+});
+
 export const tableListItemBadgeCls = style({
   display: "flex",
   alignItems: "center",

@@ -1,11 +1,14 @@
 import { TournamentStatus } from "./common/TournamentStatus";
-import { Bonus, PaymentMethod, PlayerStatus } from "./common/InGamePlayerState";
 export type {
   Bonus,
   PaymentMethod,
   PlayerStatus,
   InGamePlayerState,
 } from "./common/InGamePlayerState";
+export type {
+  UpdatePlayerStateRequest,
+  InGameBonusUpdateRequest,
+} from "./common/UpdatePlayerStateRequest";
 
 export interface MakeTournamentStructureRequest {
   readonly name: string;
@@ -27,19 +30,6 @@ export interface UpdateTournamentRequest {
   readonly date: number;
   readonly structure: MakeTournamentStructureRequest;
   readonly status: TournamentStatus;
-}
-
-export interface UpdatePlayerStateRequest {
-  readonly tournamentId: string;
-  readonly playerId: number;
-  readonly status?: PlayerStatus;
-  readonly entyPaymentMethod?: PaymentMethod;
-  readonly reentyPaymentMethod?: PaymentMethod;
-  readonly tableId?: number;
-  readonly reentryCount?: number;
-  readonly bountyCount?: number;
-  readonly paidReentryCount?: number;
-  readonly bonuses?: Array<{ bonus: Bonus; count: number }>;
 }
 
 export interface Blind {

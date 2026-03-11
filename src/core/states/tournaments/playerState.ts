@@ -1,7 +1,7 @@
 import { queryState } from "@/core/stateManager/factories/queryState";
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
 import { Environment } from "@/core/states/environment/Environment";
-import { UpdatePlayerStateRequest } from "./types";
+import { UpdatePlayerStateRequest } from "./common/UpdatePlayerStateRequest";
 import { InGamePlayerState } from "./common/InGamePlayerState";
 import { securedFetch } from "@/core/utils/misc/securedFetch";
 

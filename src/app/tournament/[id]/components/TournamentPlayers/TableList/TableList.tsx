@@ -1,29 +1,60 @@
-import { FC } from "react";
+import { FC, useMemo } from "react";
 import { Typography } from "@/components/Typography/Typography";
+import { clsx } from "clsx";
 import {
   tableListCls,
+  tableListItemActiveCls,
   tableListItemCls,
   tableListItemBadgeCls,
 } from "./TableList.css";
 import { Box } from "@/components/Box/Box";
+import { useTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
 
 export interface TableListItem {
   readonly tableNumber: number;
   readonly currentPlayers: number;
-  readonly maxPlayers: number;
 }
 
-const TABLES: TableListItem[] = Array.from({ length: 10 }, (_, i) => ({
-  tableNumber: i + 1,
-  currentPlayers: 5,
-  maxPlayers: 10,
-}));
+const MIN_TABLES_COUNT = 10;
 
-export const TableList: FC = () => {
+export interface TableListProps {
+  readonly tournamentId: string;
+}
+
+export const TableList: FC<TableListProps> = ({ tournamentId }) => {
+  const { data: players } = useTournamentPlayerState(tournamentId);
+  const tables = useMemo<TableListItem[]>(() => {
+    const byTableId = new Map<number, number>();
+
+    (players ?? []).forEach((player) => {
+      if (!player.tableId) {
+        return;
+      }
+      byTableId.set(player.tableId, (byTableId.get(player.tableId) ?? 0) + 1);
+    });
+
+    const maxTableNumberFromData = Math.max(0, ...Array.from(byTableId.keys()));
+    const totalTables = Math.max(MIN_TABLES_COUNT, maxTableNumberFromData);
+
+    return Array.from({ length: totalTables }, (_, index) => {
+      const tableNumber = index + 1;
+      return {
+        tableNumber,
+        currentPlayers: byTableId.get(tableNumber) ?? 0,
+      };
+    });
+  }, [players]);
+
   return (
     <Box className={tableListCls}>
-      {TABLES.map((item) => (
-        <Box key={item.tableNumber} className={tableListItemCls}>
+      {tables.map((item) => (
+        <Box
+          key={item.tableNumber}
+          className={clsx(
+            tableListItemCls,
+            item.currentPlayers > 0 && tableListItemActiveCls
+          )}
+        >
           <Typography.Text
             type="primary"
             size="small"
@@ -32,7 +63,7 @@ export const TableList: FC = () => {
             {item.tableNumber}
           </Typography.Text>
           <Typography.Text type="secondary" size="small">
-            {item.currentPlayers}/{item.maxPlayers}
+            {item.currentPlayers}/10
           </Typography.Text>
         </Box>
       ))}

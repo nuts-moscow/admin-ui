@@ -17,10 +17,10 @@ export const TournamentPlayers: FC<TournamentPlayersProps> = ({
 }) => {
   return (
     <Box flex={{ col: true, gap: 6, width: "100%" }}>
-      <TableList />
+      <TableList tournamentId={String(tournament.id)} />
       <div className={playerListCardContainerCls}>
         <WaitingListPlayers tournamentId={String(tournament.id)} />
-        <InGamePlayers />
+        <InGamePlayers tournamentId={String(tournament.id)} />
       </div>
     </Box>
   );

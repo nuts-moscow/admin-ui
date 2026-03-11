@@ -48,7 +48,7 @@ export const playerListRowCls = style({
 });
 
 export const playerListRowHighlightCls = style({
-  backgroundColor: "rgba(255, 204, 0, 0.12)",
+  backgroundColor: "rgba(220, 38, 38, 0.12)",
 });
 
 export const playerListRowMutedCls = style({
