@@ -1,0 +1,36 @@
+import { style } from "@vanilla-extract/css";
+import { getGutter } from "@/core/utils/style/gutter";
+
+export const tableListCls = style({
+  display: "flex",
+  flexWrap: "wrap",
+  justifyContent: "center",
+  width: "100%",
+  gap: getGutter(2),
+});
+
+export const tableListItemCls = style({
+  display: "flex",
+  flexDirection: "column",
+  cursor: "pointer",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: getGutter(1.5),
+  padding: getGutter([3, 4]),
+  backgroundColor: "rgba(94, 94, 94, 0.22)",
+  borderRadius: 24,
+  minWidth: 100,
+});
+
+export const tableListItemBadgeCls = style({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  width: 40,
+  height: 40,
+  borderRadius: "50%",
+  backgroundColor: "var(--background-primary)",
+  fontWeight: "bold",
+  fontSize: 16,
+  color: "var(--text-primary)",
+});

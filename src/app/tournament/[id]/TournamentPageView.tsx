@@ -59,10 +59,11 @@ export const TournamentPageView: FC<TournamentPageViewProps> = ({
             width="100%"
             onTabChange={(tabKey) => setActiveTab(tabKey)}
             tabsType="tab"
+            tabsPadding={[4, 0]}
             tabsJustify
             tabs={[
               {
-                title: "Список",
+                title: "Игроки",
                 key: "players",
                 content: <TournamentPlayers tournament={tournament} />,
               },

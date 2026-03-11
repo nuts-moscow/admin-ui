@@ -2,9 +2,11 @@
 
 import { FC } from "react";
 import { Box } from "@/components/Box/Box";
-import { Button } from "@/components/Button/Button";
-import { Typography } from "@/components/Typography/Typography";
 import { TournamentInfoResponse } from "@/core/states/tournaments/requests/getTournament";
+import { TableList } from "./TableList/TableList";
+import { WaitingListPlayers } from "./WaitingListPlayers/WaitingListPlayers";
+import { InGamePlayers } from "./InGamePlayers/InGamePlayers";
+import { playerListCardContainerCls } from "./PlayerListCard/PlayerListCard.css";
 
 export interface TournamentPlayersProps {
   readonly tournament: TournamentInfoResponse;
@@ -14,13 +16,12 @@ export const TournamentPlayers: FC<TournamentPlayersProps> = ({
   tournament,
 }) => {
   return (
-    <Box flex={{ col: true, gap: 8, width: "100%" }}>
-      <Button type="primary" size="medium">
-        Добавить игрока
-      </Button>
-      <Box flex={{ col: true, gap: 2, width: "100%" }}>
-        <Typography.Text>Участники турнира</Typography.Text>
-      </Box>
+    <Box flex={{ col: true, gap: 6, width: "100%" }}>
+      <TableList />
+      <div className={playerListCardContainerCls}>
+        <WaitingListPlayers tournamentId={String(tournament.id)} />
+        <InGamePlayers />
+      </div>
     </Box>
   );
 };

@@ -1,12 +1,13 @@
 import { queryState } from "@/core/stateManager/factories/queryState";
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
 import { Environment } from "@/core/states/environment/Environment";
-import { InGamePlayerState, UpdatePlayerStateRequest } from "./types";
+import { UpdatePlayerStateRequest } from "./types";
+import { InGamePlayerState } from "./common/InGamePlayerState";
 import { securedFetch } from "@/core/utils/misc/securedFetch";
 
 export const getPlayerState = async (
   environment: Environment,
-  tournamentId: string
+  tournamentId: string,
 ): Promise<InGamePlayerState[]> => {
   return securedFetch<undefined, InGamePlayerState[]>({
     method: "GET",
@@ -26,7 +27,7 @@ export const getPlayerState = async (
 
 export const updatePlayerState = async (
   environment: Environment,
-  request: UpdatePlayerStateRequest
+  request: UpdatePlayerStateRequest,
 ): Promise<InGamePlayerState> => {
   return securedFetch<UpdatePlayerStateRequest, InGamePlayerState>({
     method: "POST",
