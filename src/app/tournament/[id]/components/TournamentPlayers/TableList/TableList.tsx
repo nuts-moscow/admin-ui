@@ -37,7 +37,7 @@ export const TableList: FC<TableListProps> = ({
     const byTableId = new Map<number, number>();
 
     (players ?? []).forEach((player) => {
-      if (!player.tableId) {
+      if (!player.tableId || player.status === "Out") {
         return;
       }
       byTableId.set(player.tableId, (byTableId.get(player.tableId) ?? 0) + 1);

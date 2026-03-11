@@ -17,6 +17,8 @@ import { useEnvironment } from "@/core/states/environment/useEnvironment";
 import {
   setPlayerInGamePaidStatus,
   setPlayerTableId,
+  setTournamentPlayerKnockedOut,
+  setTournamentPlayerOutStatus,
 } from "@/core/states/tournaments/requests/updatePlayerState";
 import { refetchTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
 
@@ -27,6 +29,12 @@ export interface TournamentTablesProps {
 interface PayPlayerModalProps extends WithModalProps {
   readonly tournamentId: string;
   readonly player?: InGamePlayerState;
+}
+
+interface SetOutPlayerModalProps extends WithModalProps {
+  readonly tournamentId: string;
+  readonly bustedPlayer?: InGamePlayerState;
+  readonly players: InGamePlayerState[];
 }
 
 const statusLabels: Record<string, string> = {
@@ -130,6 +138,122 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({
   );
 };
 
+const SetOutPlayerModal: FC<SetOutPlayerModalProps> = ({
+  close,
+  tournamentId,
+  bustedPlayer,
+  players,
+}) => {
+  const environment = useEnvironment();
+  const [isLoading, setIsLoading] = useState(false);
+  const candidates = useMemo(
+    () =>
+      players.filter(
+        (player) =>
+          player.status !== "Out" && player.playerId !== bustedPlayer?.playerId
+      ),
+    [players, bustedPlayer?.playerId]
+  );
+  const [selectedKillerId, setSelectedKillerId] = useState<number | undefined>(
+    undefined
+  );
+
+  useEffect(() => {
+    setSelectedKillerId(candidates[0]?.playerId);
+  }, [bustedPlayer?.playerId, candidates]);
+
+  const handleSave = async () => {
+    if (!bustedPlayer || !selectedKillerId || isLoading) {
+      return;
+    }
+    const killer = candidates.find((player) => player.playerId === selectedKillerId);
+    if (!killer) {
+      return;
+    }
+    setIsLoading(true);
+    try {
+      await setTournamentPlayerOutStatus(
+        environment,
+        Number(tournamentId),
+        bustedPlayer.playerId
+      );
+      await setTournamentPlayerKnockedOut(
+        environment,
+        Number(tournamentId),
+        killer.playerId,
+        killer.bountyCount
+      );
+      refetchTournamentPlayerState();
+      close();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <Modal.Title showCloseButton>Игрок вылетел</Modal.Title>
+      <Modal.Content minWidth={440}>
+        <Box flex={{ col: true, gap: 4 }}>
+          <Typography.Text type="secondary" size="small">
+            {bustedPlayer
+              ? `Кто выбил игрока "${bustedPlayer.playerName}"?`
+              : "Выбери игрока"}
+          </Typography.Text>
+          {candidates.length > 0 ? (
+            <select
+              value={selectedKillerId}
+              onChange={(event) => setSelectedKillerId(Number(event.target.value))}
+              style={{
+                width: "100%",
+                borderRadius: 12,
+                border: "1px solid var(--border-color)",
+                minHeight: 44,
+                padding: "0 12px",
+                backgroundColor: "var(--background-primary)",
+                color: "var(--text-primary)",
+              }}
+            >
+              {candidates.map((player) => (
+                <option key={player.playerId} value={player.playerId}>
+                  {player.playerName} (ID: {player.playerId})
+                </option>
+              ))}
+            </select>
+          ) : (
+            <Typography.Text type="secondary" size="small">
+              Нет доступных игроков для выбора
+            </Typography.Text>
+          )}
+          <Box flex={{ gap: 4, width: "100%" }}>
+            <Button
+              type="secondary"
+              htmlType="button"
+              onClick={() => close()}
+              flexItem={{ flex: 1 }}
+              disabled={isLoading}
+            >
+              Отмена
+            </Button>
+            <Button
+              type="error"
+              htmlType="button"
+              onClick={handleSave}
+              flexItem={{ flex: 1 }}
+              loading={isLoading}
+              disabled={!bustedPlayer || !selectedKillerId || candidates.length === 0}
+            >
+              Сохранить
+            </Button>
+          </Box>
+        </Box>
+      </Modal.Content>
+    </>
+  );
+};
+
 export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
   const environment = useEnvironment();
   const [selectedTableId, setSelectedTableId] = useState<number | undefined>(
@@ -141,13 +265,21 @@ export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
   const [playerToPay, setPlayerToPay] = useState<InGamePlayerState | undefined>(
     undefined
   );
+  const [playerToSetOut, setPlayerToSetOut] = useState<InGamePlayerState | undefined>(
+    undefined
+  );
   const [SetTableModal, openSetTableModal] = useModal(TableSelectModal);
   const [PayPlayerModalConnect, openPayPlayerModal] = useModal(PayPlayerModal);
+  const [SetOutPlayerModalConnect, openSetOutPlayerModal] =
+    useModal(SetOutPlayerModal);
   const { data: nonRegisteredPlayers } = useNonRegisteredTournamentPlayerState(
     String(tournament.id)
   );
   const tablePlayers = (nonRegisteredPlayers ?? []).filter(
-    (player) => !!selectedTableId && player.tableId === selectedTableId
+    (player) =>
+      !!selectedTableId &&
+      player.tableId === selectedTableId &&
+      player.status !== "Out"
   );
 
   return (
@@ -173,6 +305,11 @@ export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
           );
           refetchTournamentPlayerState();
         }}
+      />
+      <SetOutPlayerModalConnect
+        tournamentId={String(tournament.id)}
+        bustedPlayer={playerToSetOut}
+        players={nonRegisteredPlayers ?? []}
       />
       <TableList
         tournamentId={String(tournament.id)}
@@ -245,6 +382,18 @@ export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
               >
                 Пересадить
               </Button>
+              {tournament.status !== "RegistrationOpen" && player.status !== "Out" && (
+                <Button
+                  type="error"
+                  size="xxSmall"
+                  onClick={() => {
+                    setPlayerToSetOut(player);
+                    openSetOutPlayerModal();
+                  }}
+                >
+                  Вылетел
+                </Button>
+              )}
             </Box>
           </Box>
         ))}

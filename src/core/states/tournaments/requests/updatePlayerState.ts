@@ -85,3 +85,32 @@ export const setPlayerReentryPayments = async (
     freeEntryUsed: 0,
   });
 };
+
+export const setTournamentPlayerOutStatus = async (
+  environment: Environment,
+  tournamentId: number,
+  playerId: number
+): Promise<InGamePlayerState> => {
+  return updatePlayerState(environment, {
+    tournamentId,
+    playerId,
+    status: "Out",
+    freeReentryUsed: 0,
+    freeEntryUsed: 0,
+  });
+};
+
+export const setTournamentPlayerKnockedOut = async (
+  environment: Environment,
+  tournamentId: number,
+  playerId: number,
+  currentBountyCount: number
+): Promise<InGamePlayerState> => {
+  return updatePlayerState(environment, {
+    tournamentId,
+    playerId,
+    bountyCount: currentBountyCount + 1,
+    freeReentryUsed: 0,
+    freeEntryUsed: 0,
+  });
+};
