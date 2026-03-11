@@ -14,9 +14,7 @@ import {
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
 import { addReentry } from "@/core/states/tournaments/requests/addReentry";
 import { refetchTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
-import {
-  addReentryPayment,
-} from "@/core/states/tournaments/requests/addReentryPayment";
+import { addReentryPayment } from "@/core/states/tournaments/requests/addReentryPayment";
 
 export interface TournamentReentriesProps {
   readonly tournament: TournamentInfoResponse;
@@ -135,20 +133,20 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
   const environment = useEnvironment();
   const [isSaving, setIsSaving] = useState(false);
   const [methods, setMethods] = useState<Array<Exclude<PaymentMethod, "Free">>>(
-    []
+    [],
   );
 
   const paidReentryCount = useMemo(
     () =>
       (player?.reentryByPaymentMethod ?? []).reduce(
         (sum, [, count]) => sum + count,
-        0
+        0,
       ),
-    [player?.reentryByPaymentMethod]
+    [player?.reentryByPaymentMethod],
   );
   const toPayReentryCount = useMemo(
     () => Math.max(0, (player?.unpaidReentryCount ?? 0) - paidReentryCount),
-    [player?.unpaidReentryCount, paidReentryCount]
+    [player?.unpaidReentryCount, paidReentryCount],
   );
 
   useEffect(() => {
@@ -157,7 +155,7 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
 
   const handleMethodChange = (
     index: number,
-    value: Exclude<PaymentMethod, "Free">
+    value: Exclude<PaymentMethod, "Free">,
   ) => {
     setMethods((prev) => prev.map((item, i) => (i === index ? value : item)));
   };
@@ -168,14 +166,11 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
     }
     setIsSaving(true);
     try {
-      await addReentryPayment(
-        environment,
-        {
-          tournamentId: Number(tournamentId),
-          playerId: player.playerId,
-          payments: methods,
-        }
-      );
+      await addReentryPayment(environment, {
+        tournamentId: Number(tournamentId),
+        playerId: player.playerId,
+        payments: methods,
+      });
       refetchTournamentPlayerState();
       close();
     } catch (error) {
@@ -198,7 +193,11 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
           <Box flex={{ col: true, gap: 2 }}>
             {methods.map((method, index) => (
               <Box key={index} flex={{ align: "center", gap: 2 }}>
-                <Typography.Text size="small" type="secondary" flexItem={{ minWidth: 70 }}>
+                <Typography.Text
+                  size="small"
+                  type="secondary"
+                  flexItem={{ minWidth: 70 }}
+                >
                   Ребай {index + 1}
                 </Typography.Text>
                 <select
@@ -206,7 +205,7 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
                   onChange={(event) =>
                     handleMethodChange(
                       index,
-                      event.target.value as Exclude<PaymentMethod, "Free">
+                      event.target.value as Exclude<PaymentMethod, "Free">,
                     )
                   }
                   style={{
@@ -266,22 +265,23 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
   const [playerToPayReentries, setPlayerToPayReentries] = useState<
     InGamePlayerState | undefined
   >(undefined);
-  const [AddReentryModalConnect, openAddReentryModal] = useModal(AddReentryModal);
+  const [AddReentryModalConnect, openAddReentryModal] =
+    useModal(AddReentryModal);
   const [PayReentriesModalConnect, openPayReentriesModal] =
     useModal(PayReentriesModal);
   const { data: players } = useNonRegisteredTournamentPlayerState(
-    String(tournament.id)
+    String(tournament.id),
   );
   const rows = useMemo(
     () =>
       [...(players ?? [])].sort((a, b) => {
         const aPaid = (a.reentryByPaymentMethod ?? []).reduce(
           (sum, [, count]) => sum + count,
-          0
+          0,
         );
         const bPaid = (b.reentryByPaymentMethod ?? []).reduce(
           (sum, [, count]) => sum + count,
-          0
+          0,
         );
         const aToPay = Math.max(0, a.unpaidReentryCount - aPaid);
         const bToPay = Math.max(0, b.unpaidReentryCount - bPaid);
@@ -294,7 +294,7 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
         }
         return a.playerId - b.playerId;
       }),
-    [players]
+    [players],
   );
 
   return (
@@ -309,7 +309,10 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
       />
       <Box
         flex={{ width: "100%", align: "center", justify: "space-between" }}
-        style={{ borderBottom: "1px solid rgba(0, 0, 0, 0.16)", paddingBottom: 8 }}
+        style={{
+          borderBottom: "1px solid rgba(0, 0, 0, 0.16)",
+          paddingBottom: 8,
+        }}
       >
         <Typography.Text bold>Статистика ребаев</Typography.Text>
         <Typography.Text bold>{rows.length}</Typography.Text>
@@ -354,10 +357,14 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
           const unpaidReentryCount = player.unpaidReentryCount;
           const paidReentryCount = (player.reentryByPaymentMethod ?? []).reduce(
             (sum, [, count]) => sum + count,
-            0
+            0,
           );
-          const toPayReentryCount = Math.max(0, unpaidReentryCount - paidReentryCount);
-          const totalReentryCount = freeReentryCount + unpaidReentryCount;
+          const toPayReentryCount = Math.max(
+            0,
+            unpaidReentryCount - paidReentryCount,
+          );
+          const totalReentryCount =
+            freeReentryCount + unpaidReentryCount + paidReentryCount;
 
           return (
             <Box
