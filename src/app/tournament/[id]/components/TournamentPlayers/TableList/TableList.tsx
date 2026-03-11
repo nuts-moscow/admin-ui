@@ -6,6 +6,8 @@ import {
   tableListItemActiveCls,
   tableListItemCls,
   tableListItemBadgeCls,
+  tableListItemSelectableCls,
+  tableListItemSelectedCls,
 } from "./TableList.css";
 import { Box } from "@/components/Box/Box";
 import { useTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
@@ -19,9 +21,17 @@ const MIN_TABLES_COUNT = 10;
 
 export interface TableListProps {
   readonly tournamentId: string;
+  readonly selectable?: boolean;
+  readonly selectedTableId?: number;
+  readonly onSelectTable?: (tableId: number) => void;
 }
 
-export const TableList: FC<TableListProps> = ({ tournamentId }) => {
+export const TableList: FC<TableListProps> = ({
+  tournamentId,
+  selectable = false,
+  selectedTableId,
+  onSelectTable,
+}) => {
   const { data: players } = useTournamentPlayerState(tournamentId);
   const tables = useMemo<TableListItem[]>(() => {
     const byTableId = new Map<number, number>();
@@ -52,8 +62,17 @@ export const TableList: FC<TableListProps> = ({ tournamentId }) => {
           key={item.tableNumber}
           className={clsx(
             tableListItemCls,
-            item.currentPlayers > 0 && tableListItemActiveCls
+            item.currentPlayers > 0 && tableListItemActiveCls,
+            selectable && tableListItemSelectableCls,
+            selectedTableId === item.tableNumber && tableListItemSelectedCls
           )}
+          onClick={
+            selectable
+              ? () => {
+                  onSelectTable?.(item.tableNumber);
+                }
+              : undefined
+          }
         >
           <Typography.Text
             type="primary"

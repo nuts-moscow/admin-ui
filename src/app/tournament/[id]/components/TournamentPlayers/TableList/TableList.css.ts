@@ -12,7 +12,7 @@ export const tableListCls = style({
 export const tableListItemCls = style({
   display: "flex",
   flexDirection: "column",
-  cursor: "pointer",
+  cursor: "default",
   alignItems: "center",
   justifyContent: "center",
   gap: getGutter(1.5),
@@ -25,6 +25,15 @@ export const tableListItemCls = style({
 export const tableListItemActiveCls = style({
   backgroundColor: "rgba(255, 196, 2, 0.22)",
   border: "1px solid rgba(255, 196, 2, 0.55)",
+});
+
+export const tableListItemSelectableCls = style({
+  cursor: "pointer",
+});
+
+export const tableListItemSelectedCls = style({
+  border: "2px solid var(--text-accent)",
+  boxShadow: "0 0 0 2px rgba(255, 196, 2, 0.18)",
 });
 
 export const tableListItemBadgeCls = style({
