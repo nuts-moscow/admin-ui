@@ -20,6 +20,17 @@ export interface TournamentReentriesProps {
   readonly tournament: TournamentInfoResponse;
 }
 
+const toSafeNumber = (value: unknown): number => {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+};
+
+const getPlayerLabel = (player?: InGamePlayerState): string => {
+  if (!player) {
+    return "-";
+  }
+  return player.playerName || player.playerId || "-";
+};
+
 interface AddReentryModalProps extends WithModalProps {
   readonly tournamentId: string;
   readonly player?: InGamePlayerState;
@@ -78,7 +89,7 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
         <Box flex={{ col: true, gap: 4 }}>
           <Typography.Text type="secondary" size="small">
             {player
-              ? `Игрок: ${player.playerName}`
+              ? `Игрок: ${getPlayerLabel(player)}`
               : "Укажи количество ребаев для игрока"}
           </Typography.Text>
           <input
@@ -141,7 +152,7 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
     [player?.reentryByPaymentMethod],
   );
   const toPayReentryCount = useMemo(
-    () => Math.max(0, (player?.unpaidReentryCount ?? 0) - paidReentryCount),
+    () => Math.max(0, toSafeNumber(player?.unpaidReentryCount) - paidReentryCount),
     [player?.unpaidReentryCount, paidReentryCount],
   );
 
@@ -162,11 +173,14 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
     }
     setIsSaving(true);
     try {
-      await addReentryPayment(environment, {
-        tournamentId: Number(tournamentId),
-        playerId: player.playerId,
+      await addReentryPayment(
+        environment,
+        Number(tournamentId),
+        player.playerId,
+        {
         payments: methods,
-      });
+        }
+      );
       refetchTournamentPlayerState();
       close();
     } catch (error) {
@@ -183,7 +197,7 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
         <Box flex={{ col: true, gap: 4 }}>
           <Typography.Text type="secondary" size="small">
             {player
-              ? `Игрок: ${player.playerName}. Неоплачено ребаев: ${toPayReentryCount}`
+              ? `Игрок: ${getPlayerLabel(player)}. Неоплачено ребаев: ${toPayReentryCount}`
               : "Выбери способы оплаты"}
           </Typography.Text>
           <Box flex={{ col: true, gap: 2 }}>
@@ -273,8 +287,8 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
       [...(players ?? [])].sort((a, b) => {
         const aPaid = (a.reentryByPaymentMethod ?? []).length;
         const bPaid = (b.reentryByPaymentMethod ?? []).length;
-        const aToPay = Math.max(0, a.unpaidReentryCount - aPaid);
-        const bToPay = Math.max(0, b.unpaidReentryCount - bPaid);
+        const aToPay = Math.max(0, toSafeNumber(a.unpaidReentryCount) - aPaid);
+        const bToPay = Math.max(0, toSafeNumber(b.unpaidReentryCount) - bPaid);
 
         if (aToPay > 0 && bToPay === 0) {
           return -1;
@@ -343,8 +357,8 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
         </Box>
 
         {rows.map((player) => {
-          const freeReentryCount = player.freeReentryCount;
-          const unpaidReentryCount = player.unpaidReentryCount;
+          const freeReentryCount = toSafeNumber(player.freeReentryCount);
+          const unpaidReentryCount = toSafeNumber(player.unpaidReentryCount);
           const paidReentryCount = (player.reentryByPaymentMethod ?? []).length;
           const toPayReentryCount = Math.max(
             0,
@@ -368,7 +382,7 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
                 {player.playerId}
               </Typography.Text>
               <Typography.Text bold flexItem={{ flex: 1 }}>
-                {player.playerName}
+                {getPlayerLabel(player)}
               </Typography.Text>
               <Typography.Text bold flexItem={{ minWidth: 110 }}>
                 {totalReentryCount}/{REENTRY_LIMIT}
