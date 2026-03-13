@@ -15,6 +15,7 @@ import { useEnvironment } from "@/core/states/environment/useEnvironment";
 import {
   setPlayerInGamePaidStatus,
   setPlayerTableId,
+  setTournamentPlayerRegisteredStatus,
 } from "@/core/states/tournaments/requests/updatePlayerState";
 import { refetchTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
 
@@ -27,12 +28,18 @@ interface PayPlayerModalProps extends WithModalProps {
   readonly player?: InGamePlayerState;
 }
 
+const getPlayerPaymentMethod = (
+  player?: InGamePlayerState,
+): PaymentMethod | undefined => {
+  return player?.entryPaymentMethod ?? player?.entyPaymentMethod;
+};
+
 const PayPlayerModal: FC<PayPlayerModalProps> = ({ close, tournamentId, player }) => {
   const environment = useEnvironment();
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("Cache");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CreditCard");
   const [isLoading, setIsLoading] = useState(false);
   const paymentMethodOptions = useMemo<PaymentMethod[]>(() => {
-    const baseOptions: PaymentMethod[] = ["Cache", "CreditCard"];
+    const baseOptions: PaymentMethod[] = ["CreditCard", "Cache"];
     if ((player?.freeEntryCount ?? 0) > 0) {
       return [...baseOptions, "Free"];
     }
@@ -40,8 +47,12 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({ close, tournamentId, player }
   }, [player?.freeEntryCount]);
 
   useEffect(() => {
+    setPaymentMethod(getPlayerPaymentMethod(player) ?? "CreditCard");
+  }, [player?.playerId, player?.entryPaymentMethod, player?.entyPaymentMethod]);
+
+  useEffect(() => {
     if (paymentMethod === "Free" && (player?.freeEntryCount ?? 0) <= 0) {
-      setPaymentMethod("Cache");
+      setPaymentMethod("CreditCard");
     }
   }, [paymentMethod, player?.freeEntryCount]);
 
@@ -185,6 +196,34 @@ export const InGamePlayers: FC<InGamePlayersProps> = ({ tournamentId }) => {
                 }}
               >
                 Оплатить
+              </Button>
+            )}
+            {row.status === "InGamePaid" && (
+              <Button
+                type="secondary"
+                size="xxSmall"
+                onClick={() => {
+                  setPlayerToPay(row);
+                  openPayPlayerModal();
+                }}
+              >
+                {getPlayerPaymentMethod(row) ?? "Оплата"}
+              </Button>
+            )}
+            {(row.status === "InGamePaid" || row.status === "InGameNotPaid") && (
+              <Button
+                type="success"
+                size="xxSmall"
+                onClick={async () => {
+                  await setTournamentPlayerRegisteredStatus(
+                    environment,
+                    Number(tournamentId),
+                    row.playerId
+                  );
+                  refetchTournamentPlayerState();
+                }}
+              >
+                В запись
               </Button>
             )}
             {row.tableId ? (

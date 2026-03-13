@@ -49,10 +49,10 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({
   player,
 }) => {
   const environment = useEnvironment();
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("Cache");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CreditCard");
   const [isLoading, setIsLoading] = useState(false);
   const paymentMethodOptions = useMemo<PaymentMethod[]>(() => {
-    const baseOptions: PaymentMethod[] = ["Cache", "CreditCard"];
+    const baseOptions: PaymentMethod[] = ["CreditCard", "Cache"];
     if ((player?.freeEntryCount ?? 0) > 0) {
       return [...baseOptions, "Free"];
     }
@@ -61,7 +61,7 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({
 
   useEffect(() => {
     if (paymentMethod === "Free" && (player?.freeEntryCount ?? 0) <= 0) {
-      setPaymentMethod("Cache");
+      setPaymentMethod("CreditCard");
     }
   }, [paymentMethod, player?.freeEntryCount]);
 

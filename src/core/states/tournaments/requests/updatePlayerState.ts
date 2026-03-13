@@ -113,6 +113,16 @@ export const setPlayerInGameNotPaidStatus = async (
   });
 };
 
+export const setTournamentPlayerRegisteredStatus = async (
+  environment: Environment,
+  tournamentId: number,
+  playerId: string,
+): Promise<InGamePlayerState> => {
+  return updateTournamentPlayerStatus(environment, tournamentId, playerId, {
+    status: "Registered",
+  });
+};
+
 export const setPlayerTableId = async (
   environment: Environment,
   tournamentId: number,

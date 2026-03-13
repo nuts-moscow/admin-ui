@@ -15,6 +15,10 @@ import { useEnvironment } from "@/core/states/environment/useEnvironment";
 import { addReentry } from "@/core/states/tournaments/requests/addReentry";
 import { refetchTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
 import { addReentryPayment } from "@/core/states/tournaments/requests/addReentryPayment";
+import {
+  refetchTournamentRebuyCount,
+  useTournamentRebuyCount,
+} from "@/core/states/tournaments/hooks/useTournamentRebuyCount";
 
 export interface TournamentReentriesProps {
   readonly tournament: TournamentInfoResponse;
@@ -45,8 +49,8 @@ const PAY_REENTRY_METHOD_OPTIONS: Array<{
   readonly label: Exclude<PaymentMethod, "Free">;
   readonly value: Exclude<PaymentMethod, "Free">;
 }> = [
-  { label: "Cache", value: "Cache" },
   { label: "CreditCard", value: "CreditCard" },
+  { label: "Cache", value: "Cache" },
 ];
 
 const AddReentryModal: FC<AddReentryModalProps> = ({
@@ -74,6 +78,7 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
         count,
       });
       refetchTournamentPlayerState();
+      refetchTournamentRebuyCount();
       close();
     } catch (error) {
       console.error(error);
@@ -157,7 +162,7 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
   );
 
   useEffect(() => {
-    setMethods(Array.from({ length: toPayReentryCount }, () => "Cache"));
+    setMethods(Array.from({ length: toPayReentryCount }, () => "CreditCard"));
   }, [player?.playerId, toPayReentryCount]);
 
   const handleMethodChange = (
@@ -282,6 +287,9 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
   const { data: players } = useNonRegisteredTournamentPlayerState(
     String(tournament.id),
   );
+  const { data: rebuyCountResponse } = useTournamentRebuyCount(
+    String(tournament.id)
+  );
   const rows = useMemo(
     () =>
       [...(players ?? [])].sort((a, b) => {
@@ -296,7 +304,15 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
         if (aToPay === 0 && bToPay > 0) {
           return 1;
         }
-        return a.playerId.localeCompare(b.playerId);
+        const aTournamentPlayerId = Number(a.tournamentPlayerId);
+        const bTournamentPlayerId = Number(b.tournamentPlayerId);
+        if (
+          Number.isFinite(aTournamentPlayerId) &&
+          Number.isFinite(bTournamentPlayerId)
+        ) {
+          return aTournamentPlayerId - bTournamentPlayerId;
+        }
+        return a.tournamentPlayerId.localeCompare(b.tournamentPlayerId);
       }),
     [players],
   );
@@ -319,7 +335,9 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
         }}
       >
         <Typography.Text bold>Статистика ребаев</Typography.Text>
-        <Typography.Text bold>{rows.length}</Typography.Text>
+        <Typography.Text bold>
+          {rebuyCountResponse?.rebuyCount ?? rows.length}
+        </Typography.Text>
       </Box>
 
       <Box flex={{ col: true, gap: 2, width: "100%" }}>
@@ -366,20 +384,24 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
           );
           const totalReentryCount =
             freeReentryCount + unpaidReentryCount + paidReentryCount;
+          const hasUnpaidReentry = toPayReentryCount > 0;
+          const rowBackgroundColor =
+            hasUnpaidReentry
+              ? "rgba(220, 38, 38, 0.12)"
+              : "#e9e9e9";
 
           return (
             <Box
               key={player.playerId}
               flex={{ width: "100%", align: "center", gap: 3 }}
               style={{
-                backgroundColor:
-                  toPayReentryCount > 0 ? "rgba(220, 38, 38, 0.12)" : "#e9e9e9",
+                backgroundColor: rowBackgroundColor,
                 borderRadius: 10,
                 padding: "10px 12px",
               }}
             >
               <Typography.Text bold flexItem={{ minWidth: 48 }}>
-                {player.playerId}
+                {player.tournamentPlayerId}
               </Typography.Text>
               <Typography.Text bold flexItem={{ flex: 1 }}>
                 {getPlayerLabel(player)}

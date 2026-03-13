@@ -10,6 +10,7 @@ export type Bonus = "EarlyBird" | "Hookah" | "Diller";
 
 export interface InGamePlayerState {
   readonly playerId: string;
+  readonly tournamentPlayerId: string;
   // Kept for current UI rendering compatibility in current screens.
   readonly playerName: string;
   readonly status: PlayerStatus;

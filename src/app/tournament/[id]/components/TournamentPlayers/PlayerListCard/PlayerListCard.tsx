@@ -53,7 +53,7 @@ export const PlayerListCard: FC<PlayerListCardProps> = ({
                 type="secondary"
                 className={playerListRowNumberCls}
               >
-                {row.playerId}
+                {row.tournamentPlayerId ?? row.playerId}
               </Typography.Text>
               <Typography.Text size="small" className={playerListRowNameCls}>
                 {row.playerName}
