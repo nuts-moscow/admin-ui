@@ -34,6 +34,10 @@ interface UpdateTournamentPlayerTableRequest {
   readonly tableId: string;
 }
 
+interface UpdateTournamentPlayerEntryPaymentRequest {
+  readonly entryPaymentMethod: PaymentMethod;
+}
+
 const updateTournamentPlayerStatus = async (
   environment: Environment,
   tournamentId: number,
@@ -49,6 +53,27 @@ const updateTournamentPlayerStatus = async (
     mapping: {
       success: (res) => res.toJson(),
       400: () => new Error("Invalid player status data"),
+      404: () => new Error("Player or tournament not found"),
+      500: () => new Error("Server error"),
+    },
+  });
+};
+
+const updateTournamentPlayerEntryPayment = async (
+  environment: Environment,
+  tournamentId: number,
+  playerId: string,
+  request: UpdateTournamentPlayerEntryPaymentRequest
+): Promise<InGamePlayerState> => {
+  return securedFetch<UpdateTournamentPlayerEntryPaymentRequest, InGamePlayerState>({
+    method: "POST",
+    host: environment.apiUrl,
+    path: `/v2/api/tournaments/${tournamentId}/players/${playerId}/entry-payment`,
+    withCredentials: false,
+    body: request,
+    mapping: {
+      success: (res) => res.toJson(),
+      400: () => new Error("Invalid player entry payment data"),
       404: () => new Error("Player or tournament not found"),
       500: () => new Error("Server error"),
     },
@@ -114,12 +139,12 @@ export const setPlayerInGamePaidStatus = async (
   tournamentId: number,
   playerId: string,
   entyPaymentMethod: PaymentMethod,
-  tableId?: string,
 ): Promise<InGamePlayerState> => {
-  void entyPaymentMethod;
-  void tableId;
-  return updateTournamentPlayerStatus(environment, tournamentId, playerId, {
+  await updateTournamentPlayerStatus(environment, tournamentId, playerId, {
     status: "InGamePaid",
+  });
+  return updateTournamentPlayerEntryPayment(environment, tournamentId, playerId, {
+    entryPaymentMethod: entyPaymentMethod,
   });
 };
 
