@@ -13,6 +13,7 @@ import {
   InGamePlayerState,
   PaymentMethod,
 } from "@/core/states/tournaments/common/InGamePlayerState";
+import { getPaymentMethodLabel } from "@/core/states/tournaments/common/paymentMethodLabels";
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
 import { removePlayerFromTournament } from "@/core/states/tournaments/requests/removePlayerFromTournament";
 import { refetchTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
@@ -26,6 +27,7 @@ import { tableListCls, tableListItemBadgeCls } from "../TableList/TableList.css"
 
 export interface WaitingListPlayersProps {
   readonly tournamentId: string;
+  readonly searchQuery?: string;
 }
 
 interface RemovePlayerConfirmModalProps extends WithModalProps {
@@ -118,7 +120,7 @@ const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
           >
             {paymentMethodOptions.map((method) => (
               <option key={method} value={method}>
-                {method}
+                {getPaymentMethodLabel(method)}
               </option>
             ))}
           </select>
@@ -228,6 +230,7 @@ const RemovePlayerConfirmModal: FC<RemovePlayerConfirmModalProps> = ({
 
 export const WaitingListPlayers: FC<WaitingListPlayersProps> = ({
   tournamentId,
+  searchQuery = "",
 }) => {
   const environment = useEnvironment();
   const [playerToRemove, setPlayerToRemove] = useState<
@@ -248,7 +251,19 @@ export const WaitingListPlayers: FC<WaitingListPlayersProps> = ({
   );
   const { data: registeredPlayers } =
     useRegisteredTournamentPlayerState(tournamentId);
-  const rows = registeredPlayers ?? [];
+  const rows = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    if (!normalizedQuery) {
+      return registeredPlayers ?? [];
+    }
+    return (registeredPlayers ?? []).filter((player) => {
+      return (
+        (player.playerName ?? "").toLowerCase().includes(normalizedQuery) ||
+        player.playerId.toLowerCase().includes(normalizedQuery) ||
+        String(player.tournamentPlayerId).toLowerCase().includes(normalizedQuery)
+      );
+    });
+  }, [registeredPlayers, searchQuery]);
 
   return (
     <>

@@ -1,6 +1,6 @@
 "use client";
 
-import { FC } from "react";
+import { FC, useState } from "react";
 import { Box } from "@/components/Box/Box";
 import { TournamentInfoResponse } from "@/core/states/tournaments/requests/getTournament";
 import { TableList } from "./TableList/TableList";
@@ -15,12 +15,35 @@ export interface TournamentPlayersProps {
 export const TournamentPlayers: FC<TournamentPlayersProps> = ({
   tournament,
 }) => {
+  const [searchQuery, setSearchQuery] = useState("");
+
   return (
     <Box flex={{ col: true, gap: 6, width: "100%" }}>
       <TableList tournamentId={String(tournament.id)} />
+      <input
+        type="text"
+        value={searchQuery}
+        onChange={(event) => setSearchQuery(event.target.value)}
+        placeholder="Поиск игрока: id, имя"
+        style={{
+          width: "100%",
+          borderRadius: 12,
+          border: "1px solid var(--border-color)",
+          minHeight: 44,
+          padding: "0 12px",
+          backgroundColor: "var(--background-primary)",
+          color: "var(--text-primary)",
+        }}
+      />
       <div className={playerListCardContainerCls}>
-        <WaitingListPlayers tournamentId={String(tournament.id)} />
-        <InGamePlayers tournamentId={String(tournament.id)} />
+        <WaitingListPlayers
+          tournamentId={String(tournament.id)}
+          searchQuery={searchQuery}
+        />
+        <InGamePlayers
+          tournamentId={String(tournament.id)}
+          searchQuery={searchQuery}
+        />
       </div>
     </Box>
   );

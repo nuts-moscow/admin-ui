@@ -11,6 +11,7 @@ import {
   InGamePlayerState,
   PaymentMethod,
 } from "@/core/states/tournaments/common/InGamePlayerState";
+import { getPaymentMethodLabel } from "@/core/states/tournaments/common/paymentMethodLabels";
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
 import { addReentry } from "@/core/states/tournaments/requests/addReentry";
 import { refetchTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
@@ -235,7 +236,7 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
                 >
                   {PAY_REENTRY_METHOD_OPTIONS.map((methodOption) => (
                     <option key={methodOption.value} value={methodOption.value}>
-                      {methodOption.label}
+                      {getPaymentMethodLabel(methodOption.label)}
                     </option>
                   ))}
                 </select>
@@ -274,6 +275,7 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
 }) => {
   const REENTRY_LIMIT = 5;
   const ACTIONS_COLUMN_WIDTH = 230;
+  const [searchQuery, setSearchQuery] = useState("");
   const [playerToAddReentry, setPlayerToAddReentry] = useState<
     InGamePlayerState | undefined
   >(undefined);
@@ -290,9 +292,26 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
   const { data: rebuyCountResponse } = useTournamentRebuyCount(
     String(tournament.id)
   );
+  const filteredPlayers = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    if (!normalizedQuery) {
+      return players ?? [];
+    }
+    return (players ?? []).filter((player) => {
+      const label = getPlayerLabel(player).toLowerCase();
+      return (
+        label.includes(normalizedQuery) ||
+        player.playerId.toLowerCase().includes(normalizedQuery) ||
+        String(player.tournamentPlayerId)
+          .toLowerCase()
+          .includes(normalizedQuery)
+      );
+    });
+  }, [players, searchQuery]);
+
   const rows = useMemo(
     () =>
-      [...(players ?? [])].sort((a, b) => {
+      [...filteredPlayers].sort((a, b) => {
         const aPaid = (a.reentryByPaymentMethod ?? []).length;
         const bPaid = (b.reentryByPaymentMethod ?? []).length;
         const aToPay = Math.max(0, toSafeNumber(a.unpaidReentryCount) - aPaid);
@@ -314,7 +333,7 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
         }
         return a.tournamentPlayerId.localeCompare(b.tournamentPlayerId);
       }),
-    [players],
+    [filteredPlayers],
   );
 
   return (
@@ -339,6 +358,21 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
           {rebuyCountResponse?.rebuyCount ?? rows.length}
         </Typography.Text>
       </Box>
+      <input
+        type="text"
+        value={searchQuery}
+        onChange={(event) => setSearchQuery(event.target.value)}
+        placeholder="Поиск игрока: id, никнейм"
+        style={{
+          width: "100%",
+          borderRadius: 12,
+          border: "1px solid var(--border-color)",
+          minHeight: 44,
+          padding: "0 12px",
+          backgroundColor: "var(--background-primary)",
+          color: "var(--text-primary)",
+        }}
+      />
 
       <Box flex={{ col: true, gap: 2, width: "100%" }}>
         <Box

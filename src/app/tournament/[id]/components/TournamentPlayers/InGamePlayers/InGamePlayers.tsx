@@ -10,6 +10,7 @@ import {
   InGamePlayerState,
   PaymentMethod,
 } from "@/core/states/tournaments/common/InGamePlayerState";
+import { getPaymentMethodLabel } from "@/core/states/tournaments/common/paymentMethodLabels";
 import { TableSelectModal } from "../TableSelectModal/TableSelectModal";
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
 import {
@@ -21,6 +22,7 @@ import { refetchTournamentPlayerState } from "@/core/states/tournaments/hooks/us
 
 export interface InGamePlayersProps {
   readonly tournamentId: string;
+  readonly searchQuery?: string;
 }
 
 interface PayPlayerModalProps extends WithModalProps {
@@ -105,7 +107,7 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({ close, tournamentId, player }
           >
             {paymentMethodOptions.map((method) => (
               <option key={method} value={method}>
-                {method}
+                {getPaymentMethodLabel(method)}
               </option>
             ))}
           </select>
@@ -136,7 +138,10 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({ close, tournamentId, player }
   );
 };
 
-export const InGamePlayers: FC<InGamePlayersProps> = ({ tournamentId }) => {
+export const InGamePlayers: FC<InGamePlayersProps> = ({
+  tournamentId,
+  searchQuery = "",
+}) => {
   const environment = useEnvironment();
   const [playerToSetTable, setPlayerToSetTable] = useState<
     InGamePlayerState | undefined
@@ -148,9 +153,23 @@ export const InGamePlayers: FC<InGamePlayersProps> = ({ tournamentId }) => {
   const [PayPlayerModalConnect, openPayPlayerModal] = useModal(PayPlayerModal);
   const { data: nonRegisteredPlayers } =
     useNonRegisteredTournamentPlayerState(tournamentId);
+  const filteredPlayers = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    if (!normalizedQuery) {
+      return nonRegisteredPlayers ?? [];
+    }
+    return (nonRegisteredPlayers ?? []).filter((player) => {
+      return (
+        (player.playerName ?? "").toLowerCase().includes(normalizedQuery) ||
+        player.playerId.toLowerCase().includes(normalizedQuery) ||
+        String(player.tournamentPlayerId).toLowerCase().includes(normalizedQuery)
+      );
+    });
+  }, [nonRegisteredPlayers, searchQuery]);
+
   const rows = useMemo(
     () =>
-      [...(nonRegisteredPlayers ?? [])].sort((a, b) => {
+      [...filteredPlayers].sort((a, b) => {
         if (a.status === b.status) {
           return 0;
         }
@@ -162,7 +181,7 @@ export const InGamePlayers: FC<InGamePlayersProps> = ({ tournamentId }) => {
         }
         return 0;
       }),
-    [nonRegisteredPlayers]
+    [filteredPlayers]
   );
 
   return (
@@ -208,7 +227,9 @@ export const InGamePlayers: FC<InGamePlayersProps> = ({ tournamentId }) => {
                   openPayPlayerModal();
                 }}
               >
-                {getPlayerPaymentMethod(row) ?? "Оплата"}
+                {getPlayerPaymentMethod(row)
+                  ? getPaymentMethodLabel(getPlayerPaymentMethod(row))
+                  : "Оплата"}
               </Button>
             )}
             {(row.status === "InGamePaid" || row.status === "InGameNotPaid") && (
