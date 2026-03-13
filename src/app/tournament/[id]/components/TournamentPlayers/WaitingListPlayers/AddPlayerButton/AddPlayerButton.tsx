@@ -4,6 +4,10 @@ import { FC, useMemo, useState } from "react";
 import { Box } from "@/components/Box/Box";
 import { Button } from "@/components/Button/Button";
 import { Modal, WithModalProps, useModal } from "@/components/Modal/Modal";
+import {
+  SearchableSelect,
+  SearchableSelectOption,
+} from "@/components/SearchableSelect/SearchableSelect";
 import { usePlayers } from "@/core/states/players/hooks/usePlayers";
 import { addPlayerToTournament } from "@/core/states/tournaments/requests/addPlayerToTournament";
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
@@ -39,6 +43,14 @@ const AddPlayerModalContent: FC<AddPlayerModalContentProps> = ({
       (player) => !tournamentPlayerIds.has(String(player.id))
     );
   }, [players, tournamentPlayers]);
+  const availablePlayerOptions = useMemo<SearchableSelectOption[]>(
+    () =>
+      availablePlayers.map((player) => ({
+        value: String(player.id),
+        label: `${player.nickname}${player.name ? ` (${player.name})` : ""}`,
+      })),
+    [availablePlayers]
+  );
 
   const handleSave = async () => {
     if (!selectedPlayerId || isSaving) {
@@ -61,31 +73,15 @@ const AddPlayerModalContent: FC<AddPlayerModalContentProps> = ({
       <Modal.Title showCloseButton>Добавить игрока</Modal.Title>
       <Modal.Content minWidth={480}>
         <Box flex={{ col: true, gap: 4 }}>
-          <select
-            value={selectedPlayerId ?? ""}
-            onChange={(event) =>
-              setSelectedPlayerId(
-                event.target.value ? Number(event.target.value) : undefined
-              )
+          <SearchableSelect
+            options={availablePlayerOptions}
+            value={selectedPlayerId ? String(selectedPlayerId) : undefined}
+            placeholder="Выберите игрока"
+            onChange={(newValue) =>
+              setSelectedPlayerId(newValue ? Number(newValue) : undefined)
             }
-            style={{
-              width: "100%",
-              borderRadius: 12,
-              border: "1px solid var(--border-color)",
-              minHeight: 44,
-              padding: "0 12px",
-              backgroundColor: "var(--background-primary)",
-              color: "var(--text-primary)",
-            }}
-          >
-            <option value="">Выберите игрока</option>
-            {availablePlayers.map((player) => (
-              <option key={player.id} value={player.id}>
-                {player.nickname}
-                {player.name ? ` (${player.name})` : ""}
-              </option>
-            ))}
-          </select>
+            disabled={isSaving}
+          />
 
           <Box flex={{ gap: 4, width: "100%" }}>
             <Button
