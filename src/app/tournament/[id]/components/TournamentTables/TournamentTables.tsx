@@ -15,6 +15,7 @@ import {
 import { TableSelectModal } from "../TournamentPlayers/TableSelectModal/TableSelectModal";
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
 import {
+  removePlayerFromTable,
   setPlayerInGamePaidStatus,
   setPlayerTableId,
   setTournamentPlayerKnockedOut,
@@ -389,6 +390,22 @@ export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
               >
                 Пересадить
               </Button>
+              {player.tableId && (
+                <Button
+                  type="secondary"
+                  size="xxSmall"
+                  onClick={async () => {
+                    await removePlayerFromTable(
+                      environment,
+                      Number(tournament.id),
+                      player.playerId
+                    );
+                    refetchTournamentPlayerState();
+                  }}
+                >
+                  Убрать со стола
+                </Button>
+              )}
               {tournament.status !== "RegistrationOpen" && player.status !== "Out" && (
                 <Button
                   type="error"

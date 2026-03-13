@@ -101,6 +101,25 @@ const updateTournamentPlayerTable = async (
   });
 };
 
+const removeTournamentPlayerTable = async (
+  environment: Environment,
+  tournamentId: number,
+  playerId: string,
+): Promise<InGamePlayerState> => {
+  return securedFetch<undefined, InGamePlayerState>({
+    method: "DELETE",
+    host: environment.apiUrl,
+    path: `/v2/api/tournaments/${tournamentId}/players/${playerId}/table`,
+    withCredentials: false,
+    body: undefined,
+    mapping: {
+      success: (res) => res.toJson(),
+      404: () => new Error("Player or tournament not found"),
+      500: () => new Error("Server error"),
+    },
+  });
+};
+
 export const setPlayerInGameNotPaidStatus = async (
   environment: Environment,
   tournamentId: number,
@@ -142,6 +161,14 @@ export const setPlayerTableId = async (
     freeReentryUsed: 0,
     freeEntryUsed: 0,
   });
+};
+
+export const removePlayerFromTable = async (
+  environment: Environment,
+  tournamentId: number,
+  playerId: string,
+): Promise<InGamePlayerState> => {
+  return removeTournamentPlayerTable(environment, tournamentId, playerId);
 };
 
 export const setPlayerInGamePaidStatus = async (
