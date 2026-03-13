@@ -19,10 +19,9 @@ import {
   removePlayerFromTable,
   setPlayerInGamePaidStatus,
   setPlayerTableId,
-  setTournamentPlayerKnockedOut,
-  setTournamentPlayerOutStatus,
 } from "@/core/states/tournaments/requests/updatePlayerState";
 import { refetchTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
+import { bountyEliminate } from "@/core/states/tournaments/requests/bountyEliminate";
 
 export interface TournamentTablesProps {
   readonly tournament: TournamentInfoResponse;
@@ -181,17 +180,11 @@ const SetOutPlayerModal: FC<SetOutPlayerModalProps> = ({
     }
     setIsLoading(true);
     try {
-      await setTournamentPlayerOutStatus(
-        environment,
-        Number(tournamentId),
-        bustedPlayer.playerId
-      );
-      await setTournamentPlayerKnockedOut(
-        environment,
-        Number(tournamentId),
-        killer.playerId,
-        killer.bountyCount
-      );
+      await bountyEliminate(environment, Number(tournamentId), {
+        eliminatedPlayerId: bustedPlayer.playerId,
+        killerPlayerId: killer.playerId,
+        type: "Out",
+      });
       refetchTournamentPlayerState();
       close();
     } catch (error) {

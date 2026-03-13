@@ -38,6 +38,10 @@ interface UpdateTournamentPlayerEntryPaymentRequest {
   readonly entryPaymentMethod: PaymentMethod;
 }
 
+interface AddTournamentPlayerBountyRequest {
+  readonly bountyCountToAdd: number;
+}
+
 const updateTournamentPlayerStatus = async (
   environment: Environment,
   tournamentId: number,
@@ -95,6 +99,27 @@ const updateTournamentPlayerTable = async (
     mapping: {
       success: (res) => res.toJson(),
       400: () => new Error("Invalid player table data"),
+      404: () => new Error("Player or tournament not found"),
+      500: () => new Error("Server error"),
+    },
+  });
+};
+
+export const addTournamentPlayerBounty = async (
+  environment: Environment,
+  tournamentId: number,
+  playerId: string,
+  count = 1,
+): Promise<InGamePlayerState> => {
+  return securedFetch<AddTournamentPlayerBountyRequest, InGamePlayerState>({
+    method: "POST",
+    host: environment.apiUrl,
+    path: `/v2/api/tournaments/${tournamentId}/players/${playerId}/bounty/update`,
+    withCredentials: false,
+    body: { bountyCountToAdd: count },
+    mapping: {
+      success: (res) => res.toJson(),
+      400: () => new Error("Invalid player bounty data"),
       404: () => new Error("Player or tournament not found"),
       500: () => new Error("Server error"),
     },
@@ -207,20 +232,5 @@ export const setTournamentPlayerOutStatus = async (
 ): Promise<InGamePlayerState> => {
   return updateTournamentPlayerStatus(environment, tournamentId, playerId, {
     status: "Out",
-  });
-};
-
-export const setTournamentPlayerKnockedOut = async (
-  environment: Environment,
-  tournamentId: number,
-  playerId: string,
-  currentBountyCount: number,
-): Promise<InGamePlayerState> => {
-  return updatePlayerState(environment, {
-    tournamentId,
-    playerId,
-    bountyCount: currentBountyCount + 1,
-    freeReentryUsed: 0,
-    freeEntryUsed: 0,
   });
 };

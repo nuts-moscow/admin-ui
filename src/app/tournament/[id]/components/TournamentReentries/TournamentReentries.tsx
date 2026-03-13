@@ -13,13 +13,17 @@ import {
 } from "@/core/states/tournaments/common/InGamePlayerState";
 import { getPaymentMethodLabel } from "@/core/states/tournaments/common/paymentMethodLabels";
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
-import { addReentry } from "@/core/states/tournaments/requests/addReentry";
 import { refetchTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
 import { addReentryPayment } from "@/core/states/tournaments/requests/addReentryPayment";
+import { bountyEliminate } from "@/core/states/tournaments/requests/bountyEliminate";
 import {
   refetchTournamentRebuyCount,
   useTournamentRebuyCount,
 } from "@/core/states/tournaments/hooks/useTournamentRebuyCount";
+import {
+  SearchableSelect,
+  SearchableSelectOption,
+} from "@/components/SearchableSelect/SearchableSelect";
 
 export interface TournamentReentriesProps {
   readonly tournament: TournamentInfoResponse;
@@ -39,6 +43,7 @@ const getPlayerLabel = (player?: InGamePlayerState): string => {
 interface AddReentryModalProps extends WithModalProps {
   readonly tournamentId: string;
   readonly player?: InGamePlayerState;
+  readonly players: InGamePlayerState[];
 }
 
 interface PayReentriesModalProps extends WithModalProps {
@@ -58,26 +63,60 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
   close,
   tournamentId,
   player,
+  players,
 }) => {
   const environment = useEnvironment();
   const [count, setCount] = useState<number>(1);
+  const [killerPlayerId, setKillerPlayerId] = useState<string | undefined>(
+    undefined,
+  );
   const [isSaving, setIsSaving] = useState(false);
+  const killerCandidates = useMemo(
+    () =>
+      (players ?? []).filter(
+        (candidate) =>
+          candidate.playerId !== player?.playerId &&
+          candidate.tableId != null &&
+          candidate.tableId === player?.tableId,
+      ),
+    [player?.playerId, player?.tableId, players],
+  );
+  const killerOptions = useMemo<SearchableSelectOption[]>(
+    () =>
+      killerCandidates.map((candidate) => ({
+        value: candidate.playerId,
+        label: `${candidate.playerName} (ID: ${candidate.playerId})`,
+      })),
+    [killerCandidates],
+  );
 
   useEffect(() => {
     setCount(1);
-  }, [player?.playerId]);
+    setKillerPlayerId(killerCandidates[0]?.playerId);
+  }, [player?.playerId, killerCandidates]);
+
+  useEffect(() => {
+    if (
+      killerPlayerId &&
+      !killerCandidates.some((candidate) => candidate.playerId === killerPlayerId)
+    ) {
+      setKillerPlayerId(killerCandidates[0]?.playerId);
+    }
+  }, [killerCandidates, killerPlayerId]);
 
   const handleSave = async () => {
-    if (!player || count <= 0 || isSaving) {
+    if (!player || count <= 0 || isSaving || !killerPlayerId) {
       return;
     }
     setIsSaving(true);
     try {
-      await addReentry(environment, {
-        tournamentId: Number(tournamentId),
-        playerId: player.playerId,
-        count,
-      });
+      for (let i = 0; i < count; i += 1) {
+        await bountyEliminate(environment, Number(tournamentId), {
+          eliminatedPlayerId: player.playerId,
+          killerPlayerId,
+          type: "Rebuy",
+        });
+      }
       refetchTournamentPlayerState();
       refetchTournamentRebuyCount();
       close();
@@ -98,6 +137,17 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
               ? `Игрок: ${getPlayerLabel(player)}`
               : "Укажи количество ребаев для игрока"}
           </Typography.Text>
+          <SearchableSelect
+            options={killerOptions}
+            value={killerPlayerId}
+            placeholder={
+              killerCandidates.length > 0
+                ? "Кто выбил игрока?"
+                : "Нет игроков за этим столом"
+            }
+            disabled={killerCandidates.length === 0 || isSaving}
+            onChange={(value) => setKillerPlayerId(value)}
+          />
           <input
             type="number"
             min={1}
@@ -131,7 +181,11 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
               onClick={handleSave}
               flexItem={{ flex: 1 }}
               loading={isSaving}
-              disabled={!player || count <= 0}
+              disabled={
+                !player ||
+                count <= 0 ||
+                !killerPlayerId
+              }
             >
               Сохранить
             </Button>
@@ -341,6 +395,7 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
       <AddReentryModalConnect
         tournamentId={String(tournament.id)}
         player={playerToAddReentry}
+        players={players ?? []}
       />
       <PayReentriesModalConnect
         tournamentId={String(tournament.id)}
