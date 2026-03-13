@@ -9,17 +9,21 @@ export type PaymentMethod = "Cache" | "CreditCard" | "Free";
 export type Bonus = "EarlyBird" | "Hookah" | "Diller";
 
 export interface InGamePlayerState {
-  readonly playerId: number;
-  // Kept for current UI rendering compatibility.
+  readonly playerId: string;
+  // Kept for current UI rendering compatibility in current screens.
   readonly playerName: string;
   readonly status: PlayerStatus;
-  readonly tableId?: number;
+  readonly tableId?: string;
+  readonly entryPaymentMethod?: PaymentMethod;
+  // Legacy typo field; keep optional until all usages are migrated.
   readonly entyPaymentMethod?: PaymentMethod;
-  readonly reentryByPaymentMethod?: Array<[PaymentMethod, number]>;
+  readonly reentryByPaymentMethod: PaymentMethod[];
+  readonly totalReentryCount: number;
   readonly bountyCount: number;
-  readonly bonuses?: Array<[Bonus, number]>;
+  readonly bonuses: Bonus[];
   readonly freeEntryCount: number;
   readonly freeReentryCount: number;
   readonly placement?: number;
+  // Legacy field used by current reentry UI.
   readonly unpaidReentryCount: number
 }

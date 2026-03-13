@@ -4,7 +4,7 @@ import { InGamePlayerState } from "../common/InGamePlayerState";
 
 export interface AddReentryRequest {
   readonly tournamentId: number;
-  readonly playerId: number;
+  readonly playerId: string;
   readonly count: number;
 }
 

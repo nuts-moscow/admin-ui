@@ -4,7 +4,7 @@ import { InGamePlayerState, PaymentMethod } from "../common/InGamePlayerState";
 
 export interface AddReentryPaymentRequest {
   readonly tournamentId: number;
-  readonly playerId: number;
+  readonly playerId: string;
   readonly payments: PaymentMethod[];
 }
 

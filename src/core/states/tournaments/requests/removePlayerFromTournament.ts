@@ -4,7 +4,7 @@ import { Environment } from "../../environment/Environment";
 export const removePlayerFromTournament = (
   environment: Environment,
   tournamentId: string,
-  playerId: number
+  playerId: string
 ) => {
   return securedFetch<undefined, Record<string, unknown>>({
     method: "DELETE",

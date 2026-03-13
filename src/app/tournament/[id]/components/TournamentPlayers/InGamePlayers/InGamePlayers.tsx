@@ -55,9 +55,16 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({ close, tournamentId, player }
         environment,
         Number(tournamentId),
         player.playerId,
-        paymentMethod,
-        player.tableId
+        paymentMethod
       );
+      if (player.tableId) {
+        await setPlayerTableId(
+          environment,
+          Number(tournamentId),
+          player.playerId,
+          player.tableId
+        );
+      }
       refetchTournamentPlayerState();
       close();
     } catch (error) {
@@ -157,7 +164,7 @@ export const InGamePlayers: FC<InGamePlayersProps> = ({ tournamentId }) => {
             environment,
             Number(tournamentId),
             player.playerId,
-            tableId,
+            tableId
           );
           refetchTournamentPlayerState();
         }}

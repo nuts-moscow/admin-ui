@@ -9,7 +9,7 @@ export const addPlayerToTournament = (
   return securedFetch<undefined, Record<string, unknown>>({
     method: "POST",
     host: environment.apiUrl,
-    path: `/v1/tournaments/add-player-to-tournament?tournamentId=${tournamentId}&playerId=${playerId}`,
+    path: `/v2/api/tournaments/${tournamentId}/players/${playerId}`,
     withCredentials: false,
     body: undefined,
     mapping: {

@@ -75,9 +75,16 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({
         environment,
         Number(tournamentId),
         player.playerId,
-        paymentMethod,
-        player.tableId
+        paymentMethod
       );
+      if (player.tableId) {
+        await setPlayerTableId(
+          environment,
+          Number(tournamentId),
+          player.playerId,
+          player.tableId
+        );
+      }
       refetchTournamentPlayerState();
       close();
     } catch (error) {
@@ -154,7 +161,7 @@ const SetOutPlayerModal: FC<SetOutPlayerModalProps> = ({
       ),
     [players, bustedPlayer?.playerId]
   );
-  const [selectedKillerId, setSelectedKillerId] = useState<number | undefined>(
+  const [selectedKillerId, setSelectedKillerId] = useState<string | undefined>(
     undefined
   );
 
@@ -205,7 +212,7 @@ const SetOutPlayerModal: FC<SetOutPlayerModalProps> = ({
           {candidates.length > 0 ? (
             <select
               value={selectedKillerId}
-              onChange={(event) => setSelectedKillerId(Number(event.target.value))}
+              onChange={(event) => setSelectedKillerId(event.target.value || undefined)}
               style={{
                 width: "100%",
                 borderRadius: 12,
@@ -278,7 +285,7 @@ export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
   const tablePlayers = (nonRegisteredPlayers ?? []).filter(
     (player) =>
       !!selectedTableId &&
-      player.tableId === selectedTableId &&
+      Number(player.tableId) === selectedTableId &&
       player.status !== "Out"
   );
 

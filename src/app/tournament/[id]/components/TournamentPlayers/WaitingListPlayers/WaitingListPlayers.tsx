@@ -19,6 +19,7 @@ import { refetchTournamentPlayerState } from "@/core/states/tournaments/hooks/us
 import {
   setPlayerInGameNotPaidStatus,
   setPlayerInGamePaidStatus,
+  setPlayerTableId,
 } from "@/core/states/tournaments/requests/updatePlayerState";
 import { TableSelectModal } from "../TableSelectModal/TableSelectModal";
 import { tableListCls, tableListItemBadgeCls } from "../TableList/TableList.css";
@@ -79,8 +80,15 @@ const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
         Number(tournamentId),
         player.playerId,
         paymentMethod,
-        selectedTableId,
       );
+      if (selectedTableId) {
+        await setPlayerTableId(
+          environment,
+          Number(tournamentId),
+          player.playerId,
+          String(selectedTableId),
+        );
+      }
       refetchTournamentPlayerState();
       close();
     } catch (error) {
@@ -252,8 +260,15 @@ export const WaitingListPlayers: FC<WaitingListPlayersProps> = ({
             environment,
             Number(tournamentId),
             player.playerId,
-            tableId,
           );
+          if (tableId) {
+            await setPlayerTableId(
+              environment,
+              Number(tournamentId),
+              player.playerId,
+              tableId,
+            );
+          }
           refetchTournamentPlayerState();
         }}
       />

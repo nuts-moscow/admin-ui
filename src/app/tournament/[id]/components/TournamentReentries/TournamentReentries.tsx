@@ -137,11 +137,7 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
   );
 
   const paidReentryCount = useMemo(
-    () =>
-      (player?.reentryByPaymentMethod ?? []).reduce(
-        (sum, [, count]) => sum + count,
-        0,
-      ),
+    () => (player?.reentryByPaymentMethod ?? []).length,
     [player?.reentryByPaymentMethod],
   );
   const toPayReentryCount = useMemo(
@@ -275,14 +271,8 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
   const rows = useMemo(
     () =>
       [...(players ?? [])].sort((a, b) => {
-        const aPaid = (a.reentryByPaymentMethod ?? []).reduce(
-          (sum, [, count]) => sum + count,
-          0,
-        );
-        const bPaid = (b.reentryByPaymentMethod ?? []).reduce(
-          (sum, [, count]) => sum + count,
-          0,
-        );
+        const aPaid = (a.reentryByPaymentMethod ?? []).length;
+        const bPaid = (b.reentryByPaymentMethod ?? []).length;
         const aToPay = Math.max(0, a.unpaidReentryCount - aPaid);
         const bToPay = Math.max(0, b.unpaidReentryCount - bPaid);
 
@@ -292,7 +282,7 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
         if (aToPay === 0 && bToPay > 0) {
           return 1;
         }
-        return a.playerId - b.playerId;
+        return a.playerId.localeCompare(b.playerId);
       }),
     [players],
   );
@@ -355,10 +345,7 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
         {rows.map((player) => {
           const freeReentryCount = player.freeReentryCount;
           const unpaidReentryCount = player.unpaidReentryCount;
-          const paidReentryCount = (player.reentryByPaymentMethod ?? []).reduce(
-            (sum, [, count]) => sum + count,
-            0,
-          );
+          const paidReentryCount = (player.reentryByPaymentMethod ?? []).length;
           const toPayReentryCount = Math.max(
             0,
             unpaidReentryCount - paidReentryCount,

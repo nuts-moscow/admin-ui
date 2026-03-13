@@ -35,7 +35,9 @@ const AddPlayerModalContent: FC<AddPlayerModalContentProps> = ({
     const tournamentPlayerIds = new Set(
       (tournamentPlayers ?? []).map((player) => player.playerId)
     );
-    return (players ?? []).filter((player) => !tournamentPlayerIds.has(player.id));
+    return (players ?? []).filter(
+      (player) => !tournamentPlayerIds.has(String(player.id))
+    );
   }, [players, tournamentPlayers]);
 
   const handleSave = async () => {

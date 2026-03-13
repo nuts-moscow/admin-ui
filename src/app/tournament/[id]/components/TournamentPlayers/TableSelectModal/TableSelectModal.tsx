@@ -14,7 +14,7 @@ export interface TableSelectModalProps extends WithModalProps {
   readonly description?: string;
   readonly onSave: (
     player: InGamePlayerState,
-    tableId?: number,
+    tableId?: string,
   ) => Promise<void> | void;
 }
 
@@ -33,7 +33,7 @@ export const TableSelectModal: FC<TableSelectModalProps> = ({
   );
 
   useEffect(() => {
-    setSelectedTableId(player?.tableId);
+    setSelectedTableId(player?.tableId ? Number(player.tableId) : undefined);
   }, [player?.playerId, player?.tableId]);
 
   const handleSave = async () => {
@@ -42,7 +42,7 @@ export const TableSelectModal: FC<TableSelectModalProps> = ({
     }
     setIsLoading(true);
     try {
-      await onSave(player, selectedTableId);
+      await onSave(player, selectedTableId ? String(selectedTableId) : undefined);
       close();
     } catch (error) {
       console.error(error);
