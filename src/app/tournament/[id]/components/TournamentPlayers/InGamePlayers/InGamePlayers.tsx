@@ -169,6 +169,7 @@ export const InGamePlayers: FC<InGamePlayersProps> = ({ tournamentId }) => {
     <>
       <PayPlayerModalConnect tournamentId={tournamentId} player={playerToPay} />
       <SetTableModal
+        tournamentId={tournamentId}
         player={playerToSetTable}
         onSave={async (player, tableId) => {
           await setPlayerTableId(

@@ -297,6 +297,7 @@ export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
         player={playerToPay}
       />
       <SetTableModal
+        tournamentId={String(tournament.id)}
         player={playerToMove}
         title="Пересадить игрока"
         description={

@@ -254,6 +254,7 @@ export const WaitingListPlayers: FC<WaitingListPlayersProps> = ({
     <>
       <RemovePlayerModal tournamentId={tournamentId} player={playerToRemove} />
       <SetArrivedModal
+        tournamentId={tournamentId}
         player={playerToArrive}
         onSave={async (player, tableId) => {
           await setPlayerInGameNotPaidStatus(
