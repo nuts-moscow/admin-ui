@@ -28,6 +28,7 @@ export interface InGamePlayerState {
   readonly totalReentryCount: number;
   readonly bountyCount: number;
   readonly bountyKills?: BountyKillEntry[];
+  readonly eliminatedBy?: string[];
   readonly bonuses: Bonus[];
   readonly freeEntryCount: number;
   readonly freeReentryCount: number;

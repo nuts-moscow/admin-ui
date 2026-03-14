@@ -161,6 +161,98 @@ const BountyListModal: FC<BountyListModalProps> = ({
   );
 };
 
+interface EliminatedByModalProps {
+  close: () => void;
+  initialData?: InGamePlayerState | null;
+  tournamentId: string;
+  players: InGamePlayerState[];
+  onRemoved: () => void;
+}
+
+const EliminatedByModal: FC<EliminatedByModalProps> = ({
+  close,
+  initialData: row,
+  tournamentId,
+  players,
+  onRemoved,
+}) => {
+  const environment = useEnvironment();
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const eliminatedByIds = row?.eliminatedBy ?? [];
+  const victimPlayerId = row?.playerId ?? "";
+
+  const getKillerInfo = (id: string) => {
+    const killer = players.find(
+      (p) =>
+        p.playerId === id || String(p.tournamentPlayerId) === String(id),
+    );
+    return {
+      name: killer?.playerName ?? id,
+      killerPlayerId: killer?.playerId ?? id,
+    };
+  };
+
+  const handleRemove = async (killerPlayerId: string) => {
+    setRemovingId(killerPlayerId);
+    try {
+      await bountyRemove(environment, tournamentId, {
+        killerPlayerId,
+        victimPlayerId,
+      });
+      onRemoved();
+      close();
+    } catch (error) {
+      console.error(error);
+      toast({ type: "error", message: "Не удалось отменить запись" });
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
+  return (
+    <Box flex={{ col: true }}>
+      <Modal.Title showCloseButton>
+        Кто меня выбил — {row?.playerName ?? ""}
+      </Modal.Title>
+      <Modal.Content minWidth={400}>
+        <Box flex={{ col: true, gap: 2 }}>
+          {eliminatedByIds.length === 0 ? (
+            <Typography.Text type="secondary" size="small">
+              Нет записей
+            </Typography.Text>
+          ) : (
+            eliminatedByIds.map((id, index) => {
+              const { name, killerPlayerId } = getKillerInfo(id);
+              return (
+                <Box
+                  key={`${id}-${index}`}
+                  flex={{ align: "center", justify: "space-between", gap: 2 }}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: 10,
+                    border: "1px solid var(--border-color)",
+                  }}
+                >
+                  <Typography.Text size="small">{name}</Typography.Text>
+                  <Button
+                    type="ghost"
+                    size="xxSmall"
+                    style={{ padding: 4 }}
+                    iconRight={<X size={16} color="var(--text-error)" />}
+                    onClick={() => handleRemove(killerPlayerId)}
+                    disabled={removingId !== null}
+                    loading={removingId === killerPlayerId}
+                  />
+                </Box>
+              );
+            })
+          )}
+        </Box>
+      </Modal.Content>
+    </Box>
+  );
+};
+
 const PAY_REENTRY_METHOD_OPTIONS: Array<{
   readonly label: Exclude<PaymentMethod, "Free">;
   readonly value: Exclude<PaymentMethod, "Free">;
@@ -451,6 +543,8 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
   const [PayReentriesModalConnect, openPayReentriesModal] =
     useModal(PayReentriesModal);
   const [BountyModal, openBountyModal] = useModal(BountyListModal);
+  const [EliminatedByModalConnect, openEliminatedByModal] =
+    useModal(EliminatedByModal);
   const { data: players } = useNonRegisteredTournamentPlayerState(
     String(tournament.id),
   );
@@ -510,6 +604,11 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
         player={playerToPayReentries}
       />
       <BountyModal
+        tournamentId={String(tournament.id)}
+        players={players ?? []}
+        onRemoved={refetchTournamentPlayerState}
+      />
+      <EliminatedByModalConnect
         tournamentId={String(tournament.id)}
         players={players ?? []}
         onRemoved={refetchTournamentPlayerState}
@@ -655,6 +754,13 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
                     onClick={() => openBountyModal(player)}
                   >
                     Показать баунти
+                  </Button>
+                  <Button
+                    type="secondary"
+                    size="xxSmall"
+                    onClick={() => openEliminatedByModal(player)}
+                  >
+                    Кто меня выбил
                   </Button>
                 </Box>
               </Box>
