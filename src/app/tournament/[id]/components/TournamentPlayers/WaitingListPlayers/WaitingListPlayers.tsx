@@ -19,7 +19,8 @@ import { removePlayerFromTournament } from "@/core/states/tournaments/requests/r
 import { refetchTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
 import { playerGameStart } from "@/core/states/tournaments/requests/updatePlayerState";
 import { TableSelectModal } from "../TableSelectModal/TableSelectModal";
-import { tableListCls, tableListItemBadgeCls } from "../TableList/TableList.css";
+import { tableListCls } from "../TableList/TableList.css";
+import { useTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
 
 export interface WaitingListPlayersProps {
   readonly tournamentId: string;
@@ -37,12 +38,25 @@ interface SetArrivedAndPaidConfirmModalProps extends WithModalProps {
 }
 
 const TABLE_OPTIONS = Array.from({ length: 10 }, (_, i) => i + 1);
+const TABLE_CAPACITY = 10;
+
+const parseTableNumber = (tableId?: string): number | undefined => {
+  if (!tableId) return undefined;
+  const direct = Number(tableId);
+  if (Number.isFinite(direct) && direct > 0) return direct;
+  const match = tableId.match(/\d+/);
+  if (!match) return undefined;
+  const parsed = Number(match[0]);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+};
+
 const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
   close,
   tournamentId,
   player,
 }) => {
   const environment = useEnvironment();
+  const { data: players } = useTournamentPlayerState(tournamentId);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedTableId, setSelectedTableId] = useState<number | undefined>(
     undefined,
@@ -56,10 +70,25 @@ const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
     return baseOptions;
   }, [player?.freeEntryCount]);
 
+  const occupiedByTable = useMemo(() => {
+    const tableMap = new Map<number, number>();
+    (players ?? []).forEach((item) => {
+      if (item.status === "Out" || item.playerId === player?.playerId) return;
+      const tableNumber = parseTableNumber(item.tableId);
+      if (!tableNumber) return;
+      tableMap.set(tableNumber, (tableMap.get(tableNumber) ?? 0) + 1);
+    });
+    return tableMap;
+  }, [players, player?.playerId]);
+
   useEffect(() => {
     setSelectedTableId(undefined);
     setPaymentMethod("CreditCard");
   }, [player?.playerId]);
+
+  useEffect(() => {
+    setSelectedTableId(parseTableNumber(player?.tableId));
+  }, [player?.playerId, player?.tableId]);
 
   useEffect(() => {
     if (paymentMethod === "Free" && (player?.freeEntryCount ?? 0) <= 0) {
@@ -116,16 +145,48 @@ const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
             ))}
           </select>
           <Box className={tableListCls}>
-            {TABLE_OPTIONS.map((tableNumber) => (
-              <Button
-                key={tableNumber}
-                htmlType="button"
-                type={selectedTableId === tableNumber ? "accent" : "secondary"}
-                size="xxSmall"
-                iconRight={<span className={tableListItemBadgeCls}>{tableNumber}</span>}
-                onClick={() => setSelectedTableId(tableNumber)}
-              />
-            ))}
+            {TABLE_OPTIONS.map((tableNumber) => {
+              const occupied = occupiedByTable.get(tableNumber) ?? 0;
+              const currentPlayers = Math.min(TABLE_CAPACITY, occupied);
+              const isFull = currentPlayers >= TABLE_CAPACITY;
+              const isSelected = selectedTableId === tableNumber;
+
+              return (
+                <Button
+                  key={tableNumber}
+                  htmlType="button"
+                  type="secondary"
+                  size="small"
+                  onClick={() => setSelectedTableId(tableNumber)}
+                  disabled={isFull}
+                  style={{
+                    minWidth: 84,
+                    backgroundColor: isSelected
+                      ? "rgba(255, 196, 2, 0.14)"
+                      : undefined,
+                    border: isSelected
+                      ? "1px solid var(--text-accent)"
+                      : "1px solid var(--border-color)",
+                    boxShadow: isSelected
+                      ? "0 0 0 2px rgba(255, 196, 2, 0.2)"
+                      : undefined,
+                  }}
+                >
+                  <Box
+                    flex={{ col: true, align: "center", gap: 0.5 }}
+                    style={{
+                      borderRadius: 10,
+                      padding: "2px 6px",
+                    }}
+                  >
+                    <Typography.Text bold>{tableNumber}</Typography.Text>
+                    <Typography.Text size="small" type="secondary">
+                      {currentPlayers}/{TABLE_CAPACITY}
+                    </Typography.Text>
+                  </Box>
+                </Button>
+              );
+            })}
           </Box>
           <Box flex={{ gap: 4, width: "100%" }}>
             <Button

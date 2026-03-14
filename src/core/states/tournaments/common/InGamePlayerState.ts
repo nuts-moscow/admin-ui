@@ -7,7 +7,14 @@ export type PlayerStatus =
 
 export type PaymentMethod = "Cache" | "CreditCard" | "Free";
 
-export type Bonus = "EarlyBird" | "Hookah" | "Diller";
+export const InGameBonus = {
+  EarlyBird: "EarlyBird",
+  First20: "First20",
+  Hookah: "Hookah",
+  Diller: "Diller",
+} as const;
+
+export type Bonus = (typeof InGameBonus)[keyof typeof InGameBonus];
 
 export interface BountyKillEntry {
   readonly playerId: string;
