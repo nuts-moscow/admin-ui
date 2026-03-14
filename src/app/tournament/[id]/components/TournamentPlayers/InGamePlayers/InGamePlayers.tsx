@@ -14,9 +14,9 @@ import { getPaymentMethodLabel } from "@/core/states/tournaments/common/paymentM
 import { TableSelectModal } from "../TableSelectModal/TableSelectModal";
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
 import {
-  setPlayerInGamePaidStatus,
+  inGamePayment,
+  rollbackGameStart,
   setPlayerTableId,
-  setTournamentPlayerRegisteredStatus,
 } from "@/core/states/tournaments/requests/updatePlayerState";
 import { refetchTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
 
@@ -64,20 +64,12 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({ close, tournamentId, player }
     }
     setIsLoading(true);
     try {
-      await setPlayerInGamePaidStatus(
+      await inGamePayment(
         environment,
         Number(tournamentId),
         player.playerId,
-        paymentMethod
+        { entryPaymentMethod: paymentMethod },
       );
-      if (player.tableId) {
-        await setPlayerTableId(
-          environment,
-          Number(tournamentId),
-          player.playerId,
-          player.tableId
-        );
-      }
       refetchTournamentPlayerState();
       close();
     } catch (error) {
@@ -237,10 +229,10 @@ export const InGamePlayers: FC<InGamePlayersProps> = ({
                 type="success"
                 size="xxSmall"
                 onClick={async () => {
-                  await setTournamentPlayerRegisteredStatus(
+                  await rollbackGameStart(
                     environment,
                     Number(tournamentId),
-                    row.playerId
+                    row.playerId,
                   );
                   refetchTournamentPlayerState();
                 }}

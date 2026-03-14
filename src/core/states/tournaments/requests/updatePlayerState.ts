@@ -84,6 +84,46 @@ const updateTournamentPlayerEntryPayment = async (
   });
 };
 
+export const inGamePayment = async (
+  environment: Environment,
+  tournamentId: number,
+  playerId: string,
+  request: UpdateTournamentPlayerEntryPaymentRequest,
+): Promise<InGamePlayerState> => {
+  return securedFetch<UpdateTournamentPlayerEntryPaymentRequest, InGamePlayerState>({
+    method: "POST",
+    host: environment.apiUrl,
+    path: `/v2/api/tournaments/${tournamentId}/players/${playerId}/in-game-payment`,
+    withCredentials: false,
+    body: request,
+    mapping: {
+      success: (res) => res.toJson(),
+      400: () => new Error("Invalid body or player must be in InGameNotPaid status"),
+      404: () => new Error("Player or tournament not found"),
+      500: () => new Error("Server error"),
+    },
+  });
+};
+
+export const rollbackGameStart = async (
+  environment: Environment,
+  tournamentId: number,
+  playerId: string,
+): Promise<InGamePlayerState> => {
+  return securedFetch<undefined, InGamePlayerState>({
+    method: "POST",
+    host: environment.apiUrl,
+    path: `/v2/api/tournaments/${tournamentId}/players/${playerId}/rollback-game-start`,
+    withCredentials: false,
+    body: undefined,
+    mapping: {
+      success: (res) => res.toJson(),
+      404: () => new Error("Player or tournament not found"),
+      500: () => new Error("Server error"),
+    },
+  });
+};
+
 const updateTournamentPlayerTable = async (
   environment: Environment,
   tournamentId: number,
@@ -145,15 +185,47 @@ const removeTournamentPlayerTable = async (
   });
 };
 
+export interface PlayerGameStartBody {
+  readonly entryPaymentMethod?: PaymentMethod;
+  readonly tableId?: string;
+}
+
+export const playerGameStart = async (
+  environment: Environment,
+  tournamentId: number,
+  playerId: string,
+  body: PlayerGameStartBody = {},
+): Promise<InGamePlayerState> => {
+  const requestBody: Record<string, unknown> = {};
+  if (body.entryPaymentMethod != null) {
+    requestBody.entryPaymentMethod = body.entryPaymentMethod;
+  }
+  if (body.tableId != null && body.tableId !== "") {
+    requestBody.tableId = body.tableId;
+  }
+  return securedFetch<Record<string, unknown>, InGamePlayerState>({
+    method: "POST",
+    host: environment.apiUrl,
+    path: `/v2/api/tournaments/${tournamentId}/players/${playerId}/game-start`,
+    withCredentials: false,
+    body: requestBody,
+    mapping: {
+      success: (res) => res.toJson(),
+      400: () => new Error("Player must be in Registered status, or table has too many players (max 10)"),
+      404: () => new Error("Player or tournament not found"),
+      500: () => new Error("Server error"),
+    },
+  });
+};
+
 export const setPlayerInGameNotPaidStatus = async (
   environment: Environment,
   tournamentId: number,
   playerId: string,
   tableId?: string,
 ): Promise<InGamePlayerState> => {
-  void tableId;
-  return updateTournamentPlayerStatus(environment, tournamentId, playerId, {
-    status: "InGameNotPaid",
+  return playerGameStart(environment, tournamentId, playerId, {
+    ...(tableId ? { tableId } : {}),
   });
 };
 

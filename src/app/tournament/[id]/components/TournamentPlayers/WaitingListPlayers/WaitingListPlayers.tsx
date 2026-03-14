@@ -17,11 +17,7 @@ import { getPaymentMethodLabel } from "@/core/states/tournaments/common/paymentM
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
 import { removePlayerFromTournament } from "@/core/states/tournaments/requests/removePlayerFromTournament";
 import { refetchTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
-import {
-  setPlayerInGameNotPaidStatus,
-  setPlayerInGamePaidStatus,
-  setPlayerTableId,
-} from "@/core/states/tournaments/requests/updatePlayerState";
+import { playerGameStart } from "@/core/states/tournaments/requests/updatePlayerState";
 import { TableSelectModal } from "../TableSelectModal/TableSelectModal";
 import { tableListCls, tableListItemBadgeCls } from "../TableList/TableList.css";
 
@@ -77,20 +73,15 @@ const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
     }
     setIsLoading(true);
     try {
-      await setPlayerInGamePaidStatus(
+      await playerGameStart(
         environment,
         Number(tournamentId),
         player.playerId,
-        paymentMethod,
+        {
+          entryPaymentMethod: paymentMethod,
+          ...(selectedTableId ? { tableId: String(selectedTableId) } : {}),
+        },
       );
-      if (selectedTableId) {
-        await setPlayerTableId(
-          environment,
-          Number(tournamentId),
-          player.playerId,
-          String(selectedTableId),
-        );
-      }
       refetchTournamentPlayerState();
       close();
     } catch (error) {
@@ -272,19 +263,12 @@ export const WaitingListPlayers: FC<WaitingListPlayersProps> = ({
         tournamentId={tournamentId}
         player={playerToArrive}
         onSave={async (player, tableId) => {
-          await setPlayerInGameNotPaidStatus(
+          await playerGameStart(
             environment,
             Number(tournamentId),
             player.playerId,
+            tableId ? { tableId } : {},
           );
-          if (tableId) {
-            await setPlayerTableId(
-              environment,
-              Number(tournamentId),
-              player.playerId,
-              tableId,
-            );
-          }
           refetchTournamentPlayerState();
         }}
       />

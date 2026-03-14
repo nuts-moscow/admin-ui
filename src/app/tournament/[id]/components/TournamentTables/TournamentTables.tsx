@@ -16,8 +16,8 @@ import { getPaymentMethodLabel } from "@/core/states/tournaments/common/paymentM
 import { TableSelectModal } from "../TournamentPlayers/TableSelectModal/TableSelectModal";
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
 import {
+  inGamePayment,
   removePlayerFromTable,
-  setPlayerInGamePaidStatus,
   setPlayerTableId,
 } from "@/core/states/tournaments/requests/updatePlayerState";
 import { refetchTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
@@ -72,20 +72,12 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({
     }
     setIsLoading(true);
     try {
-      await setPlayerInGamePaidStatus(
+      await inGamePayment(
         environment,
         Number(tournamentId),
         player.playerId,
-        paymentMethod
+        { entryPaymentMethod: paymentMethod },
       );
-      if (player.tableId) {
-        await setPlayerTableId(
-          environment,
-          Number(tournamentId),
-          player.playerId,
-          player.tableId
-        );
-      }
       refetchTournamentPlayerState();
       close();
     } catch (error) {
@@ -348,13 +340,13 @@ export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
               borderRadius: 10,
               border: "1px solid rgba(0, 0, 0, 0.08)",
               backgroundColor:
-                player.entyPaymentMethod == null
+                (player.entryPaymentMethod ?? player.entyPaymentMethod) == null
                   ? "rgba(220, 38, 38, 0.12)"
                   : "#fff",
             }}
           >
             <Typography.Text size="small" type="secondary" flexItem={{ minWidth: 56 }}>
-              {player.playerId}
+              {player.tournamentPlayerId}
             </Typography.Text>
             <Typography.Text size="small" flexItem={{ flex: 1 }}>
               {player.playerName}
@@ -363,7 +355,7 @@ export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
               {statusLabels[player.status] ?? player.status}
             </Typography.Text>
             <Box flex={{ gap: 2 }}>
-              {player.entyPaymentMethod == null && (
+              {(player.entryPaymentMethod ?? player.entyPaymentMethod) == null && (
                 <Button
                   type="warning"
                   size="xxSmall"
