@@ -687,9 +687,11 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
             freeReentryCount + unpaidReentryCount + paidReentryCount;
           const hasUnpaidReentry = unpaidReentryCount > 0;
           const rowBackgroundColor =
-            hasUnpaidReentry
-              ? "rgba(220, 38, 38, 0.12)"
-              : "#e9e9e9";
+            player.signAgreement === false
+              ? "rgba(255, 196, 2, 0.22)"
+              : hasUnpaidReentry
+                ? "rgba(220, 38, 38, 0.12)"
+                : "#e9e9e9";
 
           return (
             <Box

@@ -347,9 +347,11 @@ export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
               borderRadius: 10,
               border: "1px solid rgba(0, 0, 0, 0.08)",
               backgroundColor:
-                (player.entryPaymentMethod ?? player.entyPaymentMethod) == null
-                  ? "rgba(220, 38, 38, 0.12)"
-                  : "#fff",
+                player.signAgreement === false
+                  ? "rgba(255, 196, 2, 0.22)"
+                  : (player.entryPaymentMethod ?? player.entyPaymentMethod) == null
+                    ? "rgba(220, 38, 38, 0.12)"
+                    : "#fff",
             }}
           >
             <Typography.Text size="small" type="secondary" flexItem={{ minWidth: 56 }}>

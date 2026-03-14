@@ -55,6 +55,10 @@ export const playerListRowMutedCls = style({
   backgroundColor: "rgba(94, 94, 94, 0.08)",
 });
 
+export const playerListRowNoAgreementCls = style({
+  backgroundColor: "rgba(255, 196, 2, 0.22)",
+});
+
 export const playerListRowNumberCls = style({
   minWidth: 28,
   textAlign: "right",

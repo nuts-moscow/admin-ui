@@ -35,4 +35,6 @@ export interface InGamePlayerState {
   readonly placement?: number;
   // Legacy field used by current reentry UI.
   readonly unpaidReentryCount: number;
+  /** Подписан ли договор (v2/api/tournaments/{id}/players). */
+  readonly signAgreement?: boolean;
 }

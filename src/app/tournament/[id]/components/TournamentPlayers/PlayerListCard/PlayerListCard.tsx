@@ -9,6 +9,7 @@ import {
   playerListRowCls,
   playerListRowHighlightCls,
   playerListRowMutedCls,
+  playerListRowNoAgreementCls,
   playerListRowNumberCls,
   playerListRowNameCls,
   playerListRowActionsCls,
@@ -45,7 +46,8 @@ export const PlayerListCard: FC<PlayerListCardProps> = ({
               className={clsx(
                 playerListRowCls,
                 row.status === "InGameNotPaid" && playerListRowHighlightCls,
-                row.status === "Registered" && playerListRowMutedCls
+                row.status === "Registered" && playerListRowMutedCls,
+                row.signAgreement === false && playerListRowNoAgreementCls
               )}
             >
               <Typography.Text
