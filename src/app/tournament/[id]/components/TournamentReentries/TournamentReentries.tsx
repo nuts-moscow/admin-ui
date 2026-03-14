@@ -366,17 +366,14 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
   const rows = useMemo(
     () =>
       [...filteredPlayers].sort((a, b) => {
-        const aPaid = (a.reentryByPaymentMethod ?? []).length;
-        const bPaid = (b.reentryByPaymentMethod ?? []).length;
-        const aToPay = Math.max(0, toSafeNumber(a.unpaidReentryCount) - aPaid);
-        const bToPay = Math.max(0, toSafeNumber(b.unpaidReentryCount) - bPaid);
+        const aUnpaid = toSafeNumber(a.unpaidReentryCount);
+        const bUnpaid = toSafeNumber(b.unpaidReentryCount);
+        const aHasUnpaid = aUnpaid > 0;
+        const bHasUnpaid = bUnpaid > 0;
 
-        if (aToPay > 0 && bToPay === 0) {
-          return -1;
-        }
-        if (aToPay === 0 && bToPay > 0) {
-          return 1;
-        }
+        if (aHasUnpaid && !bHasUnpaid) return -1;
+        if (!aHasUnpaid && bHasUnpaid) return 1;
+
         const aTournamentPlayerId = Number(a.tournamentPlayerId);
         const bTournamentPlayerId = Number(b.tournamentPlayerId);
         if (
@@ -385,7 +382,7 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
         ) {
           return aTournamentPlayerId - bTournamentPlayerId;
         }
-        return a.tournamentPlayerId.localeCompare(b.tournamentPlayerId);
+        return (a.tournamentPlayerId ?? "").localeCompare(b.tournamentPlayerId ?? "");
       }),
     [filteredPlayers],
   );
@@ -473,7 +470,7 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
           );
           const totalReentryCount =
             freeReentryCount + unpaidReentryCount + paidReentryCount;
-          const hasUnpaidReentry = toPayReentryCount > 0;
+          const hasUnpaidReentry = unpaidReentryCount > 0;
           const rowBackgroundColor =
             hasUnpaidReentry
               ? "rgba(220, 38, 38, 0.12)"
