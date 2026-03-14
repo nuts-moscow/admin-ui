@@ -39,13 +39,20 @@ export const PlayerListCard: FC<PlayerListCardProps> = ({
       <div className={playerListCardBodyCls}>
         {rows.map((row, index) => {
           const actions = renderActions?.(row);
+          const hasEntryPayment =
+            (row.entryPaymentMethod ?? row.entyPaymentMethod) != null;
+          const isOutOrOutNotPaid =
+            row.status === "Out" || row.status === "OutNotPaid";
+          const needsEntryHighlight =
+            row.status === "InGameNotPaid" ||
+            (isOutOrOutNotPaid && !hasEntryPayment);
 
           return (
             <div
               key={index}
               className={clsx(
                 playerListRowCls,
-                row.status === "InGameNotPaid" && playerListRowHighlightCls,
+                needsEntryHighlight && playerListRowHighlightCls,
                 row.status === "Registered" && playerListRowMutedCls,
                 row.signAgreement === false && playerListRowNoAgreementCls
               )}

@@ -160,22 +160,22 @@ export const InGamePlayers: FC<InGamePlayersProps> = ({
     });
   }, [nonRegisteredPlayers, searchQuery]);
 
-  const rows = useMemo(
-    () =>
-      [...filteredPlayers].sort((a, b) => {
-        if (a.status === b.status) {
-          return 0;
-        }
-        if (a.status === "InGameNotPaid") {
-          return -1;
-        }
-        if (b.status === "InGameNotPaid") {
-          return 1;
-        }
-        return 0;
-      }),
-    [filteredPlayers]
-  );
+  const rows = useMemo(() => {
+    const needsEntryAttention = (p: InGamePlayerState) => {
+      const hasPayment = (p.entryPaymentMethod ?? p.entyPaymentMethod) != null;
+      return (
+        p.status === "InGameNotPaid" ||
+        ((p.status === "Out" || p.status === "OutNotPaid") && !hasPayment)
+      );
+    };
+    return [...filteredPlayers].sort((a, b) => {
+      const aNeeds = needsEntryAttention(a);
+      const bNeeds = needsEntryAttention(b);
+      if (aNeeds && !bNeeds) return -1;
+      if (!aNeeds && bNeeds) return 1;
+      return 0;
+    });
+  }, [filteredPlayers]);
 
   return (
     <>
