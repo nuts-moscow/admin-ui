@@ -7,12 +7,13 @@ import { Modal, useModal } from "@/components/Modal/Modal";
 import { toast } from "@/components/Toast/Toast";
 import { Typography } from "@/components/Typography/Typography";
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
-import { bountyRemove } from "@/core/states/tournaments/requests/bountyRemove";
 import {
   BountyKillEntry,
-  TournamentPlayerResult,
-} from "@/core/states/tournaments/requests/getTournamentFinalResults";
-import { useTournamentFinalResults } from "@/core/states/tournaments/hooks/useTournamentFinalResults";
+  InGamePlayerState,
+} from "@/core/states/tournaments/common/InGamePlayerState";
+import { refetchTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
+import { useTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
+import { bountyRemove } from "@/core/states/tournaments/requests/bountyRemove";
 import { TournamentInfoResponse } from "@/core/states/tournaments/requests/getTournament";
 import { Copy, X } from "lucide-react";
 
@@ -25,9 +26,9 @@ const GRID_TEMPLATE =
 
 interface BountyListModalProps {
   close: () => void;
-  initialData?: TournamentPlayerResult | null;
+  initialData?: InGamePlayerState | null;
   tournamentId: string;
-  allPlayers: TournamentPlayerResult[];
+  allPlayers: InGamePlayerState[];
   onRemoved: () => void;
 }
 
@@ -117,9 +118,9 @@ const BountyListModal: FC<BountyListModalProps> = ({
 
 interface EliminatedByModalProps {
   close: () => void;
-  initialData?: TournamentPlayerResult | null;
+  initialData?: InGamePlayerState | null;
   tournamentId: string;
-  allPlayers: TournamentPlayerResult[];
+  allPlayers: InGamePlayerState[];
   onRemoved: () => void;
 }
 
@@ -209,23 +210,40 @@ const EliminatedByModal: FC<EliminatedByModalProps> = ({
 export const TournamentResults: FC<TournamentResultsProps> = ({
   tournament,
 }) => {
-  const { data, loading, refetch } = useTournamentFinalResults(
-    String(tournament.id),
-  );
+  const tournamentId = String(tournament.id);
+  const { data: players = [], loading } = useTournamentPlayerState(tournamentId);
   const [BountyModal, openBountyModal] = useModal(BountyListModal);
   const [EliminatedByModalConnect, openEliminatedByModal] =
     useModal(EliminatedByModal);
 
-  const rows = useMemo(
-    () => [...(data?.results ?? [])].sort((a, b) => a.placement - b.placement),
-    [data?.results]
-  );
+  const rows = useMemo(() => {
+    const list = [...players];
+    const noPlacement = list.filter((r) => r.placement == null);
+    const withPlacement = list.filter((r) => r.placement != null);
+    const byTournamentPlayerId = (a: InGamePlayerState, b: InGamePlayerState) => {
+      const idA = a.tournamentPlayerId ?? a.playerId;
+      const idB = b.tournamentPlayerId ?? b.playerId;
+      const nA = typeof idA === "number" ? idA : parseInt(String(idA), 10) || 0;
+      const nB = typeof idB === "number" ? idB : parseInt(String(idB), 10) || 0;
+      if (nA !== nB) return nA - nB;
+      return String(idA).localeCompare(String(idB));
+    };
+    const byPlacementDesc = (a: InGamePlayerState, b: InGamePlayerState) =>
+      (b.placement ?? 0) - (a.placement ?? 0);
+    noPlacement.sort(byTournamentPlayerId);
+    withPlacement.sort(byPlacementDesc);
+    return [...noPlacement, ...withPlacement];
+  }, [players]);
+
+  const totalPlayers = rows.length;
+  const placeNumber = (placement: number | null | undefined) =>
+    placement != null ? totalPlayers - placement + 1 : null;
 
   const copyResults = async () => {
     const text = rows
       .map(
         (row) =>
-          `${row.placement}. ${row.playerName} — Баунти: ${row.bountyCount}`
+          `${placeNumber(row.placement) ?? "-"}. ${row.playerName} — Баунти: ${row.bountyCount}`
       )
       .join("\n");
     if (!text) {
@@ -257,14 +275,14 @@ export const TournamentResults: FC<TournamentResultsProps> = ({
       }}
     >
       <BountyModal
-        tournamentId={String(tournament.id)}
+        tournamentId={tournamentId}
         allPlayers={rows}
-        onRemoved={() => refetch(String(tournament.id))}
+        onRemoved={refetchTournamentPlayerState}
       />
       <EliminatedByModalConnect
-        tournamentId={String(tournament.id)}
+        tournamentId={tournamentId}
         allPlayers={rows}
-        onRemoved={() => refetch(String(tournament.id))}
+        onRemoved={refetchTournamentPlayerState}
       />
       <Box flex={{ justify: "center", width: "100%" }}>
         <Button
@@ -331,7 +349,9 @@ export const TournamentResults: FC<TournamentResultsProps> = ({
                 row.signAgreement === false ? "rgba(255, 196, 2, 0.22)" : undefined,
             }}
           >
-            <Typography.Text>{row.placement}</Typography.Text>
+            <Typography.Text>
+              {placeNumber(row.placement) ?? "—"}
+            </Typography.Text>
             <Box
               style={{
                 width: 40,
