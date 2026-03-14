@@ -1,11 +1,17 @@
 import { securedFetch } from "@/core/utils/misc/securedFetch";
 import { Environment } from "../../environment/Environment";
 
+export interface BountyKillEntry {
+  readonly playerId: string;
+  readonly playerName?: string;
+}
+
 export interface TournamentPlayerResult {
-  readonly playerId: number;
+  readonly playerId: number | string;
   readonly playerName: string;
   readonly placement: number;
   readonly bountyCount: number;
+  readonly bountyKills?: BountyKillEntry[];
 }
 
 export interface TournamentFinalResultsResponse {

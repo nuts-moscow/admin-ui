@@ -9,6 +9,11 @@ export type PaymentMethod = "Cache" | "CreditCard" | "Free";
 
 export type Bonus = "EarlyBird" | "Hookah" | "Diller";
 
+export interface BountyKillEntry {
+  readonly playerId: string;
+  readonly playerName?: string;
+}
+
 export interface InGamePlayerState {
   readonly playerId: string;
   readonly tournamentPlayerId: string;
@@ -22,10 +27,11 @@ export interface InGamePlayerState {
   readonly reentryByPaymentMethod: PaymentMethod[];
   readonly totalReentryCount: number;
   readonly bountyCount: number;
+  readonly bountyKills?: BountyKillEntry[];
   readonly bonuses: Bonus[];
   readonly freeEntryCount: number;
   readonly freeReentryCount: number;
   readonly placement?: number;
   // Legacy field used by current reentry UI.
-  readonly unpaidReentryCount: number
+  readonly unpaidReentryCount: number;
 }
