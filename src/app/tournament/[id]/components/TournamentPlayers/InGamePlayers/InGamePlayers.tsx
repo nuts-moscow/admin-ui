@@ -3,6 +3,7 @@
 import { FC, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/Button/Button";
 import { Box } from "@/components/Box/Box";
+import { Typography } from "@/components/Typography/Typography";
 import { useModal, Modal, WithModalProps } from "@/components/Modal/Modal";
 import { PlayerListCard } from "../PlayerListCard/PlayerListCard";
 import { useNonRegisteredTournamentPlayerState } from "@/core/states/tournaments/hooks/useNonRegisteredTournamentPlayerState";
@@ -196,80 +197,92 @@ export const InGamePlayers: FC<InGamePlayersProps> = ({
         title="На игре"
         count={rows.length}
         rows={rows}
-        renderActions={(row) => (
-          <>
-            {row.status === "InGameNotPaid" && (
-              <Button
-                type="warning"
-                size="xxSmall"
-                onClick={() => {
-                  setPlayerToPay(row);
-                  openPayPlayerModal();
-                }}
-              >
-                Оплатить
-              </Button>
-            )}
-            {row.status === "InGamePaid" && (
-              <Button
-                type="secondary"
-                size="xxSmall"
-                onClick={() => {
-                  setPlayerToPay(row);
-                  openPayPlayerModal();
-                }}
-              >
-                {getPlayerPaymentMethod(row)
-                  ? getPaymentMethodLabel(getPlayerPaymentMethod(row))
-                  : "Оплата"}
-              </Button>
-            )}
-            {(row.status === "InGamePaid" || row.status === "InGameNotPaid") && (
-              <Button
-                type="success"
-                size="xxSmall"
-                onClick={async () => {
-                  await rollbackGameStart(
-                    environment,
-                    Number(tournamentId),
-                    row.playerId,
-                  );
-                  refetchTournamentPlayerState();
-                }}
-              >
-                В запись
-              </Button>
-            )}
-            {row.tableId ? (
-              <Button
-                type="secondary"
-                size="xxSmall"
-                style={{
-                  backgroundColor: "var(--background-primary)",
-                  color: "var(--text-primary)",
-                  border: "1px solid var(--border-color)",
-                }}
-                onClick={() => {
-                  setPlayerToSetTable(row);
-                  openSetTableModal();
-                }}
-              >
-                Стол {row.tableId}
-              </Button>
-            ) : (
-              <Button
-                type="error"
-                size="xxSmall"
-                onClick={() => {
-                  setPlayerToSetTable(row);
-                  openSetTableModal();
-                }}
-              >
-                Стол
-              </Button>
-            )}
-          </>
-        )}
+        renderActions={(row) => {
+          const hasEntryPayment =
+            (row.entryPaymentMethod ?? row.entyPaymentMethod) != null;
+          const isOutOrOutNotPaid =
+            row.status === "Out" || row.status === "OutNotPaid";
+          return (
+            <>
+              {isOutOrOutNotPaid && (
+                <Typography.Text size="small" type="secondary">
+                  Вылетел
+                </Typography.Text>
+              )}
+              {!hasEntryPayment && (
+                <Button
+                  type="warning"
+                  size="xxSmall"
+                  onClick={() => {
+                    setPlayerToPay(row);
+                    openPayPlayerModal();
+                  }}
+                >
+                  Оплатить
+                </Button>
+              )}
+              {hasEntryPayment && (
+                <Button
+                  type="secondary"
+                  size="xxSmall"
+                  onClick={() => {
+                    setPlayerToPay(row);
+                    openPayPlayerModal();
+                  }}
+                >
+                  {getPlayerPaymentMethod(row)
+                    ? getPaymentMethodLabel(getPlayerPaymentMethod(row))
+                    : "Оплата"}
+                </Button>
+              )}
+              {!isOutOrOutNotPaid && (
+                <Button
+                  type="success"
+                  size="xxSmall"
+                  onClick={async () => {
+                    await rollbackGameStart(
+                      environment,
+                      Number(tournamentId),
+                      row.playerId,
+                    );
+                    refetchTournamentPlayerState();
+                  }}
+                >
+                  В запись
+                </Button>
+              )}
+              {!isOutOrOutNotPaid &&
+                (row.tableId ? (
+                  <Button
+                    type="secondary"
+                    size="xxSmall"
+                    style={{
+                      backgroundColor: "var(--background-primary)",
+                      color: "var(--text-primary)",
+                      border: "1px solid var(--border-color)",
+                    }}
+                    onClick={() => {
+                      setPlayerToSetTable(row);
+                      openSetTableModal();
+                    }}
+                  >
+                    Стол {row.tableId}
+                  </Button>
+                ) : (
+                  <Button
+                    type="error"
+                    size="xxSmall"
+                    onClick={() => {
+                      setPlayerToSetTable(row);
+                      openSetTableModal();
+                    }}
+                  >
+                    Стол
+                  </Button>
+                ))}
+            </>
+          );
+        }}
       />
     </>
   );

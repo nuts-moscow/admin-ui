@@ -2,7 +2,8 @@ export type PlayerStatus =
   | "Registered"
   | "InGamePaid"
   | "InGameNotPaid"
-  | "Out";
+  | "Out"
+  | "OutNotPaid";
 
 export type PaymentMethod = "Cache" | "CreditCard" | "Free";
 

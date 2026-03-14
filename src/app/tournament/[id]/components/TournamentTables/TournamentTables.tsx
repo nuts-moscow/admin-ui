@@ -269,11 +269,12 @@ export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
   const { data: nonRegisteredPlayers } = useNonRegisteredTournamentPlayerState(
     String(tournament.id)
   );
+  const excludedFromTableStatuses = ["Out", "OutNotPaid"] as const;
   const tablePlayers = (nonRegisteredPlayers ?? []).filter(
     (player) =>
       !!selectedTableId &&
       Number(player.tableId) === selectedTableId &&
-      player.status !== "Out"
+      !excludedFromTableStatuses.includes(player.status as (typeof excludedFromTableStatuses)[number])
   );
 
   return (
@@ -304,7 +305,13 @@ export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
       <SetOutPlayerModalConnect
         tournamentId={String(tournament.id)}
         bustedPlayer={playerToSetOut}
-        players={nonRegisteredPlayers ?? []}
+        players={
+          playerToSetOut?.tableId
+            ? (nonRegisteredPlayers ?? []).filter(
+                (p) => String(p.tableId) === String(playerToSetOut.tableId),
+              )
+            : []
+        }
       />
       <TableList
         tournamentId={String(tournament.id)}
