@@ -3,6 +3,7 @@
 import { FC, useState } from "react";
 import { Box } from "@/components/Box/Box";
 import { Button } from "@/components/Button/Button";
+import { Checkbox } from "@/components/Checkbox/Checkbox";
 import { Input } from "@/components/Input/Input";
 import { TextArea } from "@/components/Textarea/TextArea";
 import { Form } from "@/components/Form/Form";
@@ -20,6 +21,7 @@ import {
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
 import { refetchPlayers } from "@/core/states/players/hooks/usePlayers";
 import { Player } from "@/core/states/players/common/Player";
+import { Typography } from "@/components/Typography/Typography";
 import { Phone, User } from "lucide-react";
 
 export interface CreatePlayerModalProps extends WithModalProps {
@@ -35,16 +37,17 @@ export const CreatePlayerModal: FC<CreatePlayerModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [form] = useForm<Partial<CreatePlayerRequest>>({
     controls: {
-      nickname: toCtrlParam<string | undefined>(player?.nickname, [
+      nickname: toCtrlParam<string | undefined>(player?.nickname ?? undefined, [
         {
           validate: (nickname) => (nickname ? undefined : "Required"),
           level: "error",
         },
       ]),
-      name: toCtrlParam<string | undefined>(player?.name, []),
-      tg: toCtrlParam<string | undefined>(player?.tg, []),
-      phone: toCtrlParam<string | undefined>(player?.phone, []),
-      notes: toCtrlParam<string | undefined>(player?.notes, []),
+      name: toCtrlParam<string | undefined>(player?.name ?? undefined, []),
+      tg: toCtrlParam<string | undefined>(player?.tg ?? undefined, []),
+      phone: toCtrlParam<string | undefined>(player?.phone ?? undefined, []),
+      notes: toCtrlParam<string | undefined>(player?.notes ?? undefined, []),
+      signAgreement: toCtrlParam<boolean>(player?.signAgreement ?? false, []),
     },
   });
 
@@ -136,6 +139,23 @@ export const CreatePlayerModal: FC<CreatePlayerModalProps> = ({
               />
             )}
           </Form.Control>
+
+          {!player && (
+            <Form.Control name="signAgreement">
+              {({ value, onChange }) => (
+                <Box flex={{ align: "center", gap: 2 }}>
+                  <Checkbox
+                    size="medium"
+                    checked={value ?? false}
+                    onCheckedChange={(checked) => onChange(checked === true)}
+                  />
+                  <Typography.Text size="small">
+                    Есть договор
+                  </Typography.Text>
+                </Box>
+              )}
+            </Form.Control>
+          )}
 
           <Box flex={{ width: "100%", gap: 4 }}>
             <Button
