@@ -530,7 +530,7 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
   tournament,
 }) => {
   const REENTRY_LIMIT = 5;
-  const ACTIONS_COLUMN_WIDTH = 230;
+  const ACTIONS_COLUMN_WIDTH = 360;
   const [searchQuery, setSearchQuery] = useState("");
   const [playerToAddReentry, setPlayerToAddReentry] = useState<
     InGamePlayerState | undefined
@@ -725,7 +725,7 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
                   flexShrink: 0,
                 }}
               >
-                <Box flex={{ gap: 2 }}>
+                <Box flex={{ gap: 2 }} style={{ flexWrap: "wrap" }}>
                   {toPayReentryCount > 0 && (
                     <Button
                       type="warning"
