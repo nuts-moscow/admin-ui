@@ -1,9 +1,10 @@
-import * as Dialog from '@radix-ui/react-dialog';
-import { FC, ReactNode, useEffect, useState } from 'react';
+import * as Dialog from "@radix-ui/react-dialog";
+import { FC, ReactNode, useEffect, useState } from "react";
 
-import { ModalCard } from '../ModalCard/ModalCard';
-import { ModalContextProvider } from '../ModalContext/ModalContext';
-import { modalOverlayCls } from '@/components/Modal/Modal/Modal.css';
+import { ModalCard } from "../ModalCard/ModalCard";
+import { ModalContextProvider } from "../ModalContext/ModalContext";
+import { ModalDialogContextProvider } from "@/components/Modal/ModalDialogContext";
+import { modalOverlayCls } from "@/components/Modal/Modal/Modal.css";
 
 export interface ModalProps {
   readonly modalKey: string;
@@ -14,7 +15,7 @@ export interface ModalProps {
   readonly children?:
     | ReactNode
     | ((params: {
-        onClose?: ModalProps['onClose'];
+        onClose?: ModalProps["onClose"];
         opened?: boolean;
       }) => ReactNode);
 }
@@ -77,9 +78,11 @@ export const Modal: FC<ModalProps> = ({
             closing={!opened && localOpened}
             opening={localOpened && opened}
           >
-            {children instanceof Function
-              ? children({ opened, onClose })
-              : children}
+            <ModalDialogContextProvider>
+              {children instanceof Function
+                ? children({ opened, onClose })
+                : children}
+            </ModalDialogContextProvider>
           </ModalCard>
         </Dialog.Portal>
       </Dialog.Root>

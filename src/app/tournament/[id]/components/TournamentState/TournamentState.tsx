@@ -12,7 +12,15 @@ import {
   launchTournament,
 } from "@/core/states/tournaments/requests/updateTournament";
 import { refetchTournament } from "@/core/states/tournaments/hooks/useTournament";
+import { useTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
 import { TournamentInfoForm } from "./TournamentInfoForm";
+
+const IN_GAME_STATUSES = ["InGamePaid", "InGameNotPaid"] as const;
+
+const getInGameCount = (players: { status: string }[]): number =>
+  players.filter((p) =>
+    IN_GAME_STATUSES.includes(p.status as (typeof IN_GAME_STATUSES)[number]),
+  ).length;
 
 export interface TournamentStateProps {
   readonly tournament: TournamentInfoResponse;
@@ -100,9 +108,12 @@ const CompleteTournamentConfirmModal: FC<CompleteTournamentConfirmModalProps> = 
 }) => {
   const environment = useEnvironment();
   const [isCompleting, setIsCompleting] = useState(false);
+  const { data: players } = useTournamentPlayerState(String(tournament.id));
+  const inGameCount = getInGameCount(players ?? []);
+  const canComplete = inGameCount === 1;
 
   const handleCompleteTournament = async () => {
-    if (!tournament.structure || isCompleting) {
+    if (!tournament.structure || isCompleting || !canComplete) {
       return;
     }
     setIsCompleting(true);
@@ -131,6 +142,11 @@ const CompleteTournamentConfirmModal: FC<CompleteTournamentConfirmModalProps> = 
           <Typography.Text type="secondary" size="small">
             Завершить турнир "{tournament.name}"?
           </Typography.Text>
+          {!canComplete && (
+            <Typography.Text type="secondary" size="small">
+              Нельзя завершить: в игре {inGameCount} игроков (должен остаться 1 — победитель).
+            </Typography.Text>
+          )}
           <Box flex={{ gap: 4, width: "100%" }}>
             <Button
               type="secondary"
@@ -147,6 +163,7 @@ const CompleteTournamentConfirmModal: FC<CompleteTournamentConfirmModalProps> = 
               onClick={handleCompleteTournament}
               flexItem={{ flex: 1 }}
               loading={isCompleting}
+              disabled={!canComplete}
               style={{
                 backgroundColor: "#dc2626",
                 color: "#ffffff",
@@ -171,6 +188,9 @@ export const TournamentState: FC<TournamentStateProps> = ({
   const [CompleteConfirmModal, openCompleteConfirmModal] = useModal(
     CompleteTournamentConfirmModal
   );
+  const { data: players } = useTournamentPlayerState(String(tournament.id));
+  const inGameCount = getInGameCount(players ?? []);
+  const canCompleteTournament = inGameCount === 1;
 
   return (
     <Box flex={{ col: true, gap: 8, width: "100%" }}>
@@ -193,22 +213,30 @@ export const TournamentState: FC<TournamentStateProps> = ({
         </Box>
       )}
       {tournament.status === "InProgress" && (
-        <Box flex={{ justify: "center", width: "100%", gap: 3 }}>
-          <Button
-            type="error"
-            size="medium"
-            onClick={() => openCompleteConfirmModal()}
-            style={{
-              backgroundColor: "#dc2626",
-              color: "#ffffff",
-              border: "1px solid #dc2626",
-            }}
-          >
-            Завершить турнир
-          </Button>
-          <Button type="secondary" size="medium">
-            Пауза
-          </Button>
+        <Box flex={{ col: true, align: "center", width: "100%", gap: 2 }}>
+          <Box flex={{ justify: "center", width: "100%", gap: 3 }}>
+            <Button
+              type="error"
+              size="medium"
+              onClick={() => openCompleteConfirmModal()}
+              disabled={!canCompleteTournament}
+              style={{
+                backgroundColor: "#dc2626",
+                color: "#ffffff",
+                border: "1px solid #dc2626",
+              }}
+            >
+              Завершить турнир
+            </Button>
+            <Button type="secondary" size="medium">
+              Пауза
+            </Button>
+          </Box>
+          {!canCompleteTournament && (
+            <Typography.Text type="secondary" size="small">
+              Нельзя завершить: в игре {inGameCount} игроков (должен остаться 1 — победитель)
+            </Typography.Text>
+          )}
         </Box>
       )}
       <TournamentInfoForm tournament={tournament} />

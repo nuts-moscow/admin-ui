@@ -1,17 +1,23 @@
 import { securedFetch } from "@/core/utils/misc/securedFetch";
 import { Environment } from "../../environment/Environment";
 
+/** Тело POST /v2/api/tournaments/{tournamentId}/players/{playerId} (AddPlayerToTournamentBody). */
+export interface AddPlayerToTournamentBody {
+  readonly earlyBird: boolean;
+}
+
 export const addPlayerToTournament = (
   environment: Environment,
   tournamentId: string,
-  playerId: number
+  playerId: number,
+  body: AddPlayerToTournamentBody
 ) => {
-  return securedFetch<undefined, Record<string, unknown>>({
+  return securedFetch<AddPlayerToTournamentBody, Record<string, unknown>>({
     method: "POST",
     host: environment.apiUrl,
-    path: `/v1/tournaments/add-player-to-tournament?tournamentId=${tournamentId}&playerId=${playerId}`,
+    path: `/v2/api/tournaments/${tournamentId}/players/${playerId}`,
     withCredentials: false,
-    body: undefined,
+    body,
     mapping: {
       success: (res) => res.toJson(),
       400: () => new Error("Invalid tournamentId or playerId"),

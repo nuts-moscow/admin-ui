@@ -4,7 +4,6 @@ import { Box } from "@/components/Box/Box";
 import { Button } from "@/components/Button/Button";
 import { PageHeader } from "@/components/PageHeader/PageHeader";
 import { PageLayout } from "@/components/PageLayout/PageLayout";
-import { SearchInput } from "@/components/SearchInput/SearchInput";
 import { TournamentCard } from "@/app/TournamentsPageView/TournamentCard/TournamentCard";
 import { ToggleGroup } from "@/components/ToggleGroup/ToggleGroup";
 import { useModal } from "@/components/Modal/Modal";
@@ -64,24 +63,33 @@ export const TournamentsPageView: FC<TournamentsPageViewProps> = ({
         <PageHeader
           title="Турниры"
           extra={
-            <Box flex={{ gap: 2, align: "center" }}>
-              <SearchInput
-                value={searchQuery}
-                onChange={(term) => setSearchQuery(term)}
+            <Link href="/settings">
+              <Button
+                type="accent"
+                size="small"
+                iconRight={<Settings size={32} />}
               />
-              <Link href="/settings">
-                <Button
-                  type="accent"
-                  size="small"
-                  iconRight={<Settings size={32} />}
-                />
-              </Link>
-            </Box>
+            </Link>
           }
         />
 
         <PageLayout>
           <Box flex={{ col: true, gap: 12, width: "100%" }}>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Поиск по названию турнира"
+              style={{
+                width: "100%",
+                borderRadius: 12,
+                border: "1px solid var(--border-color)",
+                minHeight: 44,
+                padding: "0 12px",
+                backgroundColor: "var(--background-primary)",
+                color: "var(--text-primary)",
+              }}
+            />
             <Box
               flex={{
                 justify: "space-between",

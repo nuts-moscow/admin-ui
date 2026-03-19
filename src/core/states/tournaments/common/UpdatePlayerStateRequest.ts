@@ -7,13 +7,14 @@ export interface InGameBonusUpdateRequest {
 
 export interface UpdatePlayerStateRequest {
   readonly tournamentId: number;
-  readonly playerId: number;
+  readonly playerId: string;
   readonly status?: PlayerStatus;
+  readonly entryPaymentMethod?: PaymentMethod;
   readonly entyPaymentMethod?: PaymentMethod;
   readonly reentyPaymentMethod?: PaymentMethod;
-  readonly tableId?: number;
+  readonly tableId?: string;
   readonly reentryCount?: number;
-  readonly reentryByPaymentMethod?: Array<[PaymentMethod, number]>;
+  readonly reentryByPaymentMethod?: PaymentMethod[];
   readonly bountyCount?: number;
   readonly paidReentryCount?: number;
   readonly bonuses?: InGameBonusUpdateRequest[];

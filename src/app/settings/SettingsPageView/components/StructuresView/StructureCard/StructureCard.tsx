@@ -3,7 +3,17 @@
 import { FC } from "react";
 import { Typography } from "@/components/Typography/Typography";
 import { TournamentStructure } from "@/core/states/tournamentStructures/common/TournamentStructure";
+import { BlindType } from "@/core/states/tournamentStructures/common/BlindType";
 import { SimpleList } from "@/components/SimpleList/SimpleList";
+
+function isBlind(item: BlindType): item is { smallBlind: number; bigBlind: number } {
+  return item != null && "smallBlind" in item && "bigBlind" in item;
+}
+
+function getFirstBlindLevel(blindsStructure: TournamentStructure["blindsStructure"]): string {
+  const first = blindsStructure?.find(isBlind);
+  return first ? `${first.smallBlind}/${first.bigBlind}` : "–";
+}
 
 export interface StructureCardProps {
   readonly structure: TournamentStructure;
@@ -28,8 +38,7 @@ export const StructureCard: FC<StructureCardProps> = ({
           Старт
         </Typography.Text>
         <Typography.Text size="small">
-          {structure.blindsStructure[0].smallBlind}/
-          {structure.blindsStructure[0].bigBlind}
+          {getFirstBlindLevel(structure.blindsStructure)}
         </Typography.Text>
       </SimpleList.Column>
 

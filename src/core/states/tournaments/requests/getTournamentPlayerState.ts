@@ -9,7 +9,7 @@ export const getTournamentPlayerState = async (
   return securedFetch<undefined, InGamePlayerState[]>({
     method: "GET",
     host: environment.apiUrl,
-    path: `/v1/tournaments/get-tournament-player-state?tournamentId=${tournamentId}`,
+    path: `/v2/api/tournaments/${tournamentId}/players`,
     withCredentials: false,
     body: undefined,
     mapping: {

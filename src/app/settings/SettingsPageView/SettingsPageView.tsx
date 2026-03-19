@@ -5,7 +5,6 @@ import { Box } from "@/components/Box/Box";
 import { Button } from "@/components/Button/Button";
 import { PageHeader } from "@/components/PageHeader/PageHeader";
 import { PageLayout } from "@/components/PageLayout/PageLayout";
-import { SearchInput } from "@/components/SearchInput/SearchInput";
 import { Home } from "lucide-react";
 import Link from "next/link";
 import { StructuresView } from "./components/StructuresView/StructuresView";
@@ -40,10 +39,25 @@ export const SettingsPageView: FC<SettingsPageViewProps> = ({
         <PageHeader
           title="Турниры"
           extra={
-            <Box flex={{ gap: 2, align: "center" }}>
-              <SearchInput
+            <Box flex={{ gap: 2, align: "center" }} style={{ minWidth: 280 }}>
+              <input
+                type="text"
                 value={searchQuery}
-                onChange={(term) => setSearchQuery(term)}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder={
+                  activeTab === "structures"
+                    ? "Поиск по названию структуры"
+                    : "Поиск игрока: id, имя"
+                }
+                style={{
+                  width: "100%",
+                  borderRadius: 12,
+                  border: "1px solid var(--border-color)",
+                  minHeight: 44,
+                  padding: "0 12px",
+                  backgroundColor: "var(--background-primary)",
+                  color: "var(--text-primary)",
+                }}
               />
               <Link href="/">
                 <Button

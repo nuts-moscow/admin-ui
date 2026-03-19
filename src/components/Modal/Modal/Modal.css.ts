@@ -16,7 +16,7 @@ export const modalOverlayCls = recipe({
     background: 'var(--background-modal-overlay)',
     inset: 0,
     position: 'fixed',
-    zIndex: 9999,
+    zIndex: 9000,
   },
   variants: {
     closing: {

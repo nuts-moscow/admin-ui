@@ -3,14 +3,20 @@
 import { FC, useMemo, useState } from "react";
 import { Box } from "@/components/Box/Box";
 import { Button } from "@/components/Button/Button";
+import { Checkbox } from "@/components/Checkbox/Checkbox";
 import { Modal, WithModalProps, useModal } from "@/components/Modal/Modal";
-import { usePlayers } from "@/core/states/players/hooks/usePlayers";
-import { addPlayerToTournament } from "@/core/states/tournaments/requests/addPlayerToTournament";
+import {
+  SearchableSelect,
+  SearchableSelectOption,
+} from "@/components/SearchableSelect/SearchableSelect";
+import { Typography } from "@/components/Typography/Typography";
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
+import { usePlayers } from "@/core/states/players/hooks/usePlayers";
 import {
   refetchTournamentPlayerState,
   useTournamentPlayerState,
 } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
+import { addPlayerToTournament } from "@/core/states/tournaments/requests/addPlayerToTournament";
 
 export interface AddPlayerButtonProps {
   readonly tournamentId: string;
@@ -30,13 +36,24 @@ const AddPlayerModalContent: FC<AddPlayerModalContentProps> = ({
   const [selectedPlayerId, setSelectedPlayerId] = useState<number | undefined>(
     undefined
   );
+  const [earlyBird, setEarlyBird] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const availablePlayers = useMemo(() => {
     const tournamentPlayerIds = new Set(
       (tournamentPlayers ?? []).map((player) => player.playerId)
     );
-    return (players ?? []).filter((player) => !tournamentPlayerIds.has(player.id));
+    return (players ?? []).filter(
+      (player) => !tournamentPlayerIds.has(String(player.id))
+    );
   }, [players, tournamentPlayers]);
+  const availablePlayerOptions = useMemo<SearchableSelectOption[]>(
+    () =>
+      availablePlayers.map((player) => ({
+        value: String(player.id),
+        label: `${player.nickname}${player.name ? ` (${player.name})` : ""}`,
+      })),
+    [availablePlayers]
+  );
 
   const handleSave = async () => {
     if (!selectedPlayerId || isSaving) {
@@ -44,7 +61,9 @@ const AddPlayerModalContent: FC<AddPlayerModalContentProps> = ({
     }
     setIsSaving(true);
     try {
-      await addPlayerToTournament(environment, tournamentId, selectedPlayerId);
+      await addPlayerToTournament(environment, tournamentId, selectedPlayerId, {
+        earlyBird,
+      });
       refetchTournamentPlayerState();
       close();
     } catch (error) {
@@ -59,31 +78,25 @@ const AddPlayerModalContent: FC<AddPlayerModalContentProps> = ({
       <Modal.Title showCloseButton>Добавить игрока</Modal.Title>
       <Modal.Content minWidth={480}>
         <Box flex={{ col: true, gap: 4 }}>
-          <select
-            value={selectedPlayerId ?? ""}
-            onChange={(event) =>
-              setSelectedPlayerId(
-                event.target.value ? Number(event.target.value) : undefined
-              )
+          <SearchableSelect
+            options={availablePlayerOptions}
+            value={selectedPlayerId ? String(selectedPlayerId) : undefined}
+            placeholder="Выберите игрока"
+            onChange={(newValue) =>
+              setSelectedPlayerId(newValue ? Number(newValue) : undefined)
             }
-            style={{
-              width: "100%",
-              borderRadius: 12,
-              border: "1px solid var(--border-color)",
-              minHeight: 44,
-              padding: "0 12px",
-              backgroundColor: "var(--background-primary)",
-              color: "var(--text-primary)",
-            }}
-          >
-            <option value="">Выберите игрока</option>
-            {availablePlayers.map((player) => (
-              <option key={player.id} value={player.id}>
-                {player.nickname}
-                {player.name ? ` (${player.name})` : ""}
-              </option>
-            ))}
-          </select>
+            disabled={isSaving}
+          />
+
+          <Box flex={{ align: "center", gap: 2 }}>
+            <Checkbox
+              size="medium"
+              checked={earlyBird}
+              onCheckedChange={(checked) => setEarlyBird(checked === true)}
+              disabled={isSaving}
+            />
+            <Typography.Text size="small">Ранняя пташка</Typography.Text>
+          </Box>
 
           <Box flex={{ gap: 4, width: "100%" }}>
             <Button

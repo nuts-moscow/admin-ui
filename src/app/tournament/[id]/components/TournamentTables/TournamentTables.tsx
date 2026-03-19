@@ -12,15 +12,16 @@ import {
   InGamePlayerState,
   PaymentMethod,
 } from "@/core/states/tournaments/common/InGamePlayerState";
+import { getPaymentMethodLabel } from "@/core/states/tournaments/common/paymentMethodLabels";
 import { TableSelectModal } from "../TournamentPlayers/TableSelectModal/TableSelectModal";
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
 import {
-  setPlayerInGamePaidStatus,
+  inGamePayment,
+  removePlayerFromTable,
   setPlayerTableId,
-  setTournamentPlayerKnockedOut,
-  setTournamentPlayerOutStatus,
 } from "@/core/states/tournaments/requests/updatePlayerState";
 import { refetchTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
+import { bountyEliminate } from "@/core/states/tournaments/requests/bountyEliminate";
 
 export interface TournamentTablesProps {
   readonly tournament: TournamentInfoResponse;
@@ -49,10 +50,10 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({
   player,
 }) => {
   const environment = useEnvironment();
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("Cache");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CreditCard");
   const [isLoading, setIsLoading] = useState(false);
   const paymentMethodOptions = useMemo<PaymentMethod[]>(() => {
-    const baseOptions: PaymentMethod[] = ["Cache", "CreditCard"];
+    const baseOptions: PaymentMethod[] = ["CreditCard", "Cache"];
     if ((player?.freeEntryCount ?? 0) > 0) {
       return [...baseOptions, "Free"];
     }
@@ -61,7 +62,7 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({
 
   useEffect(() => {
     if (paymentMethod === "Free" && (player?.freeEntryCount ?? 0) <= 0) {
-      setPaymentMethod("Cache");
+      setPaymentMethod("CreditCard");
     }
   }, [paymentMethod, player?.freeEntryCount]);
 
@@ -71,12 +72,11 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({
     }
     setIsLoading(true);
     try {
-      await setPlayerInGamePaidStatus(
+      await inGamePayment(
         environment,
         Number(tournamentId),
         player.playerId,
-        paymentMethod,
-        player.tableId
+        { entryPaymentMethod: paymentMethod },
       );
       refetchTournamentPlayerState();
       close();
@@ -107,7 +107,7 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({
           >
             {paymentMethodOptions.map((method) => (
               <option key={method} value={method}>
-                {method}
+                {getPaymentMethodLabel(method)}
               </option>
             ))}
           </select>
@@ -154,7 +154,7 @@ const SetOutPlayerModal: FC<SetOutPlayerModalProps> = ({
       ),
     [players, bustedPlayer?.playerId]
   );
-  const [selectedKillerId, setSelectedKillerId] = useState<number | undefined>(
+  const [selectedKillerId, setSelectedKillerId] = useState<string | undefined>(
     undefined
   );
 
@@ -172,17 +172,11 @@ const SetOutPlayerModal: FC<SetOutPlayerModalProps> = ({
     }
     setIsLoading(true);
     try {
-      await setTournamentPlayerOutStatus(
-        environment,
-        Number(tournamentId),
-        bustedPlayer.playerId
-      );
-      await setTournamentPlayerKnockedOut(
-        environment,
-        Number(tournamentId),
-        killer.playerId,
-        killer.bountyCount
-      );
+      await bountyEliminate(environment, Number(tournamentId), {
+        eliminatedPlayerId: bustedPlayer.playerId,
+        killerPlayerId: killer.playerId,
+        type: "Out",
+      });
       refetchTournamentPlayerState();
       close();
     } catch (error) {
@@ -205,7 +199,7 @@ const SetOutPlayerModal: FC<SetOutPlayerModalProps> = ({
           {candidates.length > 0 ? (
             <select
               value={selectedKillerId}
-              onChange={(event) => setSelectedKillerId(Number(event.target.value))}
+              onChange={(event) => setSelectedKillerId(event.target.value || undefined)}
               style={{
                 width: "100%",
                 borderRadius: 12,
@@ -275,11 +269,12 @@ export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
   const { data: nonRegisteredPlayers } = useNonRegisteredTournamentPlayerState(
     String(tournament.id)
   );
+  const excludedFromTableStatuses = ["Out", "OutNotPaid"] as const;
   const tablePlayers = (nonRegisteredPlayers ?? []).filter(
     (player) =>
       !!selectedTableId &&
-      player.tableId === selectedTableId &&
-      player.status !== "Out"
+      Number(player.tableId) === selectedTableId &&
+      !excludedFromTableStatuses.includes(player.status as (typeof excludedFromTableStatuses)[number])
   );
 
   return (
@@ -289,6 +284,7 @@ export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
         player={playerToPay}
       />
       <SetTableModal
+        tournamentId={String(tournament.id)}
         player={playerToMove}
         title="Пересадить игрока"
         description={
@@ -309,7 +305,13 @@ export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
       <SetOutPlayerModalConnect
         tournamentId={String(tournament.id)}
         bustedPlayer={playerToSetOut}
-        players={nonRegisteredPlayers ?? []}
+        players={
+          playerToSetOut?.tableId
+            ? (nonRegisteredPlayers ?? []).filter(
+                (p) => String(p.tableId) === String(playerToSetOut.tableId),
+              )
+            : []
+        }
       />
       <TableList
         tournamentId={String(tournament.id)}
@@ -345,13 +347,15 @@ export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
               borderRadius: 10,
               border: "1px solid rgba(0, 0, 0, 0.08)",
               backgroundColor:
-                player.entyPaymentMethod == null
-                  ? "rgba(220, 38, 38, 0.12)"
-                  : "#fff",
+                player.signAgreement === false
+                  ? "rgba(255, 196, 2, 0.22)"
+                  : (player.entryPaymentMethod ?? player.entyPaymentMethod) == null
+                    ? "rgba(220, 38, 38, 0.12)"
+                    : "#fff",
             }}
           >
             <Typography.Text size="small" type="secondary" flexItem={{ minWidth: 56 }}>
-              {player.playerId}
+              {player.tournamentPlayerId}
             </Typography.Text>
             <Typography.Text size="small" flexItem={{ flex: 1 }}>
               {player.playerName}
@@ -360,7 +364,7 @@ export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
               {statusLabels[player.status] ?? player.status}
             </Typography.Text>
             <Box flex={{ gap: 2 }}>
-              {player.entyPaymentMethod == null && (
+              {(player.entryPaymentMethod ?? player.entyPaymentMethod) == null && (
                 <Button
                   type="warning"
                   size="xxSmall"
@@ -382,6 +386,22 @@ export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
               >
                 Пересадить
               </Button>
+              {player.tableId && (
+                <Button
+                  type="secondary"
+                  size="xxSmall"
+                  onClick={async () => {
+                    await removePlayerFromTable(
+                      environment,
+                      Number(tournament.id),
+                      player.playerId
+                    );
+                    refetchTournamentPlayerState();
+                  }}
+                >
+                  Убрать со стола
+                </Button>
+              )}
               {tournament.status !== "RegistrationOpen" && player.status !== "Out" && (
                 <Button
                   type="error"

@@ -9,6 +9,7 @@ import {
   playerListRowCls,
   playerListRowHighlightCls,
   playerListRowMutedCls,
+  playerListRowNoAgreementCls,
   playerListRowNumberCls,
   playerListRowNameCls,
   playerListRowActionsCls,
@@ -38,14 +39,22 @@ export const PlayerListCard: FC<PlayerListCardProps> = ({
       <div className={playerListCardBodyCls}>
         {rows.map((row, index) => {
           const actions = renderActions?.(row);
+          const hasEntryPayment =
+            (row.entryPaymentMethod ?? row.entyPaymentMethod) != null;
+          const isOutOrOutNotPaid =
+            row.status === "Out" || row.status === "OutNotPaid";
+          const needsEntryHighlight =
+            row.status === "InGameNotPaid" ||
+            (isOutOrOutNotPaid && !hasEntryPayment);
 
           return (
             <div
               key={index}
               className={clsx(
                 playerListRowCls,
-                row.status === "InGameNotPaid" && playerListRowHighlightCls,
-                row.status === "Registered" && playerListRowMutedCls
+                needsEntryHighlight && playerListRowHighlightCls,
+                row.status === "Registered" && playerListRowMutedCls,
+                row.signAgreement === false && playerListRowNoAgreementCls
               )}
             >
               <Typography.Text
@@ -53,7 +62,7 @@ export const PlayerListCard: FC<PlayerListCardProps> = ({
                 type="secondary"
                 className={playerListRowNumberCls}
               >
-                {row.playerId}
+                {row.tournamentPlayerId ?? row.playerId}
               </Typography.Text>
               <Typography.Text size="small" className={playerListRowNameCls}>
                 {row.playerName}

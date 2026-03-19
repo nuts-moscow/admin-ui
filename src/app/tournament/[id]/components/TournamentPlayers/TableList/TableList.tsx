@@ -40,7 +40,11 @@ export const TableList: FC<TableListProps> = ({
       if (!player.tableId || player.status === "Out") {
         return;
       }
-      byTableId.set(player.tableId, (byTableId.get(player.tableId) ?? 0) + 1);
+      const tableId = Number(player.tableId);
+      if (!Number.isFinite(tableId) || tableId <= 0) {
+        return;
+      }
+      byTableId.set(tableId, (byTableId.get(tableId) ?? 0) + 1);
     });
 
     const maxTableNumberFromData = Math.max(0, ...Array.from(byTableId.keys()));

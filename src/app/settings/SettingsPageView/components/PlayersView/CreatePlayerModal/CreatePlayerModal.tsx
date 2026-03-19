@@ -3,6 +3,7 @@
 import { FC, useState } from "react";
 import { Box } from "@/components/Box/Box";
 import { Button } from "@/components/Button/Button";
+import { Checkbox } from "@/components/Checkbox/Checkbox";
 import { Input } from "@/components/Input/Input";
 import { TextArea } from "@/components/Textarea/TextArea";
 import { Form } from "@/components/Form/Form";
@@ -20,6 +21,7 @@ import {
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
 import { refetchPlayers } from "@/core/states/players/hooks/usePlayers";
 import { Player } from "@/core/states/players/common/Player";
+import { Typography } from "@/components/Typography/Typography";
 import { Phone, User } from "lucide-react";
 
 export interface CreatePlayerModalProps extends WithModalProps {
@@ -35,16 +37,17 @@ export const CreatePlayerModal: FC<CreatePlayerModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [form] = useForm<Partial<CreatePlayerRequest>>({
     controls: {
-      nickname: toCtrlParam<string | undefined>(player?.nickname, [
+      nickname: toCtrlParam<string | undefined>(player?.nickname ?? undefined, [
         {
           validate: (nickname) => (nickname ? undefined : "Required"),
           level: "error",
         },
       ]),
-      name: toCtrlParam<string | undefined>(player?.name, []),
-      tg: toCtrlParam<string | undefined>(player?.tg, []),
-      phone: toCtrlParam<string | undefined>(player?.phone, []),
-      notes: toCtrlParam<string | undefined>(player?.notes, []),
+      name: toCtrlParam<string | undefined>(player?.name ?? undefined, []),
+      tg: toCtrlParam<string | undefined>(player?.tg ?? undefined, []),
+      phone: toCtrlParam<string | undefined>(player?.phone ?? undefined, []),
+      notes: toCtrlParam<string | undefined>(player?.notes ?? undefined, []),
+      signAgreement: toCtrlParam<boolean>(player?.signAgreement ?? false, []),
     },
   });
 
@@ -55,15 +58,29 @@ export const CreatePlayerModal: FC<CreatePlayerModalProps> = ({
     setIsLoading(true);
     try {
       if (player) {
-        await updatePlayer(environment, {
-          id: player.id,
-          ...(form.value as Partial<UpdatePlayerRequest>),
-        } as UpdatePlayerRequest);
+        const v = form.value;
+        const updates: Partial<UpdatePlayerRequest> = { id: player.id };
+        if (v.nickname !== (player.nickname ?? undefined))
+          updates.nickname = v.nickname;
+        if (v.name !== (player.name ?? undefined))
+          updates.name = v.name ?? null;
+        if (v.phone !== (player.phone ?? undefined))
+          updates.phone = v.phone ?? null;
+        if (v.tg !== (player.tg ?? undefined)) updates.tg = v.tg ?? null;
+        if (v.notes !== (player.notes ?? undefined))
+          updates.notes = v.notes ?? null;
+        if (Boolean(v.signAgreement) !== Boolean(player.signAgreement))
+          updates.signAgreement = Boolean(v.signAgreement);
+        if (Object.keys(updates).length > 1) {
+          await updatePlayer(environment, updates as UpdatePlayerRequest);
+          refetchPlayers();
+        }
+        close();
       } else {
         await createPlayer(environment, form.value as CreatePlayerRequest);
+        refetchPlayers();
+        close();
       }
-      refetchPlayers();
-      close();
     } catch (error) {
       console.error(error);
     } finally {
@@ -134,6 +151,21 @@ export const CreatePlayerModal: FC<CreatePlayerModalProps> = ({
                   onChange(e.target.value)
                 }
               />
+            )}
+          </Form.Control>
+
+          <Form.Control name="signAgreement">
+            {({ value, onChange }) => (
+              <Box flex={{ align: "center", gap: 2 }}>
+                <Checkbox
+                  size="medium"
+                  checked={value ?? false}
+                  onCheckedChange={(checked) => onChange(checked === true)}
+                />
+                <Typography.Text size="small">
+                  Есть договор
+                </Typography.Text>
+              </Box>
             )}
           </Form.Control>
 

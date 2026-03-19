@@ -5,24 +5,49 @@ import { Box } from "@/components/Box/Box";
 import { Button } from "@/components/Button/Button";
 import { Modal, WithModalProps, useModal } from "@/components/Modal/Modal";
 import { Typography } from "@/components/Typography/Typography";
+import { toast } from "@/components/Toast/Toast";
 import { TournamentInfoResponse } from "@/core/states/tournaments/requests/getTournament";
 import { useNonRegisteredTournamentPlayerState } from "@/core/states/tournaments/hooks/useNonRegisteredTournamentPlayerState";
 import {
+  BountyKillEntry,
   InGamePlayerState,
   PaymentMethod,
 } from "@/core/states/tournaments/common/InGamePlayerState";
+import { getPaymentMethodLabel } from "@/core/states/tournaments/common/paymentMethodLabels";
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
-import { addReentry } from "@/core/states/tournaments/requests/addReentry";
 import { refetchTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
 import { addReentryPayment } from "@/core/states/tournaments/requests/addReentryPayment";
+import { bountyEliminate } from "@/core/states/tournaments/requests/bountyEliminate";
+import { bountyRemove } from "@/core/states/tournaments/requests/bountyRemove";
+import { X } from "lucide-react";
+import {
+  refetchTournamentRebuyCount,
+  useTournamentRebuyCount,
+} from "@/core/states/tournaments/hooks/useTournamentRebuyCount";
+import {
+  SearchableSelect,
+  SearchableSelectOption,
+} from "@/components/SearchableSelect/SearchableSelect";
 
 export interface TournamentReentriesProps {
   readonly tournament: TournamentInfoResponse;
 }
 
+const toSafeNumber = (value: unknown): number => {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+};
+
+const getPlayerLabel = (player?: InGamePlayerState): string => {
+  if (!player) {
+    return "-";
+  }
+  return player.playerName || player.playerId || "-";
+};
+
 interface AddReentryModalProps extends WithModalProps {
   readonly tournamentId: string;
   readonly player?: InGamePlayerState;
+  readonly players: InGamePlayerState[];
 }
 
 interface PayReentriesModalProps extends WithModalProps {
@@ -30,39 +55,280 @@ interface PayReentriesModalProps extends WithModalProps {
   readonly player?: InGamePlayerState;
 }
 
-const PAY_REENTRY_METHOD_OPTIONS: Array<{
-  readonly label: Exclude<PaymentMethod, "Free">;
-  readonly value: Exclude<PaymentMethod, "Free">;
+interface BountyListModalProps {
+  close: () => void;
+  initialData?: InGamePlayerState | null;
+  tournamentId: string;
+  players: InGamePlayerState[];
+  onRemoved: () => void;
+}
+
+const BountyListModal: FC<BountyListModalProps> = ({
+  close,
+  initialData: row,
+  tournamentId,
+  players,
+  onRemoved,
+}) => {
+  const environment = useEnvironment();
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const bountyKills = row?.bountyKills ?? [];
+  const killerPlayerId = row?.playerId ?? "";
+  const killerPlayerName = row?.playerName ?? "";
+
+  const getVictimDisplay = (kill: BountyKillEntry) => {
+    const rawId =
+      (typeof kill === "object" && kill
+        ? String(
+            (kill as BountyKillEntry & { victimPlayerId?: string }).playerId ??
+              (kill as BountyKillEntry & { victimPlayerId?: string })
+                .victimPlayerId ??
+              "",
+          )
+        : String(kill ?? "")) || "";
+    const victim = players.find(
+      (p) =>
+        p.playerId === rawId || String(p.tournamentPlayerId) === String(rawId),
+    );
+    const nameFromKill = typeof kill === "object" && kill && "playerName" in kill
+      ? (kill as BountyKillEntry).playerName
+      : undefined;
+    return {
+      name: (victim?.playerName ?? nameFromKill) ?? "-",
+      victimPlayerId: victim?.playerId ?? rawId,
+    };
+  };
+
+  const handleRemove = async (victimPlayerId: string) => {
+    setRemovingId(victimPlayerId);
+    try {
+      await bountyRemove(environment, tournamentId, {
+        killerPlayerId,
+        victimPlayerId,
+      });
+      onRemoved();
+      close();
+    } catch (error) {
+      console.error(error);
+      toast({ type: "error", message: "Не удалось отменить выбивание" });
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
+  return (
+    <Box flex={{ col: true }}>
+      <Modal.Title showCloseButton>Баунти — {killerPlayerName}</Modal.Title>
+      <Modal.Content minWidth={400}>
+        <Box flex={{ col: true, gap: 2 }}>
+          {bountyKills.length === 0 ? (
+            <Typography.Text type="secondary" size="small">
+              Нет выбиваний
+            </Typography.Text>
+          ) : (
+            bountyKills.map((kill, index) => {
+              const { name, victimPlayerId } = getVictimDisplay(kill);
+              const keyId = typeof kill === "object" && kill && "playerId" in kill ? (kill as BountyKillEntry).playerId : String(kill);
+              return (
+                <Box
+                  key={`${keyId}-${index}`}
+                  flex={{ align: "center", justify: "space-between", gap: 2 }}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: 10,
+                    border: "1px solid var(--border-color)",
+                  }}
+                >
+                  <Typography.Text size="small">
+                    {name}
+                  </Typography.Text>
+                  <Button
+                    type="ghost"
+                    size="xxSmall"
+                    style={{ padding: 4 }}
+                    iconRight={<X size={16} color="var(--text-error)" />}
+                    onClick={() => handleRemove(victimPlayerId)}
+                    disabled={removingId !== null}
+                    loading={removingId === victimPlayerId}
+                  />
+                </Box>
+              );
+            })
+          )}
+        </Box>
+      </Modal.Content>
+    </Box>
+  );
+};
+
+interface EliminatedByModalProps {
+  close: () => void;
+  initialData?: InGamePlayerState | null;
+  tournamentId: string;
+  players: InGamePlayerState[];
+  onRemoved: () => void;
+}
+
+const EliminatedByModal: FC<EliminatedByModalProps> = ({
+  close,
+  initialData: row,
+  tournamentId,
+  players,
+  onRemoved,
+}) => {
+  const environment = useEnvironment();
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const eliminatedByIds = row?.eliminatedBy ?? [];
+  const victimPlayerId = row?.playerId ?? "";
+
+  const getKillerInfo = (id: string) => {
+    const killer = players.find(
+      (p) =>
+        p.playerId === id || String(p.tournamentPlayerId) === String(id),
+    );
+    return {
+      name: killer?.playerName ?? id,
+      killerPlayerId: killer?.playerId ?? id,
+    };
+  };
+
+  const handleRemove = async (killerPlayerId: string) => {
+    setRemovingId(killerPlayerId);
+    try {
+      await bountyRemove(environment, tournamentId, {
+        killerPlayerId,
+        victimPlayerId,
+      });
+      onRemoved();
+      close();
+    } catch (error) {
+      console.error(error);
+      toast({ type: "error", message: "Не удалось отменить запись" });
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
+  return (
+    <Box flex={{ col: true }}>
+      <Modal.Title showCloseButton>
+        Кто меня выбил — {row?.playerName ?? ""}
+      </Modal.Title>
+      <Modal.Content minWidth={400}>
+        <Box flex={{ col: true, gap: 2 }}>
+          {eliminatedByIds.length === 0 ? (
+            <Typography.Text type="secondary" size="small">
+              Нет записей
+            </Typography.Text>
+          ) : (
+            eliminatedByIds.map((id, index) => {
+              const { name, killerPlayerId } = getKillerInfo(id);
+              return (
+                <Box
+                  key={`${id}-${index}`}
+                  flex={{ align: "center", justify: "space-between", gap: 2 }}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: 10,
+                    border: "1px solid var(--border-color)",
+                  }}
+                >
+                  <Typography.Text size="small">{name}</Typography.Text>
+                  <Button
+                    type="ghost"
+                    size="xxSmall"
+                    style={{ padding: 4 }}
+                    iconRight={<X size={16} color="var(--text-error)" />}
+                    onClick={() => handleRemove(killerPlayerId)}
+                    disabled={removingId !== null}
+                    loading={removingId === killerPlayerId}
+                  />
+                </Box>
+              );
+            })
+          )}
+        </Box>
+      </Modal.Content>
+    </Box>
+  );
+};
+
+const BASE_PAY_REENTRY_METHOD_OPTIONS: Array<{
+  readonly label: PaymentMethod;
+  readonly value: PaymentMethod;
 }> = [
-  { label: "Cache", value: "Cache" },
   { label: "CreditCard", value: "CreditCard" },
+  { label: "Cache", value: "Cache" },
 ];
+
+function getPayReentryMethodOptions(player?: InGamePlayerState): Array<{ label: PaymentMethod; value: PaymentMethod }> {
+  const options = [...BASE_PAY_REENTRY_METHOD_OPTIONS];
+  if ((player?.freeReentryCount ?? 0) > 0) {
+    options.push({ label: "Free", value: "Free" });
+  }
+  return options;
+}
 
 const AddReentryModal: FC<AddReentryModalProps> = ({
   close,
   tournamentId,
   player,
+  players,
 }) => {
   const environment = useEnvironment();
   const [count, setCount] = useState<number>(1);
+  const [killerPlayerId, setKillerPlayerId] = useState<string | undefined>(
+    undefined,
+  );
   const [isSaving, setIsSaving] = useState(false);
+  const killerCandidates = useMemo(
+    () =>
+      (players ?? []).filter(
+        (candidate) =>
+          candidate.playerId !== player?.playerId &&
+          candidate.tableId != null &&
+          candidate.tableId === player?.tableId,
+      ),
+    [player?.playerId, player?.tableId, players],
+  );
+  const killerOptions = useMemo<SearchableSelectOption[]>(
+    () =>
+      killerCandidates.map((candidate) => ({
+        value: candidate.playerId,
+        label: `${candidate.playerName} (ID: ${candidate.playerId})`,
+      })),
+    [killerCandidates],
+  );
 
   useEffect(() => {
     setCount(1);
-  }, [player?.playerId]);
+    setKillerPlayerId(killerCandidates[0]?.playerId);
+  }, [player?.playerId, killerCandidates]);
+
+  useEffect(() => {
+    if (
+      killerPlayerId &&
+      !killerCandidates.some((candidate) => candidate.playerId === killerPlayerId)
+    ) {
+      setKillerPlayerId(killerCandidates[0]?.playerId);
+    }
+  }, [killerCandidates, killerPlayerId]);
 
   const handleSave = async () => {
-    if (!player || count <= 0 || isSaving) {
+    if (!player || count <= 0 || isSaving || !killerPlayerId) {
       return;
     }
     setIsSaving(true);
     try {
-      await addReentry(environment, {
-        tournamentId: Number(tournamentId),
-        playerId: player.playerId,
-        count,
-      });
+      for (let i = 0; i < count; i += 1) {
+        await bountyEliminate(environment, Number(tournamentId), {
+          eliminatedPlayerId: player.playerId,
+          killerPlayerId,
+          type: "Rebuy",
+        });
+      }
       refetchTournamentPlayerState();
+      refetchTournamentRebuyCount();
       close();
     } catch (error) {
       console.error(error);
@@ -78,9 +344,20 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
         <Box flex={{ col: true, gap: 4 }}>
           <Typography.Text type="secondary" size="small">
             {player
-              ? `Игрок: ${player.playerName}`
+              ? `Игрок: ${getPlayerLabel(player)}`
               : "Укажи количество ребаев для игрока"}
           </Typography.Text>
+          <SearchableSelect
+            options={killerOptions}
+            value={killerPlayerId}
+            placeholder={
+              killerCandidates.length > 0
+                ? "Кто выбил игрока?"
+                : "Нет игроков за этим столом"
+            }
+            disabled={killerCandidates.length === 0 || isSaving}
+            onChange={(value) => setKillerPlayerId(value)}
+          />
           <input
             type="number"
             min={1}
@@ -114,7 +391,11 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
               onClick={handleSave}
               flexItem={{ flex: 1 }}
               loading={isSaving}
-              disabled={!player || count <= 0}
+              disabled={
+                !player ||
+                count <= 0 ||
+                !killerPlayerId
+              }
             >
               Сохранить
             </Button>
@@ -132,31 +413,27 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
 }) => {
   const environment = useEnvironment();
   const [isSaving, setIsSaving] = useState(false);
-  const [methods, setMethods] = useState<Array<Exclude<PaymentMethod, "Free">>>(
-    [],
-  );
+  const [methods, setMethods] = useState<PaymentMethod[]>([]);
 
   const paidReentryCount = useMemo(
-    () =>
-      (player?.reentryByPaymentMethod ?? []).reduce(
-        (sum, [, count]) => sum + count,
-        0,
-      ),
+    () => (player?.reentryByPaymentMethod ?? []).length,
     [player?.reentryByPaymentMethod],
   );
   const toPayReentryCount = useMemo(
-    () => Math.max(0, (player?.unpaidReentryCount ?? 0) - paidReentryCount),
+    () => Math.max(0, toSafeNumber(player?.unpaidReentryCount) - paidReentryCount),
     [player?.unpaidReentryCount, paidReentryCount],
   );
 
+  const payReentryMethodOptions = useMemo(
+    () => getPayReentryMethodOptions(player),
+    [player],
+  );
+
   useEffect(() => {
-    setMethods(Array.from({ length: toPayReentryCount }, () => "Cache"));
+    setMethods(Array.from({ length: toPayReentryCount }, () => "CreditCard"));
   }, [player?.playerId, toPayReentryCount]);
 
-  const handleMethodChange = (
-    index: number,
-    value: Exclude<PaymentMethod, "Free">,
-  ) => {
+  const handleMethodChange = (index: number, value: PaymentMethod) => {
     setMethods((prev) => prev.map((item, i) => (i === index ? value : item)));
   };
 
@@ -166,11 +443,14 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
     }
     setIsSaving(true);
     try {
-      await addReentryPayment(environment, {
-        tournamentId: Number(tournamentId),
-        playerId: player.playerId,
+      await addReentryPayment(
+        environment,
+        Number(tournamentId),
+        player.playerId,
+        {
         payments: methods,
-      });
+        }
+      );
       refetchTournamentPlayerState();
       close();
     } catch (error) {
@@ -187,7 +467,7 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
         <Box flex={{ col: true, gap: 4 }}>
           <Typography.Text type="secondary" size="small">
             {player
-              ? `Игрок: ${player.playerName}. Неоплачено ребаев: ${toPayReentryCount}`
+              ? `Игрок: ${getPlayerLabel(player)}. Неоплачено ребаев: ${toPayReentryCount}`
               : "Выбери способы оплаты"}
           </Typography.Text>
           <Box flex={{ col: true, gap: 2 }}>
@@ -205,7 +485,7 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
                   onChange={(event) =>
                     handleMethodChange(
                       index,
-                      event.target.value as Exclude<PaymentMethod, "Free">,
+                      event.target.value as PaymentMethod,
                     )
                   }
                   style={{
@@ -218,9 +498,9 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
                     color: "var(--text-primary)",
                   }}
                 >
-                  {PAY_REENTRY_METHOD_OPTIONS.map((methodOption) => (
+                  {payReentryMethodOptions.map((methodOption) => (
                     <option key={methodOption.value} value={methodOption.value}>
-                      {methodOption.label}
+                      {getPaymentMethodLabel(methodOption.label)}
                     </option>
                   ))}
                 </select>
@@ -258,7 +538,8 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
   tournament,
 }) => {
   const REENTRY_LIMIT = 5;
-  const ACTIONS_COLUMN_WIDTH = 230;
+  const ACTIONS_COLUMN_WIDTH = 360;
+  const [searchQuery, setSearchQuery] = useState("");
   const [playerToAddReentry, setPlayerToAddReentry] = useState<
     InGamePlayerState | undefined
   >(undefined);
@@ -269,32 +550,54 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
     useModal(AddReentryModal);
   const [PayReentriesModalConnect, openPayReentriesModal] =
     useModal(PayReentriesModal);
+  const [BountyModal, openBountyModal] = useModal(BountyListModal);
+  const [EliminatedByModalConnect, openEliminatedByModal] =
+    useModal(EliminatedByModal);
   const { data: players } = useNonRegisteredTournamentPlayerState(
     String(tournament.id),
   );
+  const { data: rebuyCountResponse } = useTournamentRebuyCount(
+    String(tournament.id)
+  );
+  const filteredPlayers = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    if (!normalizedQuery) {
+      return players ?? [];
+    }
+    return (players ?? []).filter((player) => {
+      const label = getPlayerLabel(player).toLowerCase();
+      return (
+        label.includes(normalizedQuery) ||
+        player.playerId.toLowerCase().includes(normalizedQuery) ||
+        String(player.tournamentPlayerId)
+          .toLowerCase()
+          .includes(normalizedQuery)
+      );
+    });
+  }, [players, searchQuery]);
+
   const rows = useMemo(
     () =>
-      [...(players ?? [])].sort((a, b) => {
-        const aPaid = (a.reentryByPaymentMethod ?? []).reduce(
-          (sum, [, count]) => sum + count,
-          0,
-        );
-        const bPaid = (b.reentryByPaymentMethod ?? []).reduce(
-          (sum, [, count]) => sum + count,
-          0,
-        );
-        const aToPay = Math.max(0, a.unpaidReentryCount - aPaid);
-        const bToPay = Math.max(0, b.unpaidReentryCount - bPaid);
+      [...filteredPlayers].sort((a, b) => {
+        const aUnpaid = toSafeNumber(a.unpaidReentryCount);
+        const bUnpaid = toSafeNumber(b.unpaidReentryCount);
+        const aHasUnpaid = aUnpaid > 0;
+        const bHasUnpaid = bUnpaid > 0;
 
-        if (aToPay > 0 && bToPay === 0) {
-          return -1;
+        if (aHasUnpaid && !bHasUnpaid) return -1;
+        if (!aHasUnpaid && bHasUnpaid) return 1;
+
+        const aTournamentPlayerId = Number(a.tournamentPlayerId);
+        const bTournamentPlayerId = Number(b.tournamentPlayerId);
+        if (
+          Number.isFinite(aTournamentPlayerId) &&
+          Number.isFinite(bTournamentPlayerId)
+        ) {
+          return aTournamentPlayerId - bTournamentPlayerId;
         }
-        if (aToPay === 0 && bToPay > 0) {
-          return 1;
-        }
-        return a.playerId - b.playerId;
+        return (a.tournamentPlayerId ?? "").localeCompare(b.tournamentPlayerId ?? "");
       }),
-    [players],
+    [filteredPlayers],
   );
 
   return (
@@ -302,10 +605,21 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
       <AddReentryModalConnect
         tournamentId={String(tournament.id)}
         player={playerToAddReentry}
+        players={players ?? []}
       />
       <PayReentriesModalConnect
         tournamentId={String(tournament.id)}
         player={playerToPayReentries}
+      />
+      <BountyModal
+        tournamentId={String(tournament.id)}
+        players={players ?? []}
+        onRemoved={refetchTournamentPlayerState}
+      />
+      <EliminatedByModalConnect
+        tournamentId={String(tournament.id)}
+        players={players ?? []}
+        onRemoved={refetchTournamentPlayerState}
       />
       <Box
         flex={{ width: "100%", align: "center", justify: "space-between" }}
@@ -315,8 +629,25 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
         }}
       >
         <Typography.Text bold>Статистика ребаев</Typography.Text>
-        <Typography.Text bold>{rows.length}</Typography.Text>
+        <Typography.Text bold>
+          {rebuyCountResponse?.rebuyCount ?? rows.length}
+        </Typography.Text>
       </Box>
+      <input
+        type="text"
+        value={searchQuery}
+        onChange={(event) => setSearchQuery(event.target.value)}
+        placeholder="Поиск игрока: id, никнейм"
+        style={{
+          width: "100%",
+          borderRadius: 12,
+          border: "1px solid var(--border-color)",
+          minHeight: 44,
+          padding: "0 12px",
+          backgroundColor: "var(--background-primary)",
+          color: "var(--text-primary)",
+        }}
+      />
 
       <Box flex={{ col: true, gap: 2, width: "100%" }}>
         <Box
@@ -353,35 +684,37 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
         </Box>
 
         {rows.map((player) => {
-          const freeReentryCount = player.freeReentryCount;
-          const unpaidReentryCount = player.unpaidReentryCount;
-          const paidReentryCount = (player.reentryByPaymentMethod ?? []).reduce(
-            (sum, [, count]) => sum + count,
-            0,
-          );
+          const freeReentryCount = toSafeNumber(player.freeReentryCount);
+          const unpaidReentryCount = toSafeNumber(player.unpaidReentryCount);
+          const paidReentryCount = (player.reentryByPaymentMethod ?? []).length;
           const toPayReentryCount = Math.max(
             0,
             unpaidReentryCount - paidReentryCount,
           );
-          const totalReentryCount =
-            freeReentryCount + unpaidReentryCount + paidReentryCount;
+          const totalReentryCount = toSafeNumber(player.totalReentryCount);
+          const hasUnpaidReentry = unpaidReentryCount > 0;
+          const rowBackgroundColor =
+            player.signAgreement === false
+              ? "rgba(255, 196, 2, 0.22)"
+              : hasUnpaidReentry
+                ? "rgba(220, 38, 38, 0.12)"
+                : "#e9e9e9";
 
           return (
             <Box
               key={player.playerId}
               flex={{ width: "100%", align: "center", gap: 3 }}
               style={{
-                backgroundColor:
-                  toPayReentryCount > 0 ? "rgba(220, 38, 38, 0.12)" : "#e9e9e9",
+                backgroundColor: rowBackgroundColor,
                 borderRadius: 10,
                 padding: "10px 12px",
               }}
             >
               <Typography.Text bold flexItem={{ minWidth: 48 }}>
-                {player.playerId}
+                {player.tournamentPlayerId}
               </Typography.Text>
               <Typography.Text bold flexItem={{ flex: 1 }}>
-                {player.playerName}
+                {getPlayerLabel(player)}
               </Typography.Text>
               <Typography.Text bold flexItem={{ minWidth: 110 }}>
                 {totalReentryCount}/{REENTRY_LIMIT}
@@ -401,7 +734,7 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
                   flexShrink: 0,
                 }}
               >
-                <Box flex={{ gap: 2 }}>
+                <Box flex={{ gap: 2 }} style={{ flexWrap: "wrap" }}>
                   {toPayReentryCount > 0 && (
                     <Button
                       type="warning"
@@ -423,6 +756,20 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
                     }}
                   >
                     Добавить ребай
+                  </Button>
+                  <Button
+                    type="secondary"
+                    size="xxSmall"
+                    onClick={() => openBountyModal(player)}
+                  >
+                    Показать баунти
+                  </Button>
+                  <Button
+                    type="secondary"
+                    size="xxSmall"
+                    onClick={() => openEliminatedByModal(player)}
+                  >
+                    Кто меня выбил
                   </Button>
                 </Box>
               </Box>

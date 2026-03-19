@@ -8,8 +8,17 @@ import { SimpleList } from "@/components/SimpleList/SimpleList";
 import { Typography } from "@/components/Typography/Typography";
 import { useTournamentStructures } from "@/core/states/tournamentStructures/hooks/useTournamentStructures";
 import { TournamentStructure } from "@/core/states/tournamentStructures/common/TournamentStructure";
+import { BlindType } from "@/core/states/tournamentStructures/common/BlindType";
 import { List } from "@/components/List/List";
 import { CreateTournamentForm } from "./CreateTournamentModal";
+
+function getFirstBlindLevel(blindsStructure: TournamentStructure["blindsStructure"]): string {
+  const first = blindsStructure?.find(
+    (item): item is BlindType & { smallBlind: number; bigBlind: number } =>
+      item != null && "smallBlind" in item && "bigBlind" in item
+  );
+  return first ? `${first.smallBlind}/${first.bigBlind}` : "–";
+}
 
 export const StructureStep: FC = () => {
   const { data: structures } = useTournamentStructures();
@@ -47,8 +56,7 @@ export const StructureStep: FC = () => {
                   <Typography.Text size="small" type="grey">
                     Игроков: {structure.playersLimit} • Стек:{" "}
                     {structure.stackSize} • Старт:{" "}
-                    {structure.blindsStructure[0].smallBlind}/
-                    {structure.blindsStructure[0].bigBlind} • Финал игры:{" "}
+                    {getFirstBlindLevel(structure.blindsStructure)} • Финал игры:{" "}
                     {structure.freezeOutEnabled ? "Да" : "Нет"}
                   </Typography.Text>
                 </SimpleList.Column>

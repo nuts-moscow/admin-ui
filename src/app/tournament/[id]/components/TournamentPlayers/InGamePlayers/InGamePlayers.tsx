@@ -3,6 +3,7 @@
 import { FC, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/Button/Button";
 import { Box } from "@/components/Box/Box";
+import { Typography } from "@/components/Typography/Typography";
 import { useModal, Modal, WithModalProps } from "@/components/Modal/Modal";
 import { PlayerListCard } from "../PlayerListCard/PlayerListCard";
 import { useNonRegisteredTournamentPlayerState } from "@/core/states/tournaments/hooks/useNonRegisteredTournamentPlayerState";
@@ -10,16 +11,19 @@ import {
   InGamePlayerState,
   PaymentMethod,
 } from "@/core/states/tournaments/common/InGamePlayerState";
+import { getPaymentMethodLabel } from "@/core/states/tournaments/common/paymentMethodLabels";
 import { TableSelectModal } from "../TableSelectModal/TableSelectModal";
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
 import {
-  setPlayerInGamePaidStatus,
+  inGamePayment,
+  rollbackGameStart,
   setPlayerTableId,
 } from "@/core/states/tournaments/requests/updatePlayerState";
 import { refetchTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
 
 export interface InGamePlayersProps {
   readonly tournamentId: string;
+  readonly searchQuery?: string;
 }
 
 interface PayPlayerModalProps extends WithModalProps {
@@ -27,12 +31,18 @@ interface PayPlayerModalProps extends WithModalProps {
   readonly player?: InGamePlayerState;
 }
 
+const getPlayerPaymentMethod = (
+  player?: InGamePlayerState,
+): PaymentMethod | undefined => {
+  return player?.entryPaymentMethod ?? player?.entyPaymentMethod;
+};
+
 const PayPlayerModal: FC<PayPlayerModalProps> = ({ close, tournamentId, player }) => {
   const environment = useEnvironment();
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("Cache");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CreditCard");
   const [isLoading, setIsLoading] = useState(false);
   const paymentMethodOptions = useMemo<PaymentMethod[]>(() => {
-    const baseOptions: PaymentMethod[] = ["Cache", "CreditCard"];
+    const baseOptions: PaymentMethod[] = ["CreditCard", "Cache"];
     if ((player?.freeEntryCount ?? 0) > 0) {
       return [...baseOptions, "Free"];
     }
@@ -40,8 +50,12 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({ close, tournamentId, player }
   }, [player?.freeEntryCount]);
 
   useEffect(() => {
+    setPaymentMethod(getPlayerPaymentMethod(player) ?? "CreditCard");
+  }, [player?.playerId, player?.entryPaymentMethod, player?.entyPaymentMethod]);
+
+  useEffect(() => {
     if (paymentMethod === "Free" && (player?.freeEntryCount ?? 0) <= 0) {
-      setPaymentMethod("Cache");
+      setPaymentMethod("CreditCard");
     }
   }, [paymentMethod, player?.freeEntryCount]);
 
@@ -51,12 +65,11 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({ close, tournamentId, player }
     }
     setIsLoading(true);
     try {
-      await setPlayerInGamePaidStatus(
+      await inGamePayment(
         environment,
         Number(tournamentId),
         player.playerId,
-        paymentMethod,
-        player.tableId
+        { entryPaymentMethod: paymentMethod },
       );
       refetchTournamentPlayerState();
       close();
@@ -87,7 +100,7 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({ close, tournamentId, player }
           >
             {paymentMethodOptions.map((method) => (
               <option key={method} value={method}>
-                {method}
+                {getPaymentMethodLabel(method)}
               </option>
             ))}
           </select>
@@ -118,7 +131,10 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({ close, tournamentId, player }
   );
 };
 
-export const InGamePlayers: FC<InGamePlayersProps> = ({ tournamentId }) => {
+export const InGamePlayers: FC<InGamePlayersProps> = ({
+  tournamentId,
+  searchQuery = "",
+}) => {
   const environment = useEnvironment();
   const [playerToSetTable, setPlayerToSetTable] = useState<
     InGamePlayerState | undefined
@@ -130,34 +146,49 @@ export const InGamePlayers: FC<InGamePlayersProps> = ({ tournamentId }) => {
   const [PayPlayerModalConnect, openPayPlayerModal] = useModal(PayPlayerModal);
   const { data: nonRegisteredPlayers } =
     useNonRegisteredTournamentPlayerState(tournamentId);
-  const rows = useMemo(
-    () =>
-      [...(nonRegisteredPlayers ?? [])].sort((a, b) => {
-        if (a.status === b.status) {
-          return 0;
-        }
-        if (a.status === "InGameNotPaid") {
-          return -1;
-        }
-        if (b.status === "InGameNotPaid") {
-          return 1;
-        }
-        return 0;
-      }),
-    [nonRegisteredPlayers]
-  );
+  const filteredPlayers = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    if (!normalizedQuery) {
+      return nonRegisteredPlayers ?? [];
+    }
+    return (nonRegisteredPlayers ?? []).filter((player) => {
+      return (
+        (player.playerName ?? "").toLowerCase().includes(normalizedQuery) ||
+        player.playerId.toLowerCase().includes(normalizedQuery) ||
+        String(player.tournamentPlayerId).toLowerCase().includes(normalizedQuery)
+      );
+    });
+  }, [nonRegisteredPlayers, searchQuery]);
+
+  const rows = useMemo(() => {
+    const needsEntryAttention = (p: InGamePlayerState) => {
+      const hasPayment = (p.entryPaymentMethod ?? p.entyPaymentMethod) != null;
+      return (
+        p.status === "InGameNotPaid" ||
+        ((p.status === "Out" || p.status === "OutNotPaid") && !hasPayment)
+      );
+    };
+    return [...filteredPlayers].sort((a, b) => {
+      const aNeeds = needsEntryAttention(a);
+      const bNeeds = needsEntryAttention(b);
+      if (aNeeds && !bNeeds) return -1;
+      if (!aNeeds && bNeeds) return 1;
+      return 0;
+    });
+  }, [filteredPlayers]);
 
   return (
     <>
       <PayPlayerModalConnect tournamentId={tournamentId} player={playerToPay} />
       <SetTableModal
+        tournamentId={tournamentId}
         player={playerToSetTable}
         onSave={async (player, tableId) => {
           await setPlayerTableId(
             environment,
             Number(tournamentId),
             player.playerId,
-            tableId,
+            tableId
           );
           refetchTournamentPlayerState();
         }}
@@ -166,50 +197,92 @@ export const InGamePlayers: FC<InGamePlayersProps> = ({ tournamentId }) => {
         title="На игре"
         count={rows.length}
         rows={rows}
-        renderActions={(row) => (
-          <>
-            {row.status === "InGameNotPaid" && (
-              <Button
-                type="warning"
-                size="xxSmall"
-                onClick={() => {
-                  setPlayerToPay(row);
-                  openPayPlayerModal();
-                }}
-              >
-                Оплатить
-              </Button>
-            )}
-            {row.tableId ? (
-              <Button
-                type="secondary"
-                size="xxSmall"
-                style={{
-                  backgroundColor: "var(--background-primary)",
-                  color: "var(--text-primary)",
-                  border: "1px solid var(--border-color)",
-                }}
-                onClick={() => {
-                  setPlayerToSetTable(row);
-                  openSetTableModal();
-                }}
-              >
-                Стол {row.tableId}
-              </Button>
-            ) : (
-              <Button
-                type="error"
-                size="xxSmall"
-                onClick={() => {
-                  setPlayerToSetTable(row);
-                  openSetTableModal();
-                }}
-              >
-                Стол
-              </Button>
-            )}
-          </>
-        )}
+        renderActions={(row) => {
+          const hasEntryPayment =
+            (row.entryPaymentMethod ?? row.entyPaymentMethod) != null;
+          const isOutOrOutNotPaid =
+            row.status === "Out" || row.status === "OutNotPaid";
+          return (
+            <>
+              {isOutOrOutNotPaid && (
+                <Typography.Text size="small" type="secondary">
+                  Вылетел
+                </Typography.Text>
+              )}
+              {!hasEntryPayment && (
+                <Button
+                  type="warning"
+                  size="xxSmall"
+                  onClick={() => {
+                    setPlayerToPay(row);
+                    openPayPlayerModal();
+                  }}
+                >
+                  Оплатить
+                </Button>
+              )}
+              {hasEntryPayment && (
+                <Button
+                  type="secondary"
+                  size="xxSmall"
+                  onClick={() => {
+                    setPlayerToPay(row);
+                    openPayPlayerModal();
+                  }}
+                >
+                  {getPlayerPaymentMethod(row)
+                    ? getPaymentMethodLabel(getPlayerPaymentMethod(row))
+                    : "Оплата"}
+                </Button>
+              )}
+              {!isOutOrOutNotPaid && (
+                <Button
+                  type="success"
+                  size="xxSmall"
+                  onClick={async () => {
+                    await rollbackGameStart(
+                      environment,
+                      Number(tournamentId),
+                      row.playerId,
+                    );
+                    refetchTournamentPlayerState();
+                  }}
+                >
+                  В запись
+                </Button>
+              )}
+              {!isOutOrOutNotPaid &&
+                (row.tableId ? (
+                  <Button
+                    type="secondary"
+                    size="xxSmall"
+                    style={{
+                      backgroundColor: "var(--background-primary)",
+                      color: "var(--text-primary)",
+                      border: "1px solid var(--border-color)",
+                    }}
+                    onClick={() => {
+                      setPlayerToSetTable(row);
+                      openSetTableModal();
+                    }}
+                  >
+                    Стол {row.tableId}
+                  </Button>
+                ) : (
+                  <Button
+                    type="error"
+                    size="xxSmall"
+                    onClick={() => {
+                      setPlayerToSetTable(row);
+                      openSetTableModal();
+                    }}
+                  >
+                    Стол
+                  </Button>
+                ))}
+            </>
+          );
+        }}
       />
     </>
   );

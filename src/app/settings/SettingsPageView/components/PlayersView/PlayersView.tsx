@@ -5,7 +5,7 @@ import { CreatePlayerModal } from "./CreatePlayerModal/CreatePlayerModal";
 import { useMemo, useState } from "react";
 import { useModal } from "@/components/Modal/Modal";
 import { Player } from "@/core/states/players/common/Player";
-import { usePlayers } from "@/core/states/players/hooks/usePlayers";
+import { refetchPlayers, usePlayers } from "@/core/states/players/hooks/usePlayers";
 
 export interface PlayersViewProps {
   readonly searchQuery: string;
@@ -62,6 +62,7 @@ export const PlayersView = ({
             onClick={() => openPlayerModal(player)}
             key={player.id}
             player={player}
+            onUpdated={refetchPlayers}
           />
         ))}
       </Box>

@@ -2,24 +2,46 @@ export type PlayerStatus =
   | "Registered"
   | "InGamePaid"
   | "InGameNotPaid"
-  | "Out";
+  | "Out"
+  | "OutNotPaid";
 
 export type PaymentMethod = "Cache" | "CreditCard" | "Free";
 
-export type Bonus = "EarlyBird" | "Hookah" | "Diller";
+export const InGameBonus = {
+  EarlyBird: "EarlyBird",
+  First20: "First20",
+  Hookah: "Hookah",
+  Diller: "Diller",
+} as const;
+
+export type Bonus = (typeof InGameBonus)[keyof typeof InGameBonus];
+
+export interface BountyKillEntry {
+  readonly playerId: string;
+  readonly playerName?: string;
+}
 
 export interface InGamePlayerState {
-  readonly playerId: number;
-  // Kept for current UI rendering compatibility.
+  readonly playerId: string;
+  readonly tournamentPlayerId: string;
+  // Kept for current UI rendering compatibility in current screens.
   readonly playerName: string;
   readonly status: PlayerStatus;
-  readonly tableId?: number;
+  readonly tableId?: string;
+  readonly entryPaymentMethod?: PaymentMethod;
+  // Legacy typo field; keep optional until all usages are migrated.
   readonly entyPaymentMethod?: PaymentMethod;
-  readonly reentryByPaymentMethod?: Array<[PaymentMethod, number]>;
+  readonly reentryByPaymentMethod: PaymentMethod[];
+  readonly totalReentryCount: number;
   readonly bountyCount: number;
-  readonly bonuses?: Array<[Bonus, number]>;
+  readonly bountyKills?: BountyKillEntry[];
+  readonly eliminatedBy?: string[];
+  readonly bonuses: Bonus[];
   readonly freeEntryCount: number;
   readonly freeReentryCount: number;
   readonly placement?: number;
-  readonly unpaidReentryCount: number
+  // Legacy field used by current reentry UI.
+  readonly unpaidReentryCount: number;
+  /** Подписан ли договор (v2/api/tournaments/{id}/players). */
+  readonly signAgreement?: boolean;
 }

@@ -3,19 +3,19 @@ import { Environment } from "../../environment/Environment";
 import { InGamePlayerState, PaymentMethod } from "../common/InGamePlayerState";
 
 export interface AddReentryPaymentRequest {
-  readonly tournamentId: number;
-  readonly playerId: number;
   readonly payments: PaymentMethod[];
 }
 
 export const addReentryPayment = async (
   environment: Environment,
+  tournamentId: number,
+  playerId: string,
   request: AddReentryPaymentRequest
 ): Promise<InGamePlayerState> => {
   return securedFetch<AddReentryPaymentRequest, InGamePlayerState>({
     method: "POST",
     host: environment.apiUrl,
-    path: "/v1/tournaments/add-reentry-payment",
+    path: `/v2/api/tournaments/${tournamentId}/players/${playerId}/reentry-payment`,
     withCredentials: false,
     body: request,
     mapping: {
