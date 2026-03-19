@@ -8,4 +8,8 @@ export interface Player {
   readonly notes: string | null;
   readonly signAgreement: boolean;
   readonly createdAt: string;
+  /** Кол-во бесплатных входов (если приходит с бэкенда). */
+  readonly freeEntryCount?: number;
+  /** Кол-во бесплатных ребаев (если приходит с бэкенда). */
+  readonly freeReentryCount?: number;
 }

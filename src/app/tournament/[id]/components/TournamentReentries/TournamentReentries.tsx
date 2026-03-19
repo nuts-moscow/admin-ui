@@ -253,13 +253,21 @@ const EliminatedByModal: FC<EliminatedByModalProps> = ({
   );
 };
 
-const PAY_REENTRY_METHOD_OPTIONS: Array<{
-  readonly label: Exclude<PaymentMethod, "Free">;
-  readonly value: Exclude<PaymentMethod, "Free">;
+const BASE_PAY_REENTRY_METHOD_OPTIONS: Array<{
+  readonly label: PaymentMethod;
+  readonly value: PaymentMethod;
 }> = [
   { label: "CreditCard", value: "CreditCard" },
   { label: "Cache", value: "Cache" },
 ];
+
+function getPayReentryMethodOptions(player?: InGamePlayerState): Array<{ label: PaymentMethod; value: PaymentMethod }> {
+  const options = [...BASE_PAY_REENTRY_METHOD_OPTIONS];
+  if ((player?.freeReentryCount ?? 0) > 0) {
+    options.push({ label: "Free", value: "Free" });
+  }
+  return options;
+}
 
 const AddReentryModal: FC<AddReentryModalProps> = ({
   close,
@@ -405,9 +413,7 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
 }) => {
   const environment = useEnvironment();
   const [isSaving, setIsSaving] = useState(false);
-  const [methods, setMethods] = useState<Array<Exclude<PaymentMethod, "Free">>>(
-    [],
-  );
+  const [methods, setMethods] = useState<PaymentMethod[]>([]);
 
   const paidReentryCount = useMemo(
     () => (player?.reentryByPaymentMethod ?? []).length,
@@ -418,14 +424,16 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
     [player?.unpaidReentryCount, paidReentryCount],
   );
 
+  const payReentryMethodOptions = useMemo(
+    () => getPayReentryMethodOptions(player),
+    [player],
+  );
+
   useEffect(() => {
     setMethods(Array.from({ length: toPayReentryCount }, () => "CreditCard"));
   }, [player?.playerId, toPayReentryCount]);
 
-  const handleMethodChange = (
-    index: number,
-    value: Exclude<PaymentMethod, "Free">,
-  ) => {
+  const handleMethodChange = (index: number, value: PaymentMethod) => {
     setMethods((prev) => prev.map((item, i) => (i === index ? value : item)));
   };
 
@@ -477,7 +485,7 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
                   onChange={(event) =>
                     handleMethodChange(
                       index,
-                      event.target.value as Exclude<PaymentMethod, "Free">,
+                      event.target.value as PaymentMethod,
                     )
                   }
                   style={{
@@ -490,7 +498,7 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
                     color: "var(--text-primary)",
                   }}
                 >
-                  {PAY_REENTRY_METHOD_OPTIONS.map((methodOption) => (
+                  {payReentryMethodOptions.map((methodOption) => (
                     <option key={methodOption.value} value={methodOption.value}>
                       {getPaymentMethodLabel(methodOption.label)}
                     </option>
@@ -683,8 +691,7 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
             0,
             unpaidReentryCount - paidReentryCount,
           );
-          const totalReentryCount =
-            freeReentryCount + unpaidReentryCount + paidReentryCount;
+          const totalReentryCount = toSafeNumber(player.totalReentryCount);
           const hasUnpaidReentry = unpaidReentryCount > 0;
           const rowBackgroundColor =
             player.signAgreement === false
