@@ -127,7 +127,7 @@ export class SecuredErrorResponse<R = any> {
  */
 export interface SecuredFetchConfig<B, JR, R = JR> {
   /** HTTP method: GET or POST */
-  readonly method: "POST" | "GET" | "PUT" | "DELETE";
+  readonly method: "POST" | "GET" | "PUT" | "PATCH" | "DELETE";
   /** API host URL (e.g., 'https://api.example.com') */
   readonly host: string;
   /** Request path (e.g., '/profile/seed/get') */
@@ -148,6 +148,8 @@ export interface SecuredFetchConfig<B, JR, R = JR> {
     403?: <ER>(response: SecuredErrorResponse<ER>) => Error | Promise<R> | R;
     /** Handler for 404 Not Found */
     404?: <ER>(response: SecuredErrorResponse<ER>) => Error | Promise<R> | R;
+    /** Handler for 409 Conflict */
+    409?: <ER>(response: SecuredErrorResponse<ER>) => Error | Promise<R> | R;
     /** Handler for 406 Not Acceptable (e.g., wrong TOTP) */
     406?: <ER>(response: SecuredErrorResponse<ER>) => Error | Promise<R> | R;
     /** Handler for 429 Too Many Requests (rate limited) */

@@ -36,14 +36,14 @@ export const createPlayer = async (
   environment: Environment,
   request: CreatePlayerRequest
 ): Promise<Player> => {
-  return securedFetch<CreatePlayerBody, Player>({
+  return securedFetch<CreatePlayerBody, Player, Player>({
     method: "POST",
     host: environment.apiUrl,
     path: "/v2/api/players/create",
     withCredentials: false,
     body: toCreatePlayerBody(request),
     mapping: {
-      success: async (res) => (await res.toJson()) as Player,
+      success: (res) => res.toJson(),
       400: () => new Error("Invalid request body"),
       409: () => new Error("Player with this nickname already exists"),
       500: () => new Error("Failed to create player"),

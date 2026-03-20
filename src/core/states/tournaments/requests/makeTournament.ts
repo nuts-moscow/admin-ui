@@ -1,6 +1,7 @@
 import { Environment } from "@/core/states/environment/Environment";
 import { securedFetch } from "@/core/utils/misc/securedFetch";
 import { Blinds, normalizeBlindsForApi } from "../../tournamentStructures/common/BlindType";
+import { normalizeTournamentStatus } from "../common/TournamentStatus";
 import { ShortTournament } from "./getTournaments";
 
 export interface MakeTournamentRequest {
@@ -28,6 +29,13 @@ interface MakeTournamentBody {
   };
 }
 
+interface MakeTournamentResponse {
+  readonly id: number;
+  readonly name: string;
+  readonly status: string;
+  readonly date: number;
+}
+
 function toMakeTournamentBody(request: MakeTournamentRequest): MakeTournamentBody {
   if (!request.structure.blinds?.length) {
     throw new Error("Structure blinds are required");
@@ -50,14 +58,14 @@ export const makeTournament = async (
   request: MakeTournamentRequest
 ): Promise<ShortTournament> => {
   const body = toMakeTournamentBody(request);
-  const res = await securedFetch<MakeTournamentBody, { id: number; name: string; status: string; date: number }>({
+  const res = await securedFetch<MakeTournamentBody, MakeTournamentResponse>({
     method: "POST",
     host: environment.apiUrl,
     path: "/v2/api/tournaments",
     withCredentials: false,
     body,
     mapping: {
-      success: async (res) => (await res.toJson()) as { id: number; name: string; status: string; date: number },
+      success: (res) => res.toJson(),
       400: () => new Error("Invalid request body"),
       500: () => new Error("Failed to create tournament"),
     },
@@ -65,7 +73,7 @@ export const makeTournament = async (
   return {
     id: String(res.id),
     name: res.name,
-    status: res.status,
+    status: normalizeTournamentStatus(res.status),
     date: res.date,
   };
 };

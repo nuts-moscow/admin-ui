@@ -3,10 +3,10 @@
 import { FC } from "react";
 import { Typography } from "@/components/Typography/Typography";
 import { TournamentStructure } from "@/core/states/tournamentStructures/common/TournamentStructure";
-import { BlindType } from "@/core/states/tournamentStructures/common/BlindType";
+import { Blind, BlindType } from "@/core/states/tournamentStructures/common/BlindType";
 import { SimpleList } from "@/components/SimpleList/SimpleList";
 
-function isBlind(item: BlindType): item is { smallBlind: number; bigBlind: number } {
+function isBlind(item: BlindType): item is Blind {
   return item != null && "smallBlind" in item && "bigBlind" in item;
 }
 

@@ -43,11 +43,14 @@ export const CreatePlayerModal: FC<CreatePlayerModalProps> = ({
           level: "error",
         },
       ]),
-      name: toCtrlParam<string | undefined>(player?.name ?? undefined, []),
-      tg: toCtrlParam<string | undefined>(player?.tg ?? undefined, []),
-      phone: toCtrlParam<string | undefined>(player?.phone ?? undefined, []),
-      notes: toCtrlParam<string | undefined>(player?.notes ?? undefined, []),
-      signAgreement: toCtrlParam<boolean>(player?.signAgreement ?? false, []),
+      name: toCtrlParam<string | null | undefined>(player?.name, []),
+      tg: toCtrlParam<string | null | undefined>(player?.tg, []),
+      phone: toCtrlParam<string | null | undefined>(player?.phone, []),
+      notes: toCtrlParam<string | null | undefined>(player?.notes, []),
+      signAgreement: toCtrlParam<boolean | undefined>(
+        player?.signAgreement ?? false,
+        [],
+      ),
     },
   });
 
@@ -59,7 +62,10 @@ export const CreatePlayerModal: FC<CreatePlayerModalProps> = ({
     try {
       if (player) {
         const v = form.value;
-        const updates: Partial<UpdatePlayerRequest> = { id: player.id };
+        type MutableUpdatePlayerRequest = {
+          -readonly [K in keyof UpdatePlayerRequest]: UpdatePlayerRequest[K];
+        };
+        const updates: Partial<MutableUpdatePlayerRequest> = { id: player.id };
         if (v.nickname !== (player.nickname ?? undefined))
           updates.nickname = v.nickname;
         if (v.name !== (player.name ?? undefined))

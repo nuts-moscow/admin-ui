@@ -42,14 +42,14 @@ export const updatePlayer = async (
 ): Promise<Player> => {
   const { id, ...rest } = request;
   const body = toUpdatePlayerBody(rest);
-  return securedFetch<UpdatePlayerBody, Player>({
+  return securedFetch<UpdatePlayerBody, Player, Player>({
     method: "PATCH",
     host: environment.apiUrl,
     path: `/v2/api/players/${id}`,
     withCredentials: false,
     body,
     mapping: {
-      success: async (res) => (await res.toJson()) as Player,
+      success: (res) => res.toJson(),
       400: () => new Error("Invalid request body or empty nickname"),
       404: () => new Error("Player not found"),
       409: () => new Error("Player with this nickname already exists"),
