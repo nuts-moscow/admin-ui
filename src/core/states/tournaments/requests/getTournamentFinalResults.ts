@@ -13,7 +13,7 @@ export interface TournamentPlayerResult {
   readonly playerName: string;
   readonly placement: number | null;
   readonly bountyCount: number;
-  readonly bountyKills?: BountyKillEntry[];
+  readonly bountyKills?: (BountyKillEntry | string)[];
   readonly eliminatedBy?: string[];
 }
 

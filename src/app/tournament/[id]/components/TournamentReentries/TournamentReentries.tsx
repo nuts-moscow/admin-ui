@@ -76,23 +76,18 @@ const BountyListModal: FC<BountyListModalProps> = ({
   const killerPlayerId = row?.playerId ?? "";
   const killerPlayerName = row?.playerName ?? "";
 
-  const getVictimDisplay = (kill: BountyKillEntry) => {
+  const getVictimDisplay = (kill: BountyKillEntry | string) => {
     const rawId =
-      (typeof kill === "object" && kill
-        ? String(
-            (kill as BountyKillEntry & { victimPlayerId?: string }).playerId ??
-              (kill as BountyKillEntry & { victimPlayerId?: string })
-                .victimPlayerId ??
-              "",
-          )
-        : String(kill ?? "")) || "";
+      typeof kill === "string"
+        ? kill
+        : String((kill as BountyKillEntry).playerId ?? "");
     const victim = players.find(
-      (p) =>
-        p.playerId === rawId || String(p.tournamentPlayerId) === String(rawId),
+      (p) => String(p.playerId) === String(rawId),
     );
-    const nameFromKill = typeof kill === "object" && kill && "playerName" in kill
-      ? (kill as BountyKillEntry).playerName
-      : undefined;
+    const nameFromKill =
+      typeof kill === "object" && kill && "playerName" in kill
+        ? (kill as BountyKillEntry).playerName
+        : undefined;
     return {
       name: (victim?.playerName ?? nameFromKill) ?? "-",
       victimPlayerId: victim?.playerId ?? rawId,
@@ -128,7 +123,10 @@ const BountyListModal: FC<BountyListModalProps> = ({
           ) : (
             bountyKills.map((kill, index) => {
               const { name, victimPlayerId } = getVictimDisplay(kill);
-              const keyId = typeof kill === "object" && kill && "playerId" in kill ? (kill as BountyKillEntry).playerId : String(kill);
+              const keyId =
+                typeof kill === "string"
+                  ? kill
+                  : String((kill as BountyKillEntry).playerId ?? index);
               return (
                 <Box
                   key={`${keyId}-${index}`}
@@ -182,10 +180,7 @@ const EliminatedByModal: FC<EliminatedByModalProps> = ({
   const victimPlayerId = row?.playerId ?? "";
 
   const getKillerInfo = (id: string) => {
-    const killer = players.find(
-      (p) =>
-        p.playerId === id || String(p.tournamentPlayerId) === String(id),
-    );
+    const killer = players.find((p) => String(p.playerId) === String(id));
     return {
       name: killer?.playerName ?? id,
       killerPlayerId: killer?.playerId ?? id,

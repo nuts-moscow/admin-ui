@@ -45,13 +45,19 @@ const BountyListModal: FC<BountyListModalProps> = ({
   const killerPlayerId = row ? String(row.playerId) : "";
   const killerPlayerName = row?.playerName ?? "";
 
-  const getVictimDisplay = (kill: BountyKillEntry) => {
-    const id = kill.playerId ?? "";
+  const getVictimDisplay = (kill: BountyKillEntry | string) => {
+    const id =
+      typeof kill === "string" ? kill : String(kill.playerId ?? "");
     const victim = allPlayers.find(
       (p) => String(p.playerId) === String(id),
     );
+    const nameFromKill =
+      typeof kill === "object" && kill && "playerName" in kill
+        ? kill.playerName
+        : undefined;
     return {
-      name: victim?.playerName ?? kill.playerName ?? "-",
+      name: victim?.playerName ?? nameFromKill ?? "-",
+      victimPlayerId: victim?.playerId ?? id,
     };
   };
 
@@ -83,10 +89,14 @@ const BountyListModal: FC<BountyListModalProps> = ({
             </Typography.Text>
           ) : (
             bountyKills.map((kill, index) => {
-                const { name } = getVictimDisplay(kill);
+                const { name, victimPlayerId } = getVictimDisplay(kill);
+                const keyId =
+                  typeof kill === "string"
+                    ? kill
+                    : String((kill as BountyKillEntry).playerId ?? index);
                 return (
                   <Box
-                    key={`${kill.playerId}-${index}`}
+                    key={`${keyId}-${index}`}
                   flex={{ align: "center", justify: "space-between", gap: 2 }}
                   style={{
                     padding: "8px 12px",
@@ -102,9 +112,9 @@ const BountyListModal: FC<BountyListModalProps> = ({
                     size="xxSmall"
                     style={{ padding: 4 }}
                     iconRight={<X size={16} color="var(--text-error)" />}
-                    onClick={() => handleRemove(kill.playerId)}
+                    onClick={() => handleRemove(victimPlayerId)}
                     disabled={removingId !== null}
-                    loading={removingId === kill.playerId}
+                    loading={removingId === victimPlayerId}
                   />
                 </Box>
               );

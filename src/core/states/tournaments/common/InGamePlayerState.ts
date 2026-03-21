@@ -34,7 +34,8 @@ export interface InGamePlayerState {
   readonly reentryByPaymentMethod: PaymentMethod[];
   readonly totalReentryCount: number;
   readonly bountyCount: number;
-  readonly bountyKills?: BountyKillEntry[];
+  /** ID жертв — playerId (строка или объект с playerId). */
+  readonly bountyKills?: (BountyKillEntry | string)[];
   readonly eliminatedBy?: string[];
   readonly bonuses: Bonus[];
   readonly freeEntryCount: number;
