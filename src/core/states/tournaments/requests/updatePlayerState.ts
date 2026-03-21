@@ -188,6 +188,8 @@ const removeTournamentPlayerTable = async (
 export interface PlayerGameStartBody {
   readonly entryPaymentMethod?: PaymentMethod;
   readonly tableId?: string;
+  /** EarlyBird при посадке за стол (POST game-start, поле EarlyBirdFlag). */
+  readonly earlyBirdFlag?: boolean;
 }
 
 export const playerGameStart = async (
@@ -202,6 +204,9 @@ export const playerGameStart = async (
   }
   if (body.tableId != null && body.tableId !== "") {
     requestBody.tableId = body.tableId;
+  }
+  if (body.earlyBirdFlag !== undefined) {
+    requestBody.EarlyBirdFlag = body.earlyBirdFlag;
   }
   return securedFetch<Record<string, unknown>, InGamePlayerState>({
     method: "POST",

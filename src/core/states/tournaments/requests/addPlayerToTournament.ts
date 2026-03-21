@@ -3,7 +3,7 @@ import { Environment } from "../../environment/Environment";
 
 /** Тело POST /v2/api/tournaments/{tournamentId}/players/{playerId} (AddPlayerToTournamentBody). */
 export interface AddPlayerToTournamentBody {
-  readonly earlyBird: boolean;
+  readonly EarlyBirdFlag: boolean;
 }
 
 export const addPlayerToTournament = (

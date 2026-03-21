@@ -3,6 +3,7 @@
 import { FC, useEffect, useMemo, useState } from "react";
 import { Box } from "@/components/Box/Box";
 import { Button } from "@/components/Button/Button";
+import { Checkbox } from "@/components/Checkbox/Checkbox";
 import { Typography } from "@/components/Typography/Typography";
 import { Modal, WithModalProps, useModal } from "@/components/Modal/Modal";
 import { X } from "lucide-react";
@@ -62,6 +63,7 @@ const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
     undefined,
   );
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CreditCard");
+  const [earlyBird, setEarlyBird] = useState(false);
   const paymentMethodOptions = useMemo<PaymentMethod[]>(() => {
     const baseOptions: PaymentMethod[] = ["CreditCard", "Cache"];
     if ((player?.freeEntryCount ?? 0) > 0) {
@@ -84,6 +86,7 @@ const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
   useEffect(() => {
     setSelectedTableId(undefined);
     setPaymentMethod("CreditCard");
+    setEarlyBird(false);
   }, [player?.playerId]);
 
   useEffect(() => {
@@ -109,6 +112,7 @@ const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
         {
           entryPaymentMethod: paymentMethod,
           ...(selectedTableId ? { tableId: String(selectedTableId) } : {}),
+          earlyBirdFlag: earlyBird,
         },
       );
       refetchTournamentPlayerState();
@@ -144,6 +148,15 @@ const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
               </option>
             ))}
           </select>
+          <Box flex={{ align: "center", gap: 2 }}>
+            <Checkbox
+              size="medium"
+              checked={earlyBird}
+              onCheckedChange={(checked) => setEarlyBird(checked === true)}
+              disabled={isLoading}
+            />
+            <Typography.Text size="small">Ранняя пташка</Typography.Text>
+          </Box>
           <Box className={tableListCls}>
             {TABLE_OPTIONS.map((tableNumber) => {
               const occupied = occupiedByTable.get(tableNumber) ?? 0;
@@ -323,12 +336,16 @@ export const WaitingListPlayers: FC<WaitingListPlayersProps> = ({
       <SetArrivedModal
         tournamentId={tournamentId}
         player={playerToArrive}
-        onSave={async (player, tableId) => {
+        includeEarlyBirdSeatOption
+        onSave={async (player, tableId, extra) => {
           await playerGameStart(
             environment,
             Number(tournamentId),
             player.playerId,
-            tableId ? { tableId } : {},
+            {
+              ...(tableId ? { tableId } : {}),
+              earlyBirdFlag: extra?.earlyBirdFlag === true,
+            },
           );
           refetchTournamentPlayerState();
         }}

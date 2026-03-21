@@ -3,20 +3,28 @@
 import { FC, useEffect, useMemo, useState } from "react";
 import { Box } from "@/components/Box/Box";
 import { Button } from "@/components/Button/Button";
+import { Checkbox } from "@/components/Checkbox/Checkbox";
 import { Typography } from "@/components/Typography/Typography";
 import { Modal, WithModalProps } from "@/components/Modal/Modal";
 import { InGamePlayerState } from "@/core/states/tournaments/common/InGamePlayerState";
 import { useTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
 import { tableListCls } from "../TableList/TableList.css";
 
+export interface TableSelectModalSeatExtra {
+  readonly earlyBirdFlag: boolean;
+}
+
 export interface TableSelectModalProps extends WithModalProps {
   readonly tournamentId: string;
   readonly player?: InGamePlayerState;
   readonly title?: string;
   readonly description?: string;
+  /** Показать «Ранняя пташка» при посадке с записи (POST game-start). */
+  readonly includeEarlyBirdSeatOption?: boolean;
   readonly onSave: (
     player: InGamePlayerState,
     tableId?: string,
+    extra?: TableSelectModalSeatExtra,
   ) => Promise<void> | void;
 }
 
@@ -45,10 +53,12 @@ export const TableSelectModal: FC<TableSelectModalProps> = ({
   player,
   title = "Выбор стола",
   description,
+  includeEarlyBirdSeatOption = false,
   onSave,
 }) => {
   const { data: players } = useTournamentPlayerState(tournamentId);
   const [isLoading, setIsLoading] = useState(false);
+  const [earlyBird, setEarlyBird] = useState(false);
   const [selectedTableId, setSelectedTableId] = useState<number | undefined>(
     undefined,
   );
@@ -71,13 +81,21 @@ export const TableSelectModal: FC<TableSelectModalProps> = ({
     setSelectedTableId(parseTableNumber(player?.tableId));
   }, [player?.playerId, player?.tableId]);
 
+  useEffect(() => {
+    setEarlyBird(false);
+  }, [player?.playerId]);
+
   const handleSave = async () => {
     if (!player || isLoading) {
       return;
     }
     setIsLoading(true);
     try {
-      await onSave(player, selectedTableId ? String(selectedTableId) : undefined);
+      await onSave(
+        player,
+        selectedTableId ? String(selectedTableId) : undefined,
+        includeEarlyBirdSeatOption ? { earlyBirdFlag: earlyBird } : undefined,
+      );
       close();
     } catch (error) {
       console.error(error);
@@ -97,6 +115,17 @@ export const TableSelectModal: FC<TableSelectModalProps> = ({
                 ? `Выбери стол для игрока "${player.playerName}" или пропусти`
                 : "Выбери стол или пропусти")}
           </Typography.Text>
+          {includeEarlyBirdSeatOption && (
+            <Box flex={{ align: "center", gap: 2 }}>
+              <Checkbox
+                size="medium"
+                checked={earlyBird}
+                onCheckedChange={(checked) => setEarlyBird(checked === true)}
+                disabled={isLoading}
+              />
+              <Typography.Text size="small">Ранняя пташка</Typography.Text>
+            </Box>
+          )}
           <Box className={tableListCls}>
             {TABLE_OPTIONS.map((tableNumber) => {
               const occupied = occupiedByTable.get(tableNumber) ?? 0;
