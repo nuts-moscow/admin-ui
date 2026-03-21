@@ -8,8 +8,11 @@ import { useModal, Modal, WithModalProps } from "@/components/Modal/Modal";
 import { PlayerListCard } from "../PlayerListCard/PlayerListCard";
 import { useNonRegisteredTournamentPlayerState } from "@/core/states/tournaments/hooks/useNonRegisteredTournamentPlayerState";
 import {
+  Bonus,
+  InGameBonus,
   InGamePlayerState,
   PaymentMethod,
+  tournamentBonusLabels,
 } from "@/core/states/tournaments/common/InGamePlayerState";
 import { getPaymentMethodLabel } from "@/core/states/tournaments/common/paymentMethodLabels";
 import { TableSelectModal } from "../TableSelectModal/TableSelectModal";
@@ -19,7 +22,16 @@ import {
   rollbackGameStart,
   setPlayerTableId,
 } from "@/core/states/tournaments/requests/updatePlayerState";
-import { refetchTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
+import {
+  refetchTournamentPlayerState,
+  useTournamentPlayerState,
+} from "@/core/states/tournaments/hooks/useTournamentPlayerState";
+import {
+  addPlayerTournamentBonus,
+  removePlayerTournamentBonus,
+} from "@/core/states/tournaments/requests/playerTournamentBonuses";
+import { toast } from "@/components/Toast/Toast";
+import { X } from "lucide-react";
 
 export interface InGamePlayersProps {
   readonly tournamentId: string;
@@ -30,6 +42,159 @@ interface PayPlayerModalProps extends WithModalProps {
   readonly tournamentId: string;
   readonly player?: InGamePlayerState;
 }
+
+const BONUS_OPTIONS: Bonus[] = Object.values(InGameBonus);
+
+interface PlayerBonusesModalProps extends WithModalProps {
+  readonly tournamentId: string;
+  readonly playerId?: string;
+}
+
+const PlayerBonusesModal: FC<PlayerBonusesModalProps> = ({
+  close,
+  tournamentId,
+  playerId,
+}) => {
+  const environment = useEnvironment();
+  const { data: players } = useTournamentPlayerState(tournamentId);
+  const player = useMemo(
+    () =>
+      playerId ? players?.find((p) => p.playerId === playerId) : undefined,
+    [players, playerId],
+  );
+  const [bonusToAdd, setBonusToAdd] = useState<Bonus>(InGameBonus.EarlyBird);
+  const [loadingKey, setLoadingKey] = useState<string | null>(null);
+
+  const bonuses = player?.bonuses ?? [];
+
+  const handleRemove = async (bonus: Bonus, index: number) => {
+    if (!playerId || loadingKey != null) return;
+    const key = `r-${index}`;
+    setLoadingKey(key);
+    try {
+      await removePlayerTournamentBonus(
+        environment,
+        tournamentId,
+        playerId,
+        bonus,
+      );
+      refetchTournamentPlayerState();
+    } catch (error) {
+      console.error(error);
+      toast({ type: "error", message: "Не удалось убрать бонус" });
+    } finally {
+      setLoadingKey(null);
+    }
+  };
+
+  const handleAdd = async () => {
+    if (!playerId || loadingKey != null) return;
+    setLoadingKey("add");
+    try {
+      await addPlayerTournamentBonus(
+        environment,
+        tournamentId,
+        playerId,
+        bonusToAdd,
+      );
+      refetchTournamentPlayerState();
+    } catch (error) {
+      console.error(error);
+      toast({ type: "error", message: "Не удалось добавить бонус" });
+    } finally {
+      setLoadingKey(null);
+    }
+  };
+
+  return (
+    <>
+      <Modal.Title showCloseButton>
+        Бонусы — {player?.playerName ?? "игрок"}
+      </Modal.Title>
+      <Modal.Content minWidth={400}>
+        <Box flex={{ col: true, gap: 4 }}>
+          <Typography.Text type="secondary" size="small">
+            Текущие бонусы
+          </Typography.Text>
+          {bonuses.length === 0 ? (
+            <Typography.Text type="secondary" size="small">
+              Нет бонусов
+            </Typography.Text>
+          ) : (
+            <Box flex={{ col: true, gap: 2 }}>
+              {bonuses.map((bonus, index) => {
+                const label =
+                  tournamentBonusLabels[bonus as Bonus] ?? String(bonus);
+                const key = `r-${index}`;
+                return (
+                  <Box
+                    key={`${bonus}-${index}`}
+                    flex={{ align: "center", justify: "space-between", gap: 2 }}
+                    style={{
+                      padding: "8px 12px",
+                      borderRadius: 10,
+                      border: "1px solid var(--border-color)",
+                    }}
+                  >
+                    <Typography.Text size="small">{label}</Typography.Text>
+                    <Button
+                      type="ghost"
+                      size="xxSmall"
+                      style={{ padding: 4 }}
+                      iconRight={<X size={16} color="var(--text-error)" />}
+                      onClick={() => handleRemove(bonus as Bonus, index)}
+                      disabled={loadingKey !== null}
+                      loading={loadingKey === key}
+                    />
+                  </Box>
+                );
+              })}
+            </Box>
+          )}
+
+          <Typography.Text type="secondary" size="small">
+            Добавить бонус
+          </Typography.Text>
+          <Box flex={{ align: "center", gap: 2, width: "100%" }}>
+            <select
+              value={bonusToAdd}
+              onChange={(e) => setBonusToAdd(e.target.value as Bonus)}
+              disabled={!playerId || loadingKey !== null}
+              style={{
+                flex: 1,
+                borderRadius: 12,
+                border: "1px solid var(--border-color)",
+                minHeight: 40,
+                padding: "0 12px",
+                backgroundColor: "var(--background-primary)",
+                color: "var(--text-primary)",
+              }}
+            >
+              {BONUS_OPTIONS.map((b) => (
+                <option key={b} value={b}>
+                  {tournamentBonusLabels[b]}
+                </option>
+              ))}
+            </select>
+            <Button
+              type="primary"
+              size="xxSmall"
+              onClick={handleAdd}
+              disabled={!playerId || loadingKey !== null}
+              loading={loadingKey === "add"}
+            >
+              Добавить
+            </Button>
+          </Box>
+
+          <Button type="secondary" htmlType="button" onClick={() => close()}>
+            Закрыть
+          </Button>
+        </Box>
+      </Modal.Content>
+    </>
+  );
+};
 
 const getPlayerPaymentMethod = (
   player?: InGamePlayerState,
@@ -144,6 +309,10 @@ export const InGamePlayers: FC<InGamePlayersProps> = ({
   );
   const [SetTableModal, openSetTableModal] = useModal(TableSelectModal);
   const [PayPlayerModalConnect, openPayPlayerModal] = useModal(PayPlayerModal);
+  const [playerBonusesPlayerId, setPlayerBonusesPlayerId] = useState<
+    string | undefined
+  >(undefined);
+  const [BonusesModal, openBonusesModal] = useModal(PlayerBonusesModal);
   const { data: nonRegisteredPlayers } =
     useNonRegisteredTournamentPlayerState(tournamentId);
   const filteredPlayers = useMemo(() => {
@@ -180,6 +349,10 @@ export const InGamePlayers: FC<InGamePlayersProps> = ({
   return (
     <>
       <PayPlayerModalConnect tournamentId={tournamentId} player={playerToPay} />
+      <BonusesModal
+        tournamentId={tournamentId}
+        playerId={playerBonusesPlayerId}
+      />
       <SetTableModal
         tournamentId={tournamentId}
         player={playerToSetTable}
@@ -204,6 +377,16 @@ export const InGamePlayers: FC<InGamePlayersProps> = ({
             row.status === "Out" || row.status === "OutNotPaid";
           return (
             <>
+              <Button
+                type="secondary"
+                size="xxSmall"
+                onClick={() => {
+                  setPlayerBonusesPlayerId(row.playerId);
+                  openBonusesModal();
+                }}
+              >
+                Бонусы
+              </Button>
               {isOutOrOutNotPaid && (
                 <Typography.Text size="small" type="secondary">
                   Вылетел

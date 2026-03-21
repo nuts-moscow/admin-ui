@@ -12,9 +12,19 @@ export const InGameBonus = {
   First20: "First20",
   Hookah: "Hookah",
   Diller: "Diller",
+  /** Бонус дня */
+  BonusOfTheDay: "BonusOfTheDay",
 } as const;
 
 export type Bonus = (typeof InGameBonus)[keyof typeof InGameBonus];
+
+export const tournamentBonusLabels: Record<Bonus, string> = {
+  EarlyBird: "Ранняя пташка",
+  First20: "First 20",
+  Hookah: "Кальян",
+  Diller: "Диллер",
+  BonusOfTheDay: "Бонус дня",
+};
 
 export interface BountyKillEntry {
   readonly playerId: string;
