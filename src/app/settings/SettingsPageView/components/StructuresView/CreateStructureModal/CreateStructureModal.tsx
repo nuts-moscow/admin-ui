@@ -11,6 +11,23 @@ import {
   Blinds,
   BlindType,
 } from "@/core/states/tournamentStructures/common/BlindType";
+
+const BLINDS_MIN_LEVEL_MESSAGE =
+  "Нужен хотя бы один уровень блайндов";
+
+function hasAtLeastOneBlindLevel(
+  blinds: Blinds | BlindType[] | undefined,
+): boolean {
+  if (!blinds?.length) return false;
+  return blinds.some(
+    (item) =>
+      item != null &&
+      "smallBlind" in item &&
+      "bigBlind" in item &&
+      typeof (item as { smallBlind: unknown }).smallBlind === "number" &&
+      typeof (item as { bigBlind: unknown }).bigBlind === "number",
+  );
+}
 import { BlindList } from "./BlindList/BlindList";
 import { Checkbox } from "@/components/Checkbox/Checkbox";
 import { Typography } from "@/components/Typography/Typography";
@@ -60,7 +77,13 @@ export const CreateStructureModal: FC<CreateStructureModalProps> = ({
       freezeOutEnabled: structure?.freezeOutEnabled,
       blinds: toCtrlParam<Blinds | undefined>(structure?.blindsStructure, [
         {
-          validate: (blinds) => (blinds?.length ? undefined : "Required"),
+          validate: (blinds) => {
+            if (!blinds?.length) return BLINDS_MIN_LEVEL_MESSAGE;
+            if (!hasAtLeastOneBlindLevel(blinds)) {
+              return BLINDS_MIN_LEVEL_MESSAGE;
+            }
+            return undefined;
+          },
           level: "error",
         },
       ]),
@@ -69,6 +92,10 @@ export const CreateStructureModal: FC<CreateStructureModalProps> = ({
 
   const handleSubmit = async () => {
     if (form.state === "error") {
+      return;
+    }
+    const blinds = form.value.blinds;
+    if (!hasAtLeastOneBlindLevel(blinds)) {
       return;
     }
     setIsLoading(true);
