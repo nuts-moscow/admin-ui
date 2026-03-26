@@ -49,10 +49,41 @@ export interface InGamePlayerState {
   readonly eliminatedBy?: string[];
   readonly bonuses: Bonus[];
   readonly freeEntryCount: number;
+  /** Бесплатные входы только в этом турнире (оплата входа Free). */
+  readonly tournamentFreeEntryCount?: number;
   readonly freeReentryCount: number;
+  /** Бесплатные ребаи только в этом турнире (оплата ребая Free). */
+  readonly tournamentFreeReentryCount?: number;
   readonly placement?: number;
   // Legacy field used by current reentry UI.
   readonly unpaidReentryCount: number;
   /** Подписан ли договор (v2/api/tournaments/{id}/players). */
   readonly signAgreement?: boolean;
+}
+
+/** Есть ли у игрока бесплатный вход (глобально или в турнире) для способа оплаты Free. */
+export function playerHasFreeEntryOption(
+  player?:
+    | Pick<InGamePlayerState, "freeEntryCount" | "tournamentFreeEntryCount">
+    | null,
+): boolean {
+  return (
+    (player?.freeEntryCount ?? 0) > 0 ||
+    (player?.tournamentFreeEntryCount ?? 0) > 0
+  );
+}
+
+/** Есть ли у игрока бесплатный ребай (глобально или в турнире) для способа оплаты Free. */
+export function playerHasFreeReentryOption(
+  player?:
+    | Pick<
+        InGamePlayerState,
+        "freeReentryCount" | "tournamentFreeReentryCount"
+      >
+    | null,
+): boolean {
+  return (
+    (player?.freeReentryCount ?? 0) > 0 ||
+    (player?.tournamentFreeReentryCount ?? 0) > 0
+  );
 }

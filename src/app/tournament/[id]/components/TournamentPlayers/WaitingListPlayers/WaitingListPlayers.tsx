@@ -13,6 +13,7 @@ import { useRegisteredTournamentPlayerState } from "@/core/states/tournaments/ho
 import {
   InGamePlayerState,
   PaymentMethod,
+  playerHasFreeEntryOption,
 } from "@/core/states/tournaments/common/InGamePlayerState";
 import { getPaymentMethodLabel } from "@/core/states/tournaments/common/paymentMethodLabels";
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
@@ -66,11 +67,11 @@ const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
   const [earlyBird, setEarlyBird] = useState(false);
   const paymentMethodOptions = useMemo<PaymentMethod[]>(() => {
     const baseOptions: PaymentMethod[] = ["CreditCard", "Cache"];
-    if ((player?.freeEntryCount ?? 0) > 0) {
+    if (playerHasFreeEntryOption(player)) {
       return [...baseOptions, "Free"];
     }
     return baseOptions;
-  }, [player?.freeEntryCount]);
+  }, [player]);
 
   const occupiedByTable = useMemo(() => {
     const tableMap = new Map<number, number>();
@@ -94,10 +95,10 @@ const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
   }, [player?.playerId, player?.tableId]);
 
   useEffect(() => {
-    if (paymentMethod === "Free" && (player?.freeEntryCount ?? 0) <= 0) {
+    if (paymentMethod === "Free" && !playerHasFreeEntryOption(player)) {
       setPaymentMethod("CreditCard");
     }
-  }, [paymentMethod, player?.freeEntryCount]);
+  }, [paymentMethod, player]);
 
   const handleSave = async () => {
     if (!player || isLoading) {

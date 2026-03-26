@@ -12,6 +12,7 @@ import {
   BountyKillEntry,
   InGamePlayerState,
   PaymentMethod,
+  playerHasFreeReentryOption,
 } from "@/core/states/tournaments/common/InGamePlayerState";
 import { getPaymentMethodLabel } from "@/core/states/tournaments/common/paymentMethodLabels";
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
@@ -258,7 +259,7 @@ const BASE_PAY_REENTRY_METHOD_OPTIONS: Array<{
 
 function getPayReentryMethodOptions(player?: InGamePlayerState): Array<{ label: PaymentMethod; value: PaymentMethod }> {
   const options = [...BASE_PAY_REENTRY_METHOD_OPTIONS];
-  if ((player?.freeReentryCount ?? 0) > 0) {
+  if (playerHasFreeReentryOption(player)) {
     options.push({ label: "Free", value: "Free" });
   }
   return options;
@@ -425,8 +426,21 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
   );
 
   useEffect(() => {
-    setMethods(Array.from({ length: toPayReentryCount }, () => "CreditCard"));
-  }, [player?.playerId, toPayReentryCount]);
+    const allowed = new Set(
+      payReentryMethodOptions.map((option) => option.value),
+    );
+    setMethods((prev) => {
+      if (prev.length !== toPayReentryCount) {
+        return Array.from({ length: toPayReentryCount }, (_, index) => {
+          const method = prev[index];
+          return method && allowed.has(method) ? method : "CreditCard";
+        });
+      }
+      return prev.map((method) =>
+        allowed.has(method) ? method : "CreditCard",
+      );
+    });
+  }, [player?.playerId, toPayReentryCount, payReentryMethodOptions]);
 
   const handleMethodChange = (index: number, value: PaymentMethod) => {
     setMethods((prev) => prev.map((item, i) => (i === index ? value : item)));

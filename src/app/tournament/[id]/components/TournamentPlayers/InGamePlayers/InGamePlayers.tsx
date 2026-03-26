@@ -12,6 +12,7 @@ import {
   InGameBonus,
   InGamePlayerState,
   PaymentMethod,
+  playerHasFreeEntryOption,
   tournamentBonusLabels,
 } from "@/core/states/tournaments/common/InGamePlayerState";
 import { getPaymentMethodLabel } from "@/core/states/tournaments/common/paymentMethodLabels";
@@ -208,21 +209,21 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({ close, tournamentId, player }
   const [isLoading, setIsLoading] = useState(false);
   const paymentMethodOptions = useMemo<PaymentMethod[]>(() => {
     const baseOptions: PaymentMethod[] = ["CreditCard", "Cache"];
-    if ((player?.freeEntryCount ?? 0) > 0) {
+    if (playerHasFreeEntryOption(player)) {
       return [...baseOptions, "Free"];
     }
     return baseOptions;
-  }, [player?.freeEntryCount]);
+  }, [player]);
 
   useEffect(() => {
     setPaymentMethod(getPlayerPaymentMethod(player) ?? "CreditCard");
   }, [player?.playerId, player?.entryPaymentMethod, player?.entyPaymentMethod]);
 
   useEffect(() => {
-    if (paymentMethod === "Free" && (player?.freeEntryCount ?? 0) <= 0) {
+    if (paymentMethod === "Free" && !playerHasFreeEntryOption(player)) {
       setPaymentMethod("CreditCard");
     }
-  }, [paymentMethod, player?.freeEntryCount]);
+  }, [paymentMethod, player]);
 
   const handleSave = async () => {
     if (!player || isLoading) {
