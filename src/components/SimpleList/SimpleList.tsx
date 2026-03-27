@@ -1,4 +1,5 @@
 import { FC } from "react";
+import { clsx } from "clsx";
 import { Box } from "../Box/Box";
 import { simpleListCardCls } from "./SimpleList.css";
 import { WithChildren } from "@/core/utils/style/WithChildren";
@@ -8,12 +9,14 @@ import { Upload } from "lucide-react";
 export interface SimpleListCardProps extends WithChildren {
   readonly selected?: boolean;
   readonly onClick?: () => void;
+  readonly className?: string;
 }
 
 const SimpleListCard: FC<SimpleListCardProps> = ({
   children,
   onClick,
   selected,
+  className,
 }) => {
   return (
     <Box
@@ -23,7 +26,7 @@ const SimpleListCard: FC<SimpleListCardProps> = ({
       borderRadius="m"
       border
       disableHover
-      className={simpleListCardCls({ selected })}
+      className={clsx(simpleListCardCls({ selected }), className)}
     >
       {children}
     </Box>

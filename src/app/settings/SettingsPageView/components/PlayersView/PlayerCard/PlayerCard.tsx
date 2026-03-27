@@ -9,6 +9,8 @@ import { SimpleList } from "@/components/SimpleList/SimpleList";
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
 import { updatePlayerFreeEntries } from "@/core/states/players/requests/updatePlayerFreeEntries";
 import { updatePlayerFreeReentries } from "@/core/states/players/requests/updatePlayerFreeReentries";
+import { clsx } from "clsx";
+import { playerCardNoAgreementCls } from "./PlayerCard.css";
 
 export interface PlayerCardProps {
   readonly player: Player;
@@ -67,7 +69,12 @@ export const PlayerCard: FC<PlayerCardProps> = ({
   };
 
   return (
-    <SimpleList.Card onClick={onClick}>
+    <SimpleList.Card
+      onClick={onClick}
+      className={clsx(
+        player.signAgreement === false && playerCardNoAgreementCls,
+      )}
+    >
       <SimpleList.Column>
         <Typography.Text size="small" type="secondary">
           Никнейм

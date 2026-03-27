@@ -7,19 +7,31 @@ export interface GetPlayersResponse {
   readonly players: Player[];
 }
 
+function normalizeSignAgreement(
+  raw: Player & { readonly sign_agreement?: boolean },
+): Player {
+  return {
+    ...raw,
+    signAgreement:
+      raw.signAgreement === true || raw.sign_agreement === true,
+  };
+}
+
 function toPlayerList(value: unknown): Player[] {
+  let list: Player[] = [];
   if (Array.isArray(value)) {
-    return value;
-  }
-  if (
+    list = value as Player[];
+  } else if (
     value &&
     typeof value === "object" &&
     "players" in value &&
     Array.isArray((value as { players: unknown }).players)
   ) {
-    return (value as GetPlayersResponse).players;
+    list = (value as GetPlayersResponse).players;
   }
-  return [];
+  return list.map((p) =>
+    normalizeSignAgreement(p as Player & { readonly sign_agreement?: boolean }),
+  );
 }
 
 export const getPlayers = (environment: Environment) => {
