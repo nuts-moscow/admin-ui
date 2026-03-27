@@ -91,7 +91,7 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
           {averageStack == null ? (
             "—"
           ) : (
-            <Formatter.number value={averageStack} type="2digit" />
+            <Formatter.number value={averageStack} type="withoutDecimals" />
           )}
         </StatRow>
         <StatRow label="Ребаи" last>
