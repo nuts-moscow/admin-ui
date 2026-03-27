@@ -16,10 +16,17 @@ import {
 } from "@/core/states/tournaments/common/InGamePlayerState";
 import { getPaymentMethodLabel } from "@/core/states/tournaments/common/paymentMethodLabels";
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
-import { refetchTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
+import {
+  refetchTournamentPlayerState,
+  useTournamentPlayerState,
+} from "@/core/states/tournaments/hooks/useTournamentPlayerState";
 import { addReentryPayment } from "@/core/states/tournaments/requests/addReentryPayment";
-import { bountyEliminate } from "@/core/states/tournaments/requests/bountyEliminate";
+import {
+  bountyEliminate,
+  BountyEliminateBody,
+} from "@/core/states/tournaments/requests/bountyEliminate";
 import { bountyRemove } from "@/core/states/tournaments/requests/bountyRemove";
+import { undoRebuyBurnedStack } from "@/core/states/tournaments/requests/undoRebuyBurnedStack";
 import { X } from "lucide-react";
 import {
   refetchTournamentRebuyCount,
@@ -29,6 +36,7 @@ import {
   SearchableSelect,
   SearchableSelectOption,
 } from "@/components/SearchableSelect/SearchableSelect";
+import { Formatter } from "@/components/Formatter/Formatter";
 
 export interface TournamentReentriesProps {
   readonly tournament: TournamentInfoResponse;
@@ -168,6 +176,108 @@ interface EliminatedByModalProps {
   onRemoved: () => void;
 }
 
+interface BurnedRebuyUndoModalProps extends WithModalProps {
+  readonly tournamentId: string;
+  readonly player?: InGamePlayerState | null;
+}
+
+const BurnedRebuyUndoModal: FC<BurnedRebuyUndoModalProps> = ({
+  close,
+  tournamentId,
+  player,
+}) => {
+  const environment = useEnvironment();
+  const [undoingKey, setUndoingKey] = useState<string | null>(null);
+  const rebuyBurns = useMemo(() => {
+    const list = (player?.burnedStackEvents ?? []).filter(
+      (e) => e.source === "Rebuy",
+    );
+    return [...list].reverse();
+  }, [player?.burnedStackEvents, player?.playerId]);
+
+  const handleUndo = async (burnedChips: number, rowIndex: number) => {
+    if (!player || undoingKey != null) {
+      return;
+    }
+    const key = `undo-${rowIndex}-${burnedChips}`;
+    setUndoingKey(key);
+    try {
+      await undoRebuyBurnedStack(environment, tournamentId, {
+        playerId: player.playerId,
+        burnedChips,
+      });
+      refetchTournamentPlayerState();
+      refetchTournamentRebuyCount();
+    } catch (error) {
+      console.error(error);
+      toast({
+        type: "error",
+        message:
+          error instanceof Error ? error.message : "Не удалось откатить сгорание",
+      });
+    } finally {
+      setUndoingKey(null);
+    }
+  };
+
+  return (
+    <>
+      <Modal.Title showCloseButton>
+        Сгорание стека (ребай) —{" "}
+        {player ? getPlayerLabel(player) : ""}
+      </Modal.Title>
+      <Modal.Content minWidth={420}>
+        <Box flex={{ col: true, gap: 3 }}>
+          <Typography.Text type="tertiary" size="xxSmall">
+            Откат снимает последнее событие Rebuy с этой суммой фишек (LIFO
+            среди совпадений).
+          </Typography.Text>
+          {rebuyBurns.length === 0 ? (
+            <Typography.Text type="secondary" size="small">
+              Нет записей сгорания за ребай
+            </Typography.Text>
+          ) : (
+            <Box flex={{ col: true, gap: 2 }}>
+              {rebuyBurns.map((ev, index) => (
+                <Box
+                  key={`burn-rebuy-${index}-${ev.chips}`}
+                  flex={{
+                    align: "center",
+                    justify: "space-between",
+                    gap: 2,
+                  }}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: 10,
+                    border: "1px solid var(--border-color)",
+                  }}
+                >
+                  <Typography.Text size="small">
+                    <Formatter.number value={ev.chips} type="withoutDecimals" />{" "}
+                    фишек
+                  </Typography.Text>
+                  <Button
+                    type="secondary"
+                    size="xxSmall"
+                    onClick={() => handleUndo(ev.chips, index)}
+                    disabled={undoingKey !== null}
+                    loading={undoingKey === `undo-${index}-${ev.chips}`}
+                  >
+                    Откат
+                  </Button>
+                </Box>
+              ))}
+            </Box>
+          )}
+          <Button type="secondary" htmlType="button" onClick={() => close()}>
+            Закрыть
+          </Button>
+        </Box>
+      </Modal.Content>
+    </>
+  );
+};
+
 const EliminatedByModal: FC<EliminatedByModalProps> = ({
   close,
   initialData: row,
@@ -273,6 +383,8 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
 }) => {
   const environment = useEnvironment();
   const [count, setCount] = useState<number>(1);
+  const [burnedStack, setBurnedStack] = useState(false);
+  const [burnedChipsInput, setBurnedChipsInput] = useState("");
   const [killerPlayerId, setKillerPlayerId] = useState<string | undefined>(
     undefined,
   );
@@ -298,6 +410,8 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
 
   useEffect(() => {
     setCount(1);
+    setBurnedStack(false);
+    setBurnedChipsInput("");
     setKillerPlayerId(killerCandidates[0]?.playerId);
   }, [player?.playerId, killerCandidates]);
 
@@ -311,17 +425,35 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
   }, [killerCandidates, killerPlayerId]);
 
   const handleSave = async () => {
-    if (!player || count <= 0 || isSaving || !killerPlayerId) {
+    if (!player || count <= 0 || isSaving) {
       return;
+    }
+    let payload: BountyEliminateBody;
+    if (burnedStack) {
+      const parsed = Number.parseInt(burnedChipsInput.trim(), 10);
+      if (!Number.isFinite(parsed) || parsed < 0) {
+        return;
+      }
+      payload = {
+        eliminatedPlayerId: player.playerId,
+        type: "Rebuy",
+        burnedStack: true,
+        burnedChips: parsed,
+      };
+    } else {
+      if (!killerPlayerId) {
+        return;
+      }
+      payload = {
+        eliminatedPlayerId: player.playerId,
+        killerPlayerId,
+        type: "Rebuy",
+      };
     }
     setIsSaving(true);
     try {
       for (let i = 0; i < count; i += 1) {
-        await bountyEliminate(environment, Number(tournamentId), {
-          eliminatedPlayerId: player.playerId,
-          killerPlayerId,
-          type: "Rebuy",
-        });
+        await bountyEliminate(environment, Number(tournamentId), payload);
       }
       refetchTournamentPlayerState();
       refetchTournamentRebuyCount();
@@ -343,17 +475,56 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
               ? `Игрок: ${getPlayerLabel(player)}`
               : "Укажи количество ребаев для игрока"}
           </Typography.Text>
-          <SearchableSelect
-            options={killerOptions}
-            value={killerPlayerId}
-            placeholder={
-              killerCandidates.length > 0
-                ? "Кто выбил игрока?"
-                : "Нет игроков за этим столом"
-            }
-            disabled={killerCandidates.length === 0 || isSaving}
-            onChange={(value) => setKillerPlayerId(value)}
-          />
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              cursor: "pointer",
+              userSelect: "none",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={burnedStack}
+              onChange={(e) => setBurnedStack(e.target.checked)}
+              disabled={isSaving}
+            />
+            <Typography.Text size="small">Сжёг стек</Typography.Text>
+          </label>
+          {burnedStack ? (
+            <input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              step={1}
+              placeholder="Сожжённых фишек (на один ребай)"
+              value={burnedChipsInput}
+              onChange={(e) => setBurnedChipsInput(e.target.value)}
+              disabled={isSaving}
+              style={{
+                width: "100%",
+                borderRadius: 12,
+                border: "1px solid var(--border-color)",
+                minHeight: 44,
+                padding: "0 12px",
+                backgroundColor: "var(--background-primary)",
+                color: "var(--text-primary)",
+              }}
+            />
+          ) : (
+            <SearchableSelect
+              options={killerOptions}
+              value={killerPlayerId}
+              placeholder={
+                killerCandidates.length > 0
+                  ? "Кто выбил игрока?"
+                  : "Нет игроков за этим столом"
+              }
+              disabled={killerCandidates.length === 0 || isSaving}
+              onChange={(value) => setKillerPlayerId(value)}
+            />
+          )}
           <input
             type="number"
             min={1}
@@ -390,7 +561,13 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
               disabled={
                 !player ||
                 count <= 0 ||
-                !killerPlayerId
+                isSaving ||
+                (burnedStack
+                  ? !Number.isFinite(
+                      Number.parseInt(burnedChipsInput.trim(), 10),
+                    ) ||
+                    Number.parseInt(burnedChipsInput.trim(), 10) < 0
+                  : !killerPlayerId)
               }
             >
               Сохранить
@@ -547,12 +724,15 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
   tournament,
 }) => {
   const REENTRY_LIMIT = 5;
-  const ACTIONS_COLUMN_WIDTH = 360;
+  const ACTIONS_COLUMN_WIDTH = 420;
   const [searchQuery, setSearchQuery] = useState("");
   const [playerToAddReentry, setPlayerToAddReentry] = useState<
     InGamePlayerState | undefined
   >(undefined);
   const [playerToPayReentries, setPlayerToPayReentries] = useState<
+    InGamePlayerState | undefined
+  >(undefined);
+  const [playerBurnedRebuyUndo, setPlayerBurnedRebuyUndo] = useState<
     InGamePlayerState | undefined
   >(undefined);
   const [AddReentryModalConnect, openAddReentryModal] =
@@ -562,6 +742,9 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
   const [BountyModal, openBountyModal] = useModal(BountyListModal);
   const [EliminatedByModalConnect, openEliminatedByModal] =
     useModal(EliminatedByModal);
+  const [BurnedRebuyUndoModalConnect, openBurnedRebuyUndoModal] = useModal(
+    BurnedRebuyUndoModal,
+  );
   const { data: players } = useNonRegisteredTournamentPlayerState(
     String(tournament.id),
   );
@@ -629,6 +812,10 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
         tournamentId={String(tournament.id)}
         players={players ?? []}
         onRemoved={refetchTournamentPlayerState}
+      />
+      <BurnedRebuyUndoModalConnect
+        tournamentId={String(tournament.id)}
+        player={playerBurnedRebuyUndo}
       />
       <Box
         flex={{ width: "100%", align: "center", justify: "space-between" }}
@@ -766,6 +953,20 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
                   >
                     Добавить ребай
                   </Button>
+                  {(player.burnedStackEvents ?? []).some(
+                    (e) => e.source === "Rebuy",
+                  ) && (
+                    <Button
+                      type="secondary"
+                      size="xxSmall"
+                      onClick={() => {
+                        setPlayerBurnedRebuyUndo(player);
+                        openBurnedRebuyUndoModal();
+                      }}
+                    >
+                      Откат сгорания
+                    </Button>
+                  )}
                   <Button
                     type="secondary"
                     size="xxSmall"

@@ -31,6 +31,13 @@ export interface BountyKillEntry {
   readonly playerName?: string;
 }
 
+export type BurnedStackSource = "Rebuy" | "Out";
+
+export interface BurnedStackEvent {
+  readonly chips: number;
+  readonly source: BurnedStackSource;
+}
+
 export interface InGamePlayerState {
   readonly playerId: string;
   readonly tournamentPlayerId: string;
@@ -61,6 +68,8 @@ export interface InGamePlayerState {
   readonly unpaidReentryCount: number;
   /** Подписан ли договор (v2/api/tournaments/{id}/players). */
   readonly signAgreement?: boolean;
+  /** Сгорания стека по событиям; откат ребая — только source=Rebuy. */
+  readonly burnedStackEvents?: readonly BurnedStackEvent[];
 }
 
 /** Есть ли у игрока бесплатный вход (глобально или в турнире) для способа оплаты Free. */

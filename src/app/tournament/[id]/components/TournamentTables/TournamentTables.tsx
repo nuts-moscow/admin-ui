@@ -147,6 +147,8 @@ const SetOutPlayerModal: FC<SetOutPlayerModalProps> = ({
 }) => {
   const environment = useEnvironment();
   const [isLoading, setIsLoading] = useState(false);
+  const [burnedStack, setBurnedStack] = useState(false);
+  const [burnedChipsInput, setBurnedChipsInput] = useState("");
   const candidates = useMemo(
     () =>
       players.filter(
@@ -161,10 +163,40 @@ const SetOutPlayerModal: FC<SetOutPlayerModalProps> = ({
 
   useEffect(() => {
     setSelectedKillerId(candidates[0]?.playerId);
+    setBurnedStack(false);
+    setBurnedChipsInput("");
   }, [bustedPlayer?.playerId, candidates]);
 
+  const canSave =
+    !!bustedPlayer &&
+    (burnedStack
+      ? true
+      : !!selectedKillerId && candidates.length > 0);
+
   const handleSave = async () => {
-    if (!bustedPlayer || !selectedKillerId || isLoading) {
+    if (!bustedPlayer || !canSave || isLoading) {
+      return;
+    }
+    if (burnedStack) {
+      const chips = Number.parseInt(burnedChipsInput.trim(), 10);
+      if (!Number.isFinite(chips) || chips < 0) {
+        return;
+      }
+      setIsLoading(true);
+      try {
+        await bountyEliminate(environment, Number(tournamentId), {
+          eliminatedPlayerId: bustedPlayer.playerId,
+          type: "Out",
+          burnedStack: true,
+          burnedChips: chips,
+        });
+        refetchTournamentPlayerState();
+        close();
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
       return;
     }
     const killer = candidates.find((player) => player.playerId === selectedKillerId);
@@ -194,10 +226,49 @@ const SetOutPlayerModal: FC<SetOutPlayerModalProps> = ({
         <Box flex={{ col: true, gap: 4 }}>
           <Typography.Text type="secondary" size="small">
             {bustedPlayer
-              ? `Кто выбил игрока "${bustedPlayer.playerName}"?`
+              ? burnedStack
+                ? `Сжёг стек — игрок «${bustedPlayer.playerName}»`
+                : `Кто выбил игрока «${bustedPlayer.playerName}»?`
               : "Выбери игрока"}
           </Typography.Text>
-          {candidates.length > 0 ? (
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              cursor: "pointer",
+              userSelect: "none",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={burnedStack}
+              onChange={(e) => setBurnedStack(e.target.checked)}
+              disabled={isLoading}
+            />
+            <Typography.Text size="small">Сжёг стек</Typography.Text>
+          </label>
+          {burnedStack ? (
+            <input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              step={1}
+              placeholder="Сожжённых фишек"
+              value={burnedChipsInput}
+              onChange={(e) => setBurnedChipsInput(e.target.value)}
+              disabled={isLoading}
+              style={{
+                width: "100%",
+                borderRadius: 12,
+                border: "1px solid var(--border-color)",
+                minHeight: 44,
+                padding: "0 12px",
+                backgroundColor: "var(--background-primary)",
+                color: "var(--text-primary)",
+              }}
+            />
+          ) : candidates.length > 0 ? (
             <select
               value={selectedKillerId}
               onChange={(event) => setSelectedKillerId(event.target.value || undefined)}
@@ -238,7 +309,14 @@ const SetOutPlayerModal: FC<SetOutPlayerModalProps> = ({
               onClick={handleSave}
               flexItem={{ flex: 1 }}
               loading={isLoading}
-              disabled={!bustedPlayer || !selectedKillerId || candidates.length === 0}
+              disabled={
+                !bustedPlayer ||
+                isLoading ||
+                (burnedStack
+                  ? !Number.isFinite(Number.parseInt(burnedChipsInput.trim(), 10)) ||
+                    Number.parseInt(burnedChipsInput.trim(), 10) < 0
+                  : !selectedKillerId || candidates.length === 0)
+              }
             >
               Сохранить
             </Button>
