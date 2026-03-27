@@ -130,6 +130,19 @@ const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
       <Modal.Title showCloseButton>Пришел и оплатил</Modal.Title>
       <Modal.Content minWidth={480}>
         <Box flex={{ col: true, gap: 4 }}>
+          {player ? (
+            <Box flex={{ col: true, gap: 1 }}>
+              <Typography.Text bold>
+                {player.playerName || "—"}
+              </Typography.Text>
+              <Typography.Text type="secondary" size="small">
+                № в турнире {player.tournamentPlayerId}
+              </Typography.Text>
+            </Box>
+          ) : null}
+          <Typography.Text type="secondary" size="small">
+            Способ оплаты входа
+          </Typography.Text>
           <select
             value={paymentMethod}
             onChange={(event) => setPaymentMethod(event.target.value as PaymentMethod)}

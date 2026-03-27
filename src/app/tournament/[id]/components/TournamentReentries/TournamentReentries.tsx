@@ -671,10 +671,23 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
       <Modal.Title showCloseButton>Оплатить ребаи</Modal.Title>
       <Modal.Content minWidth={520}>
         <Box flex={{ col: true, gap: 4 }}>
+          {player ? (
+            <Box flex={{ col: true, gap: 1 }}>
+              <Typography.Text bold>{getPlayerLabel(player)}</Typography.Text>
+              <Typography.Text type="secondary" size="small">
+                № в турнире {player.tournamentPlayerId}
+              </Typography.Text>
+              <Typography.Text type="secondary" size="small">
+                Неоплачено ребаев: {toPayReentryCount}
+              </Typography.Text>
+            </Box>
+          ) : (
+            <Typography.Text type="secondary" size="small">
+              Выбери способы оплаты
+            </Typography.Text>
+          )}
           <Typography.Text type="secondary" size="small">
-            {player
-              ? `Игрок: ${getPlayerLabel(player)}. Неоплачено ребаев: ${toPayReentryCount}`
-              : "Выбери способы оплаты"}
+            Способ оплаты по каждому ребаю
           </Typography.Text>
           <Box flex={{ col: true, gap: 2 }}>
             {methods.map((method, index) => (
