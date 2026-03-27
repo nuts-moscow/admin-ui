@@ -12,9 +12,9 @@ import { TournamentTables } from "./components/TournamentTables/TournamentTables
 import { TournamentState } from "./components/TournamentState/TournamentState";
 import { TournamentReentries } from "./components/TournamentReentries/TournamentReentries";
 import { TournamentCash } from "./components/TournamentCash/TournamentCash";
+import { TournamentChipPoolWindow } from "./components/TournamentChipPoolWindow/TournamentChipPoolWindow";
 import { TournamentResults } from "./components/TournamentResults/TournamentResults";
 import { TournamentInfoResponse } from "@/core/states/tournaments/requests/getTournament";
-import { Typography } from "@/components/Typography/Typography";
 import { Formatter } from "@/components/Formatter/Formatter";
 import { tournamentStatusLabels } from "@/core/states/tournaments/common/TournamentStatus";
 import { useTournament } from "@/core/states/tournaments/hooks/useTournament";
@@ -39,6 +39,11 @@ export const TournamentPageView: FC<TournamentPageViewProps> = ({
           title: "Касса",
           key: "cash",
           content: <TournamentCash tournament={currentTournament} />,
+        },
+        {
+          title: "Турнирное окно",
+          key: "chip-pool",
+          content: <TournamentChipPoolWindow tournament={currentTournament} />,
         },
         {
           title: "Результаты",
@@ -77,6 +82,11 @@ export const TournamentPageView: FC<TournamentPageViewProps> = ({
         title: "Касса",
         key: "cash",
         content: <TournamentCash tournament={currentTournament} />,
+      },
+      {
+        title: "Турнирное окно",
+        key: "chip-pool",
+        content: <TournamentChipPoolWindow tournament={currentTournament} />,
       },
       {
         title: "Результаты",
