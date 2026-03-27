@@ -58,3 +58,58 @@ export const removePlayerTournamentBonus = async (
     },
   });
 };
+
+export interface CustomBonusChipsBody {
+  readonly chips: number;
+}
+
+/**
+ * POST .../bonuses/custom — добавить грант кастомных фишек.
+ */
+export const addPlayerCustomBonusChips = async (
+  environment: Environment,
+  tournamentId: number | string,
+  playerId: string,
+  chips: number,
+): Promise<InGamePlayerState> => {
+  const body: CustomBonusChipsBody = { chips };
+  return securedFetch<CustomBonusChipsBody, InGamePlayerState>({
+    method: "POST",
+    host: environment.apiUrl,
+    path: `/v2/api/tournaments/${encodeURIComponent(String(tournamentId))}/players/${encodeURIComponent(playerId)}/bonuses/custom`,
+    withCredentials: false,
+    body,
+    mapping: {
+      success: async (res) => (await res.toJson()) as InGamePlayerState,
+      400: () => new Error("Некорректная сумма фишек или тело запроса"),
+      404: () => new Error("Игрок не в турнире"),
+      500: () => new Error("Server error"),
+    },
+  });
+};
+
+/**
+ * POST .../bonuses/custom/remove — снять один грант с конца, равный chips.
+ */
+export const removePlayerCustomBonusChipsOne = async (
+  environment: Environment,
+  tournamentId: number | string,
+  playerId: string,
+  chips: number,
+): Promise<InGamePlayerState> => {
+  const body: CustomBonusChipsBody = { chips };
+  return securedFetch<CustomBonusChipsBody, InGamePlayerState>({
+    method: "POST",
+    host: environment.apiUrl,
+    path: `/v2/api/tournaments/${encodeURIComponent(String(tournamentId))}/players/${encodeURIComponent(playerId)}/bonuses/custom/remove`,
+    withCredentials: false,
+    body,
+    mapping: {
+      success: async (res) => (await res.toJson()) as InGamePlayerState,
+      400: () => new Error("Некорректная сумма фишек или тело запроса"),
+      404: () =>
+        new Error("Нет состояния или гранта с такой суммой (с конца списка)"),
+      500: () => new Error("Server error"),
+    },
+  });
+};

@@ -48,6 +48,8 @@ export interface InGamePlayerState {
   readonly bountyKills?: (BountyKillEntry | string)[];
   readonly eliminatedBy?: string[];
   readonly bonuses: Bonus[];
+  /** Переменные бонусы (фишки); каждое число — отдельный грант. */
+  readonly customBonusChips?: readonly number[];
   readonly freeEntryCount: number;
   /** Бесплатные входы только в этом турнире (оплата входа Free). */
   readonly tournamentFreeEntryCount?: number;

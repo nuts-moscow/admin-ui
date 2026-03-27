@@ -28,10 +28,13 @@ import {
   useTournamentPlayerState,
 } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
 import {
+  addPlayerCustomBonusChips,
   addPlayerTournamentBonus,
+  removePlayerCustomBonusChipsOne,
   removePlayerTournamentBonus,
 } from "@/core/states/tournaments/requests/playerTournamentBonuses";
 import { toast } from "@/components/Toast/Toast";
+import { Formatter } from "@/components/Formatter/Formatter";
 import { X } from "lucide-react";
 
 export interface InGamePlayersProps {
@@ -64,9 +67,11 @@ const PlayerBonusesModal: FC<PlayerBonusesModalProps> = ({
     [players, playerId],
   );
   const [bonusToAdd, setBonusToAdd] = useState<Bonus>(InGameBonus.EarlyBird);
+  const [customChipsInput, setCustomChipsInput] = useState("");
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
 
   const bonuses = player?.bonuses ?? [];
+  const customBonusChips = player?.customBonusChips ?? [];
 
   const handleRemove = async (bonus: Bonus, index: number) => {
     if (!playerId || loadingKey != null) return;
@@ -107,6 +112,61 @@ const PlayerBonusesModal: FC<PlayerBonusesModalProps> = ({
     }
   };
 
+  const handleAddCustom = async () => {
+    if (!playerId || loadingKey != null) return;
+    const parsed = Number.parseInt(customChipsInput.trim(), 10);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      toast({
+        type: "error",
+        message: "Укажите целое число фишек больше 0",
+      });
+      return;
+    }
+    setLoadingKey("add-custom");
+    try {
+      await addPlayerCustomBonusChips(environment, tournamentId, playerId, parsed);
+      setCustomChipsInput("");
+      refetchTournamentPlayerState();
+    } catch (error) {
+      console.error(error);
+      toast({
+        type: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Не удалось добавить кастомный бонус",
+      });
+    } finally {
+      setLoadingKey(null);
+    }
+  };
+
+  const handleRemoveCustom = async (chips: number, index: number) => {
+    if (!playerId || loadingKey != null) return;
+    const key = `rc-${index}`;
+    setLoadingKey(key);
+    try {
+      await removePlayerCustomBonusChipsOne(
+        environment,
+        tournamentId,
+        playerId,
+        chips,
+      );
+      refetchTournamentPlayerState();
+    } catch (error) {
+      console.error(error);
+      toast({
+        type: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Не удалось снять кастомный бонус",
+      });
+    } finally {
+      setLoadingKey(null);
+    }
+  };
+
   return (
     <>
       <Modal.Title showCloseButton>
@@ -115,11 +175,11 @@ const PlayerBonusesModal: FC<PlayerBonusesModalProps> = ({
       <Modal.Content minWidth={400}>
         <Box flex={{ col: true, gap: 4 }}>
           <Typography.Text type="secondary" size="small">
-            Текущие бонусы
+            Фиксированные бонусы
           </Typography.Text>
           {bonuses.length === 0 ? (
             <Typography.Text type="secondary" size="small">
-              Нет бонусов
+              Нет
             </Typography.Text>
           ) : (
             <Box flex={{ col: true, gap: 2 }}>
@@ -154,38 +214,129 @@ const PlayerBonusesModal: FC<PlayerBonusesModalProps> = ({
           )}
 
           <Typography.Text type="secondary" size="small">
-            Добавить бонус
+            Кастомные фишки
           </Typography.Text>
-          <Box flex={{ align: "center", gap: 2, width: "100%" }}>
-            <select
-              value={bonusToAdd}
-              onChange={(e) => setBonusToAdd(e.target.value as Bonus)}
-              disabled={!playerId || loadingKey !== null}
-              style={{
-                flex: 1,
-                borderRadius: 12,
-                border: "1px solid var(--border-color)",
-                minHeight: 40,
-                padding: "0 12px",
-                backgroundColor: "var(--background-primary)",
-                color: "var(--text-primary)",
-              }}
+          {customBonusChips.length === 0 ? (
+            <Typography.Text type="secondary" size="small">
+              Нет
+            </Typography.Text>
+          ) : (
+            <Box flex={{ col: true, gap: 2 }}>
+              {customBonusChips.map((chips, index) => {
+                const key = `rc-${index}`;
+                return (
+                  <Box
+                    key={`custom-bonus-${index}`}
+                    flex={{ align: "center", justify: "space-between", gap: 2 }}
+                    style={{
+                      padding: "8px 12px",
+                      borderRadius: 10,
+                      border: "1px solid var(--border-color)",
+                    }}
+                  >
+                    <Typography.Text size="small">
+                      <Formatter.number value={chips} type="withoutDecimals" />{" "}
+                      фишек
+                    </Typography.Text>
+                    <Button
+                      type="ghost"
+                      size="xxSmall"
+                      style={{ padding: 4 }}
+                      iconRight={<X size={16} color="var(--text-error)" />}
+                      onClick={() => handleRemoveCustom(chips, index)}
+                      disabled={loadingKey !== null}
+                      loading={loadingKey === key}
+                    />
+                  </Box>
+                );
+              })}
+            </Box>
+          )}
+          <Typography.Text type="tertiary" size="xxSmall">
+            Снятие убирает последний грант с этой суммой (с конца списка).
+          </Typography.Text>
+
+          <Typography.Text type="secondary" size="small">
+            Добавить
+          </Typography.Text>
+          <Box
+            flex={{
+              align: "flex-start",
+              gap: 2,
+              flexWrap: "wrap",
+            }}
+            width="100%"
+            style={{ alignItems: "stretch" }}
+          >
+            <Box
+              flex={{ align: "center", gap: 2 }}
+              flexItem={{ flex: 1 }}
+              style={{ minWidth: 200 }}
             >
-              {BONUS_OPTIONS.map((b) => (
-                <option key={b} value={b}>
-                  {tournamentBonusLabels[b]}
-                </option>
-              ))}
-            </select>
-            <Button
-              type="primary"
-              size="xxSmall"
-              onClick={handleAdd}
-              disabled={!playerId || loadingKey !== null}
-              loading={loadingKey === "add"}
+              <select
+                value={bonusToAdd}
+                onChange={(e) => setBonusToAdd(e.target.value as Bonus)}
+                disabled={!playerId || loadingKey !== null}
+                style={{
+                  flex: 1,
+                  borderRadius: 12,
+                  border: "1px solid var(--border-color)",
+                  minHeight: 40,
+                  padding: "0 12px",
+                  backgroundColor: "var(--background-primary)",
+                  color: "var(--text-primary)",
+                }}
+              >
+                {BONUS_OPTIONS.map((b) => (
+                  <option key={b} value={b}>
+                    {tournamentBonusLabels[b]}
+                  </option>
+                ))}
+              </select>
+              <Button
+                type="primary"
+                size="xxSmall"
+                onClick={handleAdd}
+                disabled={!playerId || loadingKey !== null}
+                loading={loadingKey === "add"}
+              >
+                Добавить
+              </Button>
+            </Box>
+            <Box
+              flex={{ align: "center", gap: 2 }}
+              flexItem={{ flex: 1 }}
+              style={{ minWidth: 200 }}
             >
-              Добавить
-            </Button>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={1}
+                step={1}
+                placeholder="Фишки"
+                value={customChipsInput}
+                onChange={(e) => setCustomChipsInput(e.target.value)}
+                disabled={!playerId || loadingKey !== null}
+                style={{
+                  flex: 1,
+                  borderRadius: 12,
+                  border: "1px solid var(--border-color)",
+                  minHeight: 40,
+                  padding: "0 12px",
+                  backgroundColor: "var(--background-primary)",
+                  color: "var(--text-primary)",
+                }}
+              />
+              <Button
+                type="primary"
+                size="xxSmall"
+                onClick={handleAddCustom}
+                disabled={!playerId || loadingKey !== null}
+                loading={loadingKey === "add-custom"}
+              >
+                Кастом
+              </Button>
+            </Box>
           </Box>
 
           <Button type="secondary" htmlType="button" onClick={() => close()}>
