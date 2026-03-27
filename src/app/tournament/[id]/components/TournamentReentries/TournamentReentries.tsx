@@ -178,15 +178,27 @@ interface EliminatedByModalProps {
 
 interface BurnedRebuyUndoModalProps extends WithModalProps {
   readonly tournamentId: string;
-  readonly player?: InGamePlayerState | null;
+  readonly playerId?: string;
 }
 
 const BurnedRebuyUndoModal: FC<BurnedRebuyUndoModalProps> = ({
   close,
   tournamentId,
-  player,
+  playerId,
 }) => {
   const environment = useEnvironment();
+  const {
+    data: tournamentPlayers,
+    loading: playersLoading,
+    firstRequest: playersFirstRequest,
+  } = useTournamentPlayerState(tournamentId);
+  const player = useMemo(
+    () =>
+      playerId
+        ? tournamentPlayers?.find((p) => p.playerId === playerId)
+        : undefined,
+    [playerId, tournamentPlayers],
+  );
   const [undoingKey, setUndoingKey] = useState<string | null>(null);
   const rebuyBurns = useMemo(() => {
     const list = (player?.burnedStackEvents ?? []).filter(
@@ -196,14 +208,14 @@ const BurnedRebuyUndoModal: FC<BurnedRebuyUndoModalProps> = ({
   }, [player?.burnedStackEvents, player?.playerId]);
 
   const handleUndo = async (burnedChips: number, rowIndex: number) => {
-    if (!player || undoingKey != null) {
+    if (!playerId || undoingKey != null) {
       return;
     }
     const key = `undo-${rowIndex}-${burnedChips}`;
     setUndoingKey(key);
     try {
       await undoRebuyBurnedStack(environment, tournamentId, {
-        playerId: player.playerId,
+        playerId,
         burnedChips,
       });
       refetchTournamentPlayerState();
@@ -224,7 +236,7 @@ const BurnedRebuyUndoModal: FC<BurnedRebuyUndoModalProps> = ({
     <>
       <Modal.Title showCloseButton>
         Сгорание стека (ребай) —{" "}
-        {player ? getPlayerLabel(player) : ""}
+        {player ? getPlayerLabel(player) : playerId ?? "…"}
       </Modal.Title>
       <Modal.Content minWidth={420}>
         <Box flex={{ col: true, gap: 3 }}>
@@ -232,7 +244,15 @@ const BurnedRebuyUndoModal: FC<BurnedRebuyUndoModalProps> = ({
             Откат снимает последнее событие Rebuy с этой суммой фишек (LIFO
             среди совпадений).
           </Typography.Text>
-          {rebuyBurns.length === 0 ? (
+          {playersFirstRequest && playersLoading ? (
+            <Typography.Text type="secondary" size="small">
+              Загрузка…
+            </Typography.Text>
+          ) : playerId && !player ? (
+            <Typography.Text type="secondary" size="small">
+              Игрок не найден в турнире
+            </Typography.Text>
+          ) : rebuyBurns.length === 0 ? (
             <Typography.Text type="secondary" size="small">
               Нет записей сгорания за ребай
             </Typography.Text>
@@ -732,8 +752,8 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
   const [playerToPayReentries, setPlayerToPayReentries] = useState<
     InGamePlayerState | undefined
   >(undefined);
-  const [playerBurnedRebuyUndo, setPlayerBurnedRebuyUndo] = useState<
-    InGamePlayerState | undefined
+  const [burnedRebuyUndoPlayerId, setBurnedRebuyUndoPlayerId] = useState<
+    string | undefined
   >(undefined);
   const [AddReentryModalConnect, openAddReentryModal] =
     useModal(AddReentryModal);
@@ -815,7 +835,7 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
       />
       <BurnedRebuyUndoModalConnect
         tournamentId={String(tournament.id)}
-        player={playerBurnedRebuyUndo}
+        playerId={burnedRebuyUndoPlayerId}
       />
       <Box
         flex={{ width: "100%", align: "center", justify: "space-between" }}
@@ -960,7 +980,7 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
                       type="secondary"
                       size="xxSmall"
                       onClick={() => {
-                        setPlayerBurnedRebuyUndo(player);
+                        setBurnedRebuyUndoPlayerId(player.playerId);
                         openBurnedRebuyUndoModal();
                       }}
                     >
