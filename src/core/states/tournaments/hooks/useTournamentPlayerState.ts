@@ -23,7 +23,7 @@ export const useTournamentPlayerState = queryState({
   ): Promise<InGamePlayerState[]> => {
     return getTournamentPlayerState(environment, tournamentId);
   },
-  pollInterval: 10_000,
+  pollInterval: 1_000,
   cache: true,
   deps: {
     environment: useEnvironment,
