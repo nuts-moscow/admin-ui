@@ -26,6 +26,28 @@ function isBreak(item: BlindType): item is Break {
   return item != null && !("smallBlind" in item);
 }
 
+function formatBlindStake(bl: Blind): string {
+  const ante = bl.ante ? " · анте" : "";
+  return `Уровень ${bl.level}: ${bl.smallBlind}/${bl.bigBlind}${ante}`;
+}
+
+/**
+ * Первый блайнд после текущего шага; перерывы пропускаются (в т.ч. подряд).
+ */
+function findNextBlindInStructure(
+  blinds: Blinds | undefined,
+  currentStepIndex: number
+): Blind | null {
+  if (!blinds?.length) return null;
+  let i = currentStepIndex + 1;
+  while (i < blinds.length) {
+    const item = blinds[i];
+    if (isBlind(item)) return item;
+    i += 1;
+  }
+  return null;
+}
+
 function levelLabel(
   blinds: Blinds | undefined,
   tick: TournamentClockTick
@@ -42,8 +64,7 @@ function levelLabel(
   }
   const blItem = blinds.find((b) => isBlind(b) && b.id === tick.levelId);
   if (blItem && isBlind(blItem)) {
-    const ante = blItem.ante ? " · анте" : "";
-    return `Уровень ${blItem.level}: ${blItem.smallBlind}/${blItem.bigBlind}${ante}`;
+    return formatBlindStake(blItem);
   }
   return `Блайнд (id ${tick.levelId})`;
 }
@@ -71,6 +92,13 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
     () => (tick ? levelLabel(blindsStructure, tick) : ""),
     [blindsStructure, tick]
   );
+
+  const nextBlindLabel = useMemo(() => {
+    if (!tick || !blindsStructure?.length) return null;
+    const next = findNextBlindInStructure(blindsStructure, tick.currentStepIndex);
+    if (!next) return null;
+    return formatBlindStake(next);
+  }, [blindsStructure, tick]);
 
   const completedByTick = tick?.tournamentStatus === "completed";
 
@@ -145,6 +173,19 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
             {tick.stepType === "Break" ? " · перерыв" : " · блайнд"}
             {tick.paused ? " · на паузе" : ""}
           </Typography.Text>
+
+          {nextBlindLabel ? (
+            <Typography.Text type="secondary" size="small" style={muted}>
+              Следующий блайнд: {nextBlindLabel}
+            </Typography.Text>
+          ) : (
+            blindsStructure &&
+            blindsStructure.length > 0 && (
+              <Typography.Text type="secondary" size="small" style={muted}>
+                Следующего блайнда в структуре нет
+              </Typography.Text>
+            )
+          )}
 
           <Button
             type="secondary"
