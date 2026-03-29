@@ -1,10 +1,8 @@
 "use client";
 
-import { FC, useMemo, useState } from "react";
+import { FC, useMemo } from "react";
 import { Box } from "@/components/Box/Box";
-import { Button } from "@/components/Button/Button";
 import { Typography } from "@/components/Typography/Typography";
-import { useEnvironment } from "@/core/states/environment/useEnvironment";
 import {
   Blind,
   BlindType,
@@ -16,7 +14,6 @@ import {
   type TournamentClockTick,
 } from "@/core/states/tournaments/common/TournamentClockTick";
 import { useTournamentClock } from "@/core/states/tournaments/hooks/useTournamentClock";
-import { patchTournamentClock } from "@/core/states/tournaments/requests/patchTournamentClock";
 
 function isBlind(item: BlindType): item is Blind {
   return item != null && "smallBlind" in item;
@@ -27,8 +24,8 @@ function isBreak(item: BlindType): item is Break {
 }
 
 function formatBlindStake(bl: Blind): string {
-  const ante = bl.ante ? " · анте" : "";
-  return `Уровень ${bl.level}: ${bl.smallBlind}/${bl.bigBlind}${ante}`;
+  const antePart = bl.ante ? " · с анте" : " · без анте";
+  return `Уровень ${bl.level}: ${bl.smallBlind}/${bl.bigBlind}${antePart}`;
 }
 
 /**
@@ -81,12 +78,9 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
   blindsStructure,
   enabled = true,
 }) => {
-  const environment = useEnvironment();
   const { tick, connectionStatus } = useTournamentClock(tournamentId, {
     enabled,
   });
-
-  const [pauseLoading, setPauseLoading] = useState(false);
 
   const label = useMemo(
     () => (tick ? levelLabel(blindsStructure, tick) : ""),
@@ -101,20 +95,6 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
   }, [blindsStructure, tick]);
 
   const completedByTick = tick?.tournamentStatus === "completed";
-
-  const handlePauseToggle = async () => {
-    if (!tick || pauseLoading) return;
-    setPauseLoading(true);
-    try {
-      await patchTournamentClock(environment, tournamentId, {
-        paused: !tick.paused,
-      });
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setPauseLoading(false);
-    }
-  };
 
   const muted = { color: "#6b7280" };
   const ink = { color: "#111827" };
@@ -186,15 +166,6 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
               </Typography.Text>
             )
           )}
-
-          <Button
-            type="secondary"
-            size="small"
-            loading={pauseLoading}
-            onClick={handlePauseToggle}
-          >
-            {tick.paused ? "Снять паузу" : "Пауза"}
-          </Button>
         </>
       )}
     </Box>

@@ -12,7 +12,9 @@ import {
   launchTournament,
 } from "@/core/states/tournaments/requests/updateTournament";
 import { refetchTournament } from "@/core/states/tournaments/hooks/useTournament";
+import { useTournamentClock } from "@/core/states/tournaments/hooks/useTournamentClock";
 import { useTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
+import { patchTournamentClock } from "@/core/states/tournaments/requests/patchTournamentClock";
 import { TournamentInfoForm } from "./TournamentInfoForm";
 
 const IN_GAME_STATUSES = ["InGamePaid", "InGameNotPaid"] as const;
@@ -182,6 +184,7 @@ const CompleteTournamentConfirmModal: FC<CompleteTournamentConfirmModalProps> = 
 export const TournamentState: FC<TournamentStateProps> = ({
   tournament,
 }) => {
+  const environment = useEnvironment();
   const [LaunchConfirmModal, openLaunchConfirmModal] = useModal(
     LaunchTournamentConfirmModal
   );
@@ -191,6 +194,25 @@ export const TournamentState: FC<TournamentStateProps> = ({
   const { data: players } = useTournamentPlayerState(String(tournament.id));
   const inGameCount = getInGameCount(players ?? []);
   const canCompleteTournament = inGameCount === 1;
+  const { tick: clockTick } = useTournamentClock(tournament.id, {
+    enabled: tournament.status === "InProgress",
+  });
+  const [pauseLoading, setPauseLoading] = useState(false);
+  const clockCompletedByTick = clockTick?.tournamentStatus === "completed";
+
+  const handlePauseToggle = async () => {
+    if (!clockTick || pauseLoading || clockCompletedByTick) return;
+    setPauseLoading(true);
+    try {
+      await patchTournamentClock(environment, tournament.id, {
+        paused: !clockTick.paused,
+      });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setPauseLoading(false);
+    }
+  };
 
   return (
     <Box flex={{ col: true, gap: 8, width: "100%" }}>
@@ -215,6 +237,17 @@ export const TournamentState: FC<TournamentStateProps> = ({
       {tournament.status === "InProgress" && (
         <Box flex={{ col: true, align: "center", width: "100%", gap: 2 }}>
           <Box flex={{ justify: "center", width: "100%", gap: 3 }}>
+            <Button
+              type="secondary"
+              size="medium"
+              loading={pauseLoading}
+              disabled={
+                !clockTick || clockCompletedByTick
+              }
+              onClick={handlePauseToggle}
+            >
+              {clockTick?.paused ? "Снять паузу" : "Пауза"}
+            </Button>
             <Button
               type="error"
               size="medium"
