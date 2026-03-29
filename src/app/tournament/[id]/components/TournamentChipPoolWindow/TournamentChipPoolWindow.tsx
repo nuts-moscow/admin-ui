@@ -6,6 +6,7 @@ import { Formatter } from "@/components/Formatter/Formatter";
 import { Typography } from "@/components/Typography/Typography";
 import { useTournamentChipPoolSummary } from "@/core/states/tournaments/hooks/useTournamentChipPoolSummary";
 import { TournamentInfoResponse } from "@/core/states/tournaments/requests/getTournament";
+import { TournamentClockPanel } from "../TournamentState/TournamentClockPanel";
 
 export interface TournamentChipPoolWindowProps {
   readonly tournament: TournamentInfoResponse;
@@ -36,9 +37,19 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
   const tid = String(tournament.id);
   const { data, loading, error } = useTournamentChipPoolSummary(tid);
 
+  const clockPanel =
+    tournament.status === "InProgress" ? (
+      <TournamentClockPanel
+        tournamentId={tournament.id}
+        blindsStructure={tournament.structure?.blindsStructure}
+        enabled
+      />
+    ) : null;
+
   if (loading && !data) {
     return (
       <Box flex={{ col: true, gap: 3 }} width="100%" style={{ padding: 16 }}>
+        {clockPanel}
         <Typography.Text type="secondary">Загрузка…</Typography.Text>
       </Box>
     );
@@ -47,6 +58,7 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
   if (error) {
     return (
       <Box flex={{ col: true, gap: 3 }} width="100%" style={{ padding: 16 }}>
+        {clockPanel}
         <Typography.Text type="error">{error.message}</Typography.Text>
       </Box>
     );
@@ -55,6 +67,7 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
   if (!data) {
     return (
       <Box flex={{ col: true, gap: 3 }} width="100%" style={{ padding: 16 }}>
+        {clockPanel}
         <Typography.Text type="secondary">
           Сводка по фишкам недоступна (турнир не найден или нет кэша структуры
           для live).
@@ -68,6 +81,7 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
 
   return (
     <Box flex={{ col: true, gap: 2 }} width="100%" style={{ padding: 16 }}>
+      {clockPanel}
       <Box
         flex={{ col: true }}
         style={{

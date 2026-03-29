@@ -228,9 +228,6 @@ export const TournamentState: FC<TournamentStateProps> = ({
             >
               Завершить турнир
             </Button>
-            <Button type="secondary" size="medium">
-              Пауза
-            </Button>
           </Box>
           {!canCompleteTournament && (
             <Typography.Text type="secondary" size="small">
