@@ -24,6 +24,8 @@ import {
 import { refetchTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
 import { bountyEliminate } from "@/core/states/tournaments/requests/bountyEliminate";
 
+const EMPTY_TABLE_PLAYERS: InGamePlayerState[] = [];
+
 export interface TournamentTablesProps {
   readonly tournament: TournamentInfoResponse;
 }
@@ -170,15 +172,33 @@ const SetOutPlayerModal: FC<SetOutPlayerModalProps> = ({
       ),
     [players, bustedPlayer?.playerId]
   );
+  const candidateIdsKey = useMemo(
+    () =>
+      candidates
+        .map((c) => c.playerId)
+        .sort()
+        .join(","),
+    [candidates],
+  );
   const [selectedKillerId, setSelectedKillerId] = useState<string | undefined>(
     undefined
   );
 
   useEffect(() => {
-    setSelectedKillerId(candidates[0]?.playerId);
     setBurnedStack(false);
     setBurnedChipsInput("");
-  }, [bustedPlayer?.playerId, candidates]);
+  }, [bustedPlayer?.playerId]);
+
+  useEffect(() => {
+    if (candidates.length === 0) {
+      setSelectedKillerId(undefined);
+      return;
+    }
+    setSelectedKillerId((prev) => {
+      if (prev && candidates.some((c) => c.playerId === prev)) return prev;
+      return candidates[0]?.playerId;
+    });
+  }, [bustedPlayer?.playerId, candidateIdsKey]);
 
   const canSave =
     !!bustedPlayer &&
@@ -354,13 +374,21 @@ export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
   const [playerToSetOut, setPlayerToSetOut] = useState<InGamePlayerState | undefined>(
     undefined
   );
+  const { data: nonRegisteredPlayers } = useNonRegisteredTournamentPlayerState(
+    String(tournament.id)
+  );
+  const setOutModalPlayers = useMemo(() => {
+    if (!playerToSetOut?.tableId) {
+      return EMPTY_TABLE_PLAYERS;
+    }
+    return (nonRegisteredPlayers ?? []).filter(
+      (p) => String(p.tableId) === String(playerToSetOut.tableId),
+    );
+  }, [nonRegisteredPlayers, playerToSetOut?.tableId]);
   const [SetTableModal, openSetTableModal] = useModal(TableSelectModal);
   const [PayPlayerModalConnect, openPayPlayerModal] = useModal(PayPlayerModal);
   const [SetOutPlayerModalConnect, openSetOutPlayerModal] =
     useModal(SetOutPlayerModal);
-  const { data: nonRegisteredPlayers } = useNonRegisteredTournamentPlayerState(
-    String(tournament.id)
-  );
   const excludedFromTableStatuses = ["Out", "OutNotPaid"] as const;
   const tablePlayers = (nonRegisteredPlayers ?? []).filter(
     (player) =>
@@ -397,13 +425,7 @@ export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
       <SetOutPlayerModalConnect
         tournamentId={String(tournament.id)}
         bustedPlayer={playerToSetOut}
-        players={
-          playerToSetOut?.tableId
-            ? (nonRegisteredPlayers ?? []).filter(
-                (p) => String(p.tableId) === String(playerToSetOut.tableId),
-              )
-            : []
-        }
+        players={setOutModalPlayers}
       />
       <TableList
         tournamentId={String(tournament.id)}

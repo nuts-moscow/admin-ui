@@ -42,6 +42,8 @@ export interface TournamentReentriesProps {
   readonly tournament: TournamentInfoResponse;
 }
 
+const EMPTY_PLAYERS_LIST: InGamePlayerState[] = [];
+
 const toSafeNumber = (value: unknown): number => {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 };
@@ -428,21 +430,33 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
     [killerCandidates],
   );
 
+  const killerCandidateIdsKey = useMemo(
+    () =>
+      killerCandidates
+        .map((c) => c.playerId)
+        .sort()
+        .join(","),
+    [killerCandidates],
+  );
+
   useEffect(() => {
     setCount(1);
     setBurnedStack(false);
     setBurnedChipsInput("");
-    setKillerPlayerId(killerCandidates[0]?.playerId);
-  }, [player?.playerId, killerCandidates]);
+  }, [player?.playerId]);
 
   useEffect(() => {
-    if (
-      killerPlayerId &&
-      !killerCandidates.some((candidate) => candidate.playerId === killerPlayerId)
-    ) {
-      setKillerPlayerId(killerCandidates[0]?.playerId);
+    if (killerCandidates.length === 0) {
+      setKillerPlayerId(undefined);
+      return;
     }
-  }, [killerCandidates, killerPlayerId]);
+    setKillerPlayerId((prev) => {
+      if (prev && killerCandidates.some((c) => c.playerId === prev)) {
+        return prev;
+      }
+      return killerCandidates[0]?.playerId;
+    });
+  }, [player?.playerId, killerCandidateIdsKey]);
 
   const handleSave = async () => {
     if (!player || count <= 0 || isSaving) {
@@ -781,6 +795,7 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
   const { data: players } = useNonRegisteredTournamentPlayerState(
     String(tournament.id),
   );
+  const playersForModals = players ?? EMPTY_PLAYERS_LIST;
   const { data: rebuyCountResponse } = useTournamentRebuyCount(
     String(tournament.id)
   );
@@ -830,7 +845,7 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
       <AddReentryModalConnect
         tournamentId={String(tournament.id)}
         player={playerToAddReentry}
-        players={players ?? []}
+        players={playersForModals}
       />
       <PayReentriesModalConnect
         tournamentId={String(tournament.id)}
@@ -838,12 +853,12 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
       />
       <BountyModal
         tournamentId={String(tournament.id)}
-        players={players ?? []}
+        players={playersForModals}
         onRemoved={refetchTournamentPlayerState}
       />
       <EliminatedByModalConnect
         tournamentId={String(tournament.id)}
-        players={players ?? []}
+        players={playersForModals}
         onRemoved={refetchTournamentPlayerState}
       />
       <BurnedRebuyUndoModalConnect
