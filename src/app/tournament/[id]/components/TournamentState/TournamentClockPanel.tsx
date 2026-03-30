@@ -28,6 +28,10 @@ function formatBlindStake(bl: Blind): string {
   return `Уровень ${bl.level}: ${bl.smallBlind}/${bl.bigBlind}${antePart}`;
 }
 
+function formatSbBb(sb: number, bb: number): string {
+  return `${sb} / ${bb}`;
+}
+
 /**
  * Первый блайнд после текущего шага; перерывы пропускаются (в т.ч. подряд).
  */
@@ -43,6 +47,21 @@ function findNextBlindInStructure(
     i += 1;
   }
   return null;
+}
+
+function stepAtIndex(
+  blinds: Blinds | undefined,
+  tick: TournamentClockTick
+): BlindType | null {
+  if (!blinds?.length) return null;
+  const byIndex = blinds[tick.currentStepIndex];
+  if (byIndex !== undefined && byIndex !== null) return byIndex;
+  const matchId = blinds.find((b) => {
+    if (tick.stepType === "Break" && isBreak(b)) return b.id === tick.levelId;
+    if (tick.stepType === "Blind" && isBlind(b)) return b.id === tick.levelId;
+    return b.id === tick.levelId;
+  });
+  return matchId ?? null;
 }
 
 function levelLabel(
@@ -66,17 +85,25 @@ function levelLabel(
   return `Блайнд (id ${tick.levelId})`;
 }
 
+export type TournamentClockPanelLayout = "compact" | "broadcast";
+
 export interface TournamentClockPanelProps {
   readonly tournamentId: number;
   readonly blindsStructure: Blinds | undefined;
   /** Пока false — WebSocket не открывается (турнир не в игре). */
   readonly enabled?: boolean;
+  /**
+   * compact — карточка для встройки;
+   * broadcast — колонка по центру: уровень → блайнды → анте → таймер → следующий уровень.
+   */
+  readonly layout?: TournamentClockPanelLayout;
 }
 
 export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
   tournamentId,
   blindsStructure,
   enabled = true,
+  layout = "compact",
 }) => {
   const { tick, connectionStatus } = useTournamentClock(tournamentId, {
     enabled,
@@ -94,10 +121,130 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
     return formatBlindStake(next);
   }, [blindsStructure, tick]);
 
+  const nextSbBb = useMemo(() => {
+    if (!tick || !blindsStructure?.length) return null;
+    const next = findNextBlindInStructure(blindsStructure, tick.currentStepIndex);
+    if (!next) return null;
+    return formatSbBb(next.smallBlind, next.bigBlind);
+  }, [blindsStructure, tick]);
+
+  const currentStepItem = useMemo(
+    () => (tick ? stepAtIndex(blindsStructure, tick) : null),
+    [blindsStructure, tick]
+  );
+
   const completedByTick = tick?.tournamentStatus === "completed";
 
   const muted = { color: "#6b7280" };
   const ink = { color: "#111827" };
+
+  if (layout === "broadcast") {
+    return (
+      <Box
+        flex={{ col: true, align: "center", gap: 2 }}
+        width="100%"
+        style={{ textAlign: "center" }}
+      >
+        {connectionStatus === "connecting" && tick == null && (
+          <Typography.Text type="secondary" size="small">
+            Подключение…
+          </Typography.Text>
+        )}
+
+        {connectionStatus === "error" && tick == null && (
+          <Typography.Text type="secondary" size="small">
+            Не удалось подключиться. Повтор…
+          </Typography.Text>
+        )}
+
+        {connectionStatus === "closed" && tick == null && (
+          <Typography.Text type="secondary" size="small">
+            Соединение закрыто, переподключение…
+          </Typography.Text>
+        )}
+
+        {completedByTick && (
+          <Typography.Text size="medium">
+            Турнир завершён — активный отсчёт недоступен.
+          </Typography.Text>
+        )}
+
+        {tick && !completedByTick && (
+          <>
+            {currentStepItem && isBlind(currentStepItem) ? (
+              <>
+                <Typography.Text size="medium">
+                  Уровень {currentStepItem.level}
+                </Typography.Text>
+                <Typography.Text
+                  size="xLarge"
+                  bold
+                  style={{ fontVariantNumeric: "tabular-nums" }}
+                >
+                  {formatSbBb(
+                    currentStepItem.smallBlind,
+                    currentStepItem.bigBlind
+                  )}
+                </Typography.Text>
+                <Typography.Text type="secondary" size="small">
+                  {currentStepItem.ante
+                    ? `Анте ${currentStepItem.bigBlind} (вкл.)`
+                    : "Анте выкл."}
+                </Typography.Text>
+              </>
+            ) : currentStepItem && isBreak(currentStepItem) ? (
+              <>
+                <Typography.Text size="medium">Перерыв</Typography.Text>
+                <Typography.Text type="secondary" size="small">
+                  {currentStepItem.duration} мин
+                </Typography.Text>
+              </>
+            ) : (
+              <>
+                <Typography.Text size="medium">Шаг {tick.currentStepIndex + 1}</Typography.Text>
+                <Typography.Text type="secondary" size="small">
+                  {label}
+                </Typography.Text>
+              </>
+            )}
+
+            <Box
+              flex={{ justify: "center", align: "center" }}
+              style={{
+                marginTop: 8,
+                marginBottom: 8,
+                padding: "16px 32px",
+                minWidth: 200,
+                border: "1px solid rgba(0, 0, 0, 0.12)",
+                borderRadius: 8,
+              }}
+            >
+              <Typography.Text
+                size="xLarge"
+                bold
+                style={{ fontVariantNumeric: "tabular-nums" }}
+              >
+                {formatClockSeconds(tick.secondsRemaining)}
+              </Typography.Text>
+            </Box>
+
+            {nextSbBb ? (
+              <Typography.Text size="small">
+                Следующие блайнды: {nextSbBb}
+              </Typography.Text>
+            ) : (
+              blindsStructure &&
+              blindsStructure.length > 0 && (
+                <Typography.Text type="secondary" size="small">
+                  Следующих блайндов в структуре нет
+                </Typography.Text>
+              )
+            )}
+          </>
+        )}
+      </Box>
+    );
+  }
 
   return (
     <Box

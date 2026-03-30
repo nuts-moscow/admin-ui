@@ -12,17 +12,15 @@ export interface TournamentChipPoolWindowProps {
   readonly tournament: TournamentInfoResponse;
 }
 
-const StatRow: FC<{
-  label: string;
-  children: ReactNode;
-  last?: boolean;
-}> = ({ label, children, last }) => (
+/** Подпись над значением, по центру колонки. */
+const SideStat: FC<{ label: string; children: ReactNode }> = ({
+  label,
+  children,
+}) => (
   <Box
-    flex={{ justify: "space-between", align: "center", gap: 3 }}
-    style={{
-      padding: "10px 0",
-      borderBottom: last ? undefined : "1px solid rgba(0, 0, 0, 0.06)",
-    }}
+    flex={{ col: true, align: "center" }}
+    width="100%"
+    style={{ marginBottom: 20, textAlign: "center" }}
   >
     <Typography.Text type="secondary" size="small">
       {label}
@@ -31,87 +29,131 @@ const StatRow: FC<{
   </Box>
 );
 
+function SingleColumnWindow({
+  tournament,
+  children,
+}: {
+  readonly tournament: TournamentInfoResponse;
+  readonly children: ReactNode;
+}) {
+  return (
+    <Box
+      width="100%"
+      flex={{ col: true, align: "center" }}
+      style={{ padding: 16 }}
+    >
+      <Typography.Text
+        size="medium"
+        bold
+        style={{
+          textAlign: "center",
+          display: "block",
+          marginBottom: 24,
+          width: "100%",
+        }}
+      >
+        {tournament.name}
+      </Typography.Text>
+      <Box
+        flex={{ col: true, align: "center" }}
+        width="100%"
+        style={{ maxWidth: 480 }}
+      >
+        {children}
+      </Box>
+    </Box>
+  );
+}
+
 export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
   tournament,
 }) => {
   const tid = String(tournament.id);
   const { data, loading, error } = useTournamentChipPoolSummary(tid);
 
-  const clockPanel =
+  const clockCenter =
     tournament.status === "InProgress" ? (
       <TournamentClockPanel
         tournamentId={tournament.id}
         blindsStructure={tournament.structure?.blindsStructure}
         enabled
+        layout="broadcast"
       />
-    ) : null;
+    ) : (
+      <Typography.Text type="secondary" size="small" style={{ textAlign: "center" }}>
+        Часы доступны, когда турнир идёт.
+      </Typography.Text>
+    );
 
   if (loading && !data) {
     return (
-      <Box flex={{ col: true, gap: 3 }} width="100%" style={{ padding: 16 }}>
-        {clockPanel}
-        <Typography.Text type="secondary">Загрузка…</Typography.Text>
-      </Box>
+      <SingleColumnWindow tournament={tournament}>
+        {clockCenter}
+        <Typography.Text type="secondary" size="small" style={{ marginTop: 12, textAlign: "center" }}>
+          Загрузка…
+        </Typography.Text>
+      </SingleColumnWindow>
     );
   }
 
   if (error) {
     return (
-      <Box flex={{ col: true, gap: 3 }} width="100%" style={{ padding: 16 }}>
-        {clockPanel}
-        <Typography.Text type="error">{error.message}</Typography.Text>
-      </Box>
+      <SingleColumnWindow tournament={tournament}>
+        {clockCenter}
+        <Typography.Text type="error" size="small" style={{ marginTop: 12, textAlign: "center" }}>
+          {error.message}
+        </Typography.Text>
+      </SingleColumnWindow>
     );
   }
 
   if (!data) {
     return (
-      <Box flex={{ col: true, gap: 3 }} width="100%" style={{ padding: 16 }}>
-        {clockPanel}
-        <Typography.Text type="secondary">
+      <SingleColumnWindow tournament={tournament}>
+        {clockCenter}
+        <Typography.Text type="secondary" size="small" style={{ marginTop: 12, textAlign: "center" }}>
           Сводка по фишкам недоступна (турнир не найден или нет кэша структуры
           для live).
         </Typography.Text>
-      </Box>
+      </SingleColumnWindow>
     );
   }
 
   const { playersActive, playersArrived, totalChips, averageStack, rebuyCount } =
     data;
 
+  const statsBlock = (
+    <>
+      <SideStat label="Игроки">
+        <>
+          <Formatter.number value={playersActive} type="withoutDecimals" />
+          {" / "}
+          <Formatter.number value={playersArrived} type="withoutDecimals" />
+        </>
+      </SideStat>
+      <SideStat label="Ребаи">
+        <Formatter.number value={rebuyCount} type="withoutDecimals" />
+      </SideStat>
+      <SideStat label="Фишки в игре">
+        <Formatter.number value={totalChips} type="withoutDecimals" />
+      </SideStat>
+      <SideStat label="Средний стек">
+        {averageStack == null ? (
+          "—"
+        ) : (
+          <Formatter.number value={averageStack} type="withoutDecimals" />
+        )}
+      </SideStat>
+      <SideStat label="До перерыва">—</SideStat>
+    </>
+  );
+
   return (
-    <Box flex={{ col: true, gap: 2 }} width="100%" style={{ padding: 16 }}>
-      {clockPanel}
-      <Box
-        flex={{ col: true }}
-        style={{
-          backgroundColor: "var(--background-primary)",
-          borderRadius: 16,
-          border: "1px solid rgba(0, 0, 0, 0.08)",
-          padding: "8px 16px 16px",
-        }}
-      >
-        <StatRow label="Игроки в игре / всего в турнире">
-          <>
-            <Formatter.number value={playersActive} type="withoutDecimals" />
-            {" / "}
-            <Formatter.number value={playersArrived} type="withoutDecimals" />
-          </>
-        </StatRow>
-        <StatRow label="Всего фишек в игре">
-          <Formatter.number value={totalChips} type="withoutDecimals" />
-        </StatRow>
-        <StatRow label="Средний стек">
-          {averageStack == null ? (
-            "—"
-          ) : (
-            <Formatter.number value={averageStack} type="withoutDecimals" />
-          )}
-        </StatRow>
-        <StatRow label="Ребаи" last>
-          <Formatter.number value={rebuyCount} type="withoutDecimals" />
-        </StatRow>
+    <SingleColumnWindow tournament={tournament}>
+      {clockCenter}
+      <Box width="100%" style={{ marginTop: 8 }}>
+        {statsBlock}
       </Box>
-    </Box>
+    </SingleColumnWindow>
   );
 };
