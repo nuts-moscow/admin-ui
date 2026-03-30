@@ -39,27 +39,35 @@ function SingleColumnWindow({
   return (
     <Box
       width="100%"
-      flex={{ col: true, align: "center" }}
-      style={{ padding: 16 }}
+      flex={{ col: true, align: "center", justify: "center" }}
+      flexItem={{ flex: 1 }}
+      style={{
+        minWidth: 0,
+        minHeight: "calc(100vh - 200px)",
+        padding: 24,
+        boxSizing: "border-box",
+      }}
     >
-      <Typography.Text
-        size="medium"
-        bold
-        style={{
-          textAlign: "center",
-          display: "block",
-          marginBottom: 24,
-          width: "100%",
-        }}
-      >
-        {tournament.name}
-      </Typography.Text>
       <Box
         flex={{ col: true, align: "center" }}
         width="100%"
         style={{ maxWidth: 480 }}
       >
-        {children}
+        <Typography.Text
+          size="medium"
+          bold
+          style={{
+            textAlign: "center",
+            display: "block",
+            marginBottom: 24,
+            width: "100%",
+          }}
+        >
+          {tournament.name}
+        </Typography.Text>
+        <Box flex={{ col: true, align: "center" }} width="100%">
+          {children}
+        </Box>
       </Box>
     </Box>
   );
