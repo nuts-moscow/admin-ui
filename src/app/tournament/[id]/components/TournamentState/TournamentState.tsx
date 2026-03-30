@@ -198,10 +198,14 @@ export const TournamentState: FC<TournamentStateProps> = ({
     enabled: tournament.status === "InProgress",
   });
   const [pauseLoading, setPauseLoading] = useState(false);
-  const clockCompletedByTick = clockTick?.tournamentStatus === "completed";
+  const clockCompletedByTick =
+    clockTick?.tournamentStatus === "completed" ||
+    clockTick?.structureFinished === true;
+  const clockPauseDisabled =
+    !clockTick || clockCompletedByTick || !clockTick.clockActive;
 
   const handlePauseToggle = async () => {
-    if (!clockTick || pauseLoading || clockCompletedByTick) return;
+    if (clockPauseDisabled || pauseLoading) return;
     setPauseLoading(true);
     try {
       await patchTournamentClock(environment, tournament.id, {
@@ -241,9 +245,7 @@ export const TournamentState: FC<TournamentStateProps> = ({
               type="secondary"
               size="medium"
               loading={pauseLoading}
-              disabled={
-                !clockTick || clockCompletedByTick
-              }
+              disabled={clockPauseDisabled}
               onClick={handlePauseToggle}
             >
               {clockTick?.paused ? "Снять паузу" : "Пауза"}

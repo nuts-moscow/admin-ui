@@ -1,24 +1,28 @@
-/** Шаг структуры в тике часов (как в GET турнира). */
-export type TournamentClockStepType = "Blind" | "Break";
-
-/** Статус турнира в тике (опционально, строки API / OpenAPI). */
 export type TournamentClockTournamentStatus =
   | "registration_open"
   | "in_progress"
   | "completed";
 
-/** Один тик часов турнира (WebSocket, ~1 раз/сек). Поля согласовать с OpenAPI бэка. */
+export type TournamentClockStepType = "Blind" | "Break";
+
+/**
+ * Тик часов (WebSocket ~1 Гц и GET /api/tournaments/{id}/clock).
+ * Сверять с OpenAPI: TournamentClockTick, тег «Tournament clock».
+ */
 export interface TournamentClockTick {
+  readonly type: "tournament_clock_tick";
   readonly tournamentId: number;
   readonly serverTimeMs: number;
+  readonly tournamentStatus: TournamentClockTournamentStatus;
+  readonly clockActive: boolean;
   readonly paused: boolean;
-  readonly currentStepIndex: number;
-  readonly stepType: TournamentClockStepType;
-  readonly levelId: number;
-  readonly secondsRemaining: number;
-  readonly tournamentStatus?: TournamentClockTournamentStatus;
-  /** Дискриминатор сообщения, если бэк его добавит. */
-  readonly messageType?: string;
+  readonly currentStepIndex: number | null;
+  readonly stepType: TournamentClockStepType | null;
+  readonly levelId: number | null;
+  readonly secondsRemaining: number | null;
+  /** Секунды до следующего шага Break после currentStepIndex; иначе null. */
+  readonly secondsUntilNextBreak: number | null;
+  readonly structureFinished: boolean;
 }
 
 function asRecord(v: unknown): Record<string, unknown> | null {
@@ -44,6 +48,24 @@ function pickNumber(
   return readFiniteNumber(o[camel]) ?? readFiniteNumber(o[snake]);
 }
 
+/**
+ * number | null — в JSON явно null;
+ * undefined — ключей нет (старый контракт без nullable-полей).
+ */
+function pickNumberOrNull(
+  o: Record<string, unknown>,
+  camel: string,
+  snake: string
+): number | null | undefined {
+  const hasCamel = Object.prototype.hasOwnProperty.call(o, camel);
+  const hasSnake = Object.prototype.hasOwnProperty.call(o, snake);
+  if (!hasCamel && !hasSnake) return undefined;
+  const v = o[camel] ?? o[snake];
+  if (v === null) return null;
+  const n = readFiniteNumber(v);
+  return n !== undefined ? n : null;
+}
+
 function pickBool(
   o: Record<string, unknown>,
   camel: string,
@@ -56,15 +78,19 @@ function pickBool(
 
 function pickStepType(
   o: Record<string, unknown>
-): TournamentClockStepType | undefined {
+): TournamentClockStepType | null | undefined {
+  const hasCamel = Object.prototype.hasOwnProperty.call(o, "stepType");
+  const hasSnake = Object.prototype.hasOwnProperty.call(o, "step_type");
+  if (!hasCamel && !hasSnake) return undefined;
   const v = o.stepType ?? o.step_type;
+  if (v === null) return null;
   if (v === "Blind" || v === "Break") return v;
   if (typeof v === "string") {
     const l = v.toLowerCase();
     if (l === "blind") return "Blind";
     if (l === "break") return "Break";
   }
-  return undefined;
+  return null;
 }
 
 function pickTournamentStatus(
@@ -79,9 +105,35 @@ function pickTournamentStatus(
   return undefined;
 }
 
+function parseSecondsUntilNextBreak(
+  o: Record<string, unknown>
+): number | null | undefined {
+  const hasCamel = Object.prototype.hasOwnProperty.call(
+    o,
+    "secondsUntilNextBreak"
+  );
+  const hasSnake = Object.prototype.hasOwnProperty.call(
+    o,
+    "seconds_until_next_break"
+  );
+  if (!hasCamel && !hasSnake) return undefined;
+  const v = o.secondsUntilNextBreak ?? o.seconds_until_next_break;
+  if (v === null) return null;
+  const n = readFiniteNumber(v);
+  return n !== undefined ? n : null;
+}
+
+function tickMessageType(o: Record<string, unknown>): "tournament_clock_tick" {
+  const t = o.type;
+  if (t === "tournament_clock_tick" || t === "TournamentClockTick") {
+    return "tournament_clock_tick";
+  }
+  return "tournament_clock_tick";
+}
+
 /**
- * Разбор JSON тика с доп. полями snake_case / без дискриминатора.
- * Возвращает null, если обязательные поля отсутствуют или некорректны.
+ * Разбор JSON тика (camelCase / snake_case, доп. поля игнорируются).
+ * Старый контракт без nullables маппится в новую форму.
  */
 export function tryParseTournamentClockTick(
   raw: unknown
@@ -89,57 +141,111 @@ export function tryParseTournamentClockTick(
   const o = asRecord(raw);
   if (!o) return null;
 
-  const messageType =
-    typeof o.type === "string"
-      ? o.type
-      : typeof o.messageType === "string"
-        ? o.messageType
-        : undefined;
-
   const tournamentId = pickNumber(o, "tournamentId", "tournament_id");
   const serverTimeMs = pickNumber(o, "serverTimeMs", "server_time_ms");
+  if (tournamentId === undefined || serverTimeMs === undefined) {
+    return null;
+  }
+
   const paused = pickBool(o, "paused", "paused");
-  const currentStepIndex = pickNumber(
+  if (paused === undefined) {
+    return null;
+  }
+
+  const tournamentStatus =
+    pickTournamentStatus(o) ??
+    ("tournamentStatus" in o || "tournament_status" in o
+      ? "registration_open"
+      : "in_progress");
+
+  const structureFinished =
+    pickBool(o, "structureFinished", "structure_finished") ?? false;
+
+  let currentStepIndex = pickNumberOrNull(
     o,
     "currentStepIndex",
     "current_step_index"
   );
-  const stepType = pickStepType(o);
-  const levelId = pickNumber(o, "levelId", "level_id");
-  const secondsRemaining = pickNumber(
+  if (currentStepIndex === undefined) {
+    const legacyIdx = pickNumber(o, "currentStepIndex", "current_step_index");
+    currentStepIndex = legacyIdx !== undefined ? legacyIdx : null;
+  }
+
+  let stepType = pickStepType(o);
+  if (stepType === undefined) {
+    const raw = o.stepType ?? o.step_type;
+    if (raw === "Blind" || raw === "Break") {
+      stepType = raw;
+    } else if (typeof raw === "string") {
+      const l = raw.toLowerCase();
+      if (l === "blind") stepType = "Blind";
+      else if (l === "break") stepType = "Break";
+      else stepType = currentStepIndex !== null ? "Blind" : null;
+    } else {
+      stepType = currentStepIndex !== null ? "Blind" : null;
+    }
+  }
+
+  let levelId = pickNumberOrNull(o, "levelId", "level_id");
+  if (levelId === undefined) {
+    const legacyId = pickNumber(o, "levelId", "level_id");
+    levelId = legacyId !== undefined ? legacyId : null;
+  }
+
+  let secondsRemaining = pickNumberOrNull(
     o,
     "secondsRemaining",
     "seconds_remaining"
   );
-
-  if (
-    tournamentId === undefined ||
-    serverTimeMs === undefined ||
-    paused === undefined ||
-    currentStepIndex === undefined ||
-    stepType === undefined ||
-    levelId === undefined ||
-    secondsRemaining === undefined
-  ) {
-    return null;
+  if (secondsRemaining === undefined) {
+    const legacySec = pickNumber(o, "secondsRemaining", "seconds_remaining");
+    secondsRemaining = legacySec !== undefined ? legacySec : null;
   }
 
+  let clockActive = pickBool(o, "clockActive", "clock_active");
+  if (clockActive === undefined) {
+    clockActive =
+      tournamentStatus === "in_progress" &&
+      !structureFinished &&
+      currentStepIndex !== null &&
+      secondsRemaining !== null;
+  }
+
+  const secondsUntilNextBreak =
+    parseSecondsUntilNextBreak(o) ?? null;
+
   return {
+    type: tickMessageType(o),
     tournamentId,
     serverTimeMs,
+    tournamentStatus,
+    clockActive,
     paused,
     currentStepIndex,
     stepType,
     levelId,
     secondsRemaining,
-    tournamentStatus: pickTournamentStatus(o),
-    messageType,
+    secondsUntilNextBreak,
+    structureFinished,
   };
 }
 
+/** MM:SS для таймера уровня. */
 export function formatClockSeconds(totalSec: number): string {
   const s = Math.max(0, Math.floor(totalSec));
   const m = Math.floor(s / 60);
   const r = s % 60;
+  return `${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
+}
+
+/** H:MM:SS при ≥1 ч, иначе MM:SS — для «до перерыва». */
+export function formatClockDuration(totalSec: number): string {
+  const s = Math.max(0, Math.floor(totalSec));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const r = s % 60;
+  if (h > 0) {
+    return `${h}:${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
+  }
   return `${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
 }

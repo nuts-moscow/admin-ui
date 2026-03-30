@@ -7,6 +7,8 @@ import { Typography } from "@/components/Typography/Typography";
 import { useTournamentChipPoolSummary } from "@/core/states/tournaments/hooks/useTournamentChipPoolSummary";
 import { TournamentInfoResponse } from "@/core/states/tournaments/requests/getTournament";
 import { TournamentClockPanel } from "../TournamentState/TournamentClockPanel";
+import { useTournamentClock } from "@/core/states/tournaments/hooks/useTournamentClock";
+import { formatClockDuration } from "@/core/states/tournaments/common/TournamentClockTick";
 
 export interface TournamentChipPoolWindowProps {
   readonly tournament: TournamentInfoResponse;
@@ -78,13 +80,17 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
 }) => {
   const tid = String(tournament.id);
   const { data, loading, error } = useTournamentChipPoolSummary(tid);
+  const inProgress = tournament.status === "InProgress";
+  const clockBinding = useTournamentClock(tournament.id, {
+    enabled: inProgress,
+  });
 
-  const clockCenter =
-    tournament.status === "InProgress" ? (
+  const clockCenter = inProgress ? (
       <TournamentClockPanel
         tournamentId={tournament.id}
         blindsStructure={tournament.structure?.blindsStructure}
-        enabled
+        enabled={false}
+        clockBinding={clockBinding}
         layout="broadcast"
       />
     ) : (
@@ -152,7 +158,11 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
           <Formatter.number value={averageStack} type="withoutDecimals" />
         )}
       </SideStat>
-      <SideStat label="До перерыва">—</SideStat>
+      <SideStat label="До перерыва">
+        {clockBinding.tick?.secondsUntilNextBreak != null
+          ? formatClockDuration(clockBinding.tick.secondsUntilNextBreak)
+          : "—"}
+      </SideStat>
     </>
   );
 

@@ -269,7 +269,7 @@ export const BlindList: FC<
                   </SimpleList.Column>
                   <SimpleList.Column minWidth={40}>
                     <Box flex={{ gap: 2, align: "center" }}>
-                      <Typography.Text size="xSmall">Время</Typography.Text>
+                      <Typography.Text size="xSmall">Мин</Typography.Text>
                       <input
                         readOnly={readOnly}
                         key={`${item.id}-blind-duration`}
@@ -342,7 +342,7 @@ export const BlindList: FC<
                 <>
                   <SimpleList.Column minWidth={40}>
                     <Box flex={{ gap: 2, align: "center" }}>
-                      <Typography.Text size="xSmall">Break</Typography.Text>
+                      <Typography.Text size="xSmall">Пер. мин</Typography.Text>
                       <input
                         key={`${item.id}-break-duration`}
                         className={blindListInputCls}

@@ -7,6 +7,7 @@ import {
   tryParseTournamentClockTick,
   type TournamentClockTick,
 } from "../common/TournamentClockTick";
+import { getTournamentClock } from "../requests/getTournamentClock";
 
 export type TournamentClockConnectionStatus =
   | "idle"
@@ -28,9 +29,12 @@ export interface UseTournamentClockOptions {
   readonly enabled?: boolean;
 }
 
-export interface UseTournamentClockResult {
+export interface TournamentClockBinding {
   readonly tick: TournamentClockTick | null;
   readonly connectionStatus: TournamentClockConnectionStatus;
+}
+
+export interface UseTournamentClockResult extends TournamentClockBinding {
   /** Оценка сдвига serverTime − клиент (мс) по последнему тику. */
   readonly serverSkewMs: number | null;
   readonly reconnectAttempt: number;
@@ -63,6 +67,27 @@ export function useTournamentClock(
       reconnectTimerRef.current = null;
     }
   }, []);
+
+  /** Начальный снимок с REST до первого сообщения WebSocket. */
+  useEffect(() => {
+    const id = tournamentId != null ? String(tournamentId).trim() : "";
+    if (!id || !enabled) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const snap = await getTournamentClock(environment, id);
+        if (!cancelled && snap) {
+          setTick(snap);
+          setServerSkewMs(snap.serverTimeMs - Date.now());
+        }
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [environment, tournamentId, enabled]);
 
   useEffect(() => {
     closedByUnmountRef.current = false;

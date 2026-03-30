@@ -13,7 +13,11 @@ import {
   formatClockSeconds,
   type TournamentClockTick,
 } from "@/core/states/tournaments/common/TournamentClockTick";
-import { useTournamentClock } from "@/core/states/tournaments/hooks/useTournamentClock";
+import {
+  useTournamentClock,
+  type TournamentClockBinding,
+  type TournamentClockConnectionStatus,
+} from "@/core/states/tournaments/hooks/useTournamentClock";
 
 function isBlind(item: BlindType): item is Blind {
   return item != null && "smallBlind" in item;
@@ -32,14 +36,11 @@ function formatSbBb(sb: number, bb: number): string {
   return `${sb} / ${bb}`;
 }
 
-/**
- * Первый блайнд после текущего шага; перерывы пропускаются (в т.ч. подряд).
- */
 function findNextBlindInStructure(
   blinds: Blinds | undefined,
-  currentStepIndex: number
+  currentStepIndex: number | null
 ): Blind | null {
-  if (!blinds?.length) return null;
+  if (!blinds?.length || currentStepIndex === null) return null;
   let i = currentStepIndex + 1;
   while (i < blinds.length) {
     const item = blinds[i];
@@ -54,8 +55,11 @@ function stepAtIndex(
   tick: TournamentClockTick
 ): BlindType | null {
   if (!blinds?.length) return null;
-  const byIndex = blinds[tick.currentStepIndex];
-  if (byIndex !== undefined && byIndex !== null) return byIndex;
+  if (tick.currentStepIndex !== null) {
+    const byIndex = blinds[tick.currentStepIndex];
+    if (byIndex !== undefined && byIndex !== null) return byIndex;
+  }
+  if (tick.levelId == null) return null;
   const matchId = blinds.find((b) => {
     if (tick.stepType === "Break" && isBreak(b)) return b.id === tick.levelId;
     if (tick.stepType === "Blind" && isBlind(b)) return b.id === tick.levelId;
@@ -69,7 +73,12 @@ function levelLabel(
   tick: TournamentClockTick
 ): string {
   if (!blinds?.length) {
-    return `#${tick.currentStepIndex + 1} (id ${tick.levelId})`;
+    const idx = tick.currentStepIndex;
+    const lid = tick.levelId;
+    if (idx !== null && lid != null) {
+      return `#${idx + 1} (id ${lid})`;
+    }
+    return "Нет данных шага";
   }
   if (tick.stepType === "Break") {
     const br = blinds.find((b) => isBreak(b) && b.id === tick.levelId);
@@ -82,7 +91,7 @@ function levelLabel(
   if (blItem && isBlind(blItem)) {
     return formatBlindStake(blItem);
   }
-  return `Блайнд (id ${tick.levelId})`;
+  return tick.levelId != null ? `Блайнд (id ${tick.levelId})` : "Уровень";
 }
 
 export type TournamentClockPanelLayout = "compact" | "broadcast";
@@ -93,9 +102,9 @@ export interface TournamentClockPanelProps {
   /** Пока false — WebSocket не открывается (турнир не в игре). */
   readonly enabled?: boolean;
   /**
-   * compact — карточка для встройки;
-   * broadcast — колонка по центру: уровень → блайнды → анте → таймер → следующий уровень.
+   * Если задан — использовать переданный тик/статус сокета (один хук на экран).
    */
+  readonly clockBinding?: TournamentClockBinding;
   readonly layout?: TournamentClockPanelLayout;
 }
 
@@ -103,11 +112,15 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
   tournamentId,
   blindsStructure,
   enabled = true,
+  clockBinding,
   layout = "compact",
 }) => {
-  const { tick, connectionStatus } = useTournamentClock(tournamentId, {
-    enabled,
+  const hookResult = useTournamentClock(tournamentId, {
+    enabled: clockBinding ? false : enabled,
   });
+  const tick = clockBinding?.tick ?? hookResult.tick;
+  const connectionStatus: TournamentClockConnectionStatus =
+    clockBinding?.connectionStatus ?? hookResult.connectionStatus;
 
   const label = useMemo(
     () => (tick ? levelLabel(blindsStructure, tick) : ""),
@@ -116,14 +129,20 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
 
   const nextBlindLabel = useMemo(() => {
     if (!tick || !blindsStructure?.length) return null;
-    const next = findNextBlindInStructure(blindsStructure, tick.currentStepIndex);
+    const next = findNextBlindInStructure(
+      blindsStructure,
+      tick.currentStepIndex
+    );
     if (!next) return null;
     return formatBlindStake(next);
   }, [blindsStructure, tick]);
 
   const nextSbBb = useMemo(() => {
     if (!tick || !blindsStructure?.length) return null;
-    const next = findNextBlindInStructure(blindsStructure, tick.currentStepIndex);
+    const next = findNextBlindInStructure(
+      blindsStructure,
+      tick.currentStepIndex
+    );
     if (!next) return null;
     return formatSbBb(next.smallBlind, next.bigBlind);
   }, [blindsStructure, tick]);
@@ -133,10 +152,18 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
     [blindsStructure, tick]
   );
 
-  const completedByTick = tick?.tournamentStatus === "completed";
+  const completedOrFinished =
+    tick?.tournamentStatus === "completed" ||
+    tick?.structureFinished === true;
+  const clockInactive = tick != null && !tick.clockActive;
 
   const muted = { color: "#6b7280" };
   const ink = { color: "#111827" };
+
+  const timerText =
+    tick?.secondsRemaining != null
+      ? formatClockSeconds(tick.secondsRemaining)
+      : "—";
 
   if (layout === "broadcast") {
     return (
@@ -163,13 +190,19 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
           </Typography.Text>
         )}
 
-        {completedByTick && (
+        {completedOrFinished && (
           <Typography.Text size="medium">
             Турнир завершён — активный отсчёт недоступен.
           </Typography.Text>
         )}
 
-        {tick && !completedByTick && (
+        {tick && clockInactive && !completedOrFinished && (
+          <Typography.Text type="secondary" size="small">
+            Часы неактивны.
+          </Typography.Text>
+        )}
+
+        {tick && !completedOrFinished && tick.clockActive && (
           <>
             {currentStepItem && isBlind(currentStepItem) ? (
               <>
@@ -201,7 +234,11 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
               </>
             ) : (
               <>
-                <Typography.Text size="medium">Шаг {tick.currentStepIndex + 1}</Typography.Text>
+                <Typography.Text size="medium">
+                  {tick.currentStepIndex !== null
+                    ? `Шаг ${tick.currentStepIndex + 1}`
+                    : "Шаг"}
+                </Typography.Text>
                 <Typography.Text type="secondary" size="small">
                   {label}
                 </Typography.Text>
@@ -224,7 +261,7 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
                 bold
                 style={{ fontVariantNumeric: "tabular-nums" }}
               >
-                {formatClockSeconds(tick.secondsRemaining)}
+                {timerText}
               </Typography.Text>
             </Box>
 
@@ -278,26 +315,38 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
         </Typography.Text>
       )}
 
-      {completedByTick && (
+      {completedOrFinished && (
         <Typography.Text size="medium" style={ink}>
           Турнир завершён — активный отсчёт недоступен.
         </Typography.Text>
       )}
 
-      {tick && !completedByTick && (
+      {tick && clockInactive && !completedOrFinished && (
+        <Typography.Text type="secondary" size="small" style={muted}>
+          Часы неактивны.
+        </Typography.Text>
+      )}
+
+      {tick && !completedOrFinished && tick.clockActive && (
         <>
           <Typography.Text
             size="large"
             style={{ fontVariantNumeric: "tabular-nums", ...ink }}
           >
-            {formatClockSeconds(tick.secondsRemaining)}
+            {timerText}
           </Typography.Text>
           <Typography.Text size="small" style={ink}>
             {label}
           </Typography.Text>
           <Typography.Text type="secondary" size="small" style={muted}>
-            Шаг {tick.currentStepIndex + 1}
-            {tick.stepType === "Break" ? " · перерыв" : " · блайнд"}
+            {tick.currentStepIndex !== null
+              ? `Шаг ${tick.currentStepIndex + 1}`
+              : "Шаг"}
+            {tick.stepType === "Break"
+              ? " · перерыв"
+              : tick.stepType === "Blind"
+                ? " · блайнд"
+                : ""}
             {tick.paused ? " · на паузе" : ""}
           </Typography.Text>
 
