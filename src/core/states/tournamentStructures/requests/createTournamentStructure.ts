@@ -30,7 +30,7 @@ function toCreateBody(
     name: request.name,
     playersLimit: request.playersLimit,
     stackSize: request.stackSize,
-    freezeOutEnabled: request.freezeOutEnabled,
+    freezeOutEnabled: request.freezeOutEnabled === true,
     blinds: normalizeBlindsForApi(request.blinds),
   };
 }

@@ -74,7 +74,10 @@ export const CreateStructureModal: FC<CreateStructureModalProps> = ({
           level: "error",
         },
       ]),
-      freezeOutEnabled: structure?.freezeOutEnabled,
+      freezeOutEnabled: toCtrlParam<boolean | undefined>(
+        structure?.freezeOutEnabled ?? false,
+        [],
+      ),
       blinds: toCtrlParam<Blinds | undefined>(structure?.blindsStructure, [
         {
           validate: (blinds) => {
@@ -100,16 +103,18 @@ export const CreateStructureModal: FC<CreateStructureModalProps> = ({
     }
     setIsLoading(true);
     try {
+      const freezeOutEnabled = form.value.freezeOutEnabled === true;
       if (structure) {
         await updateTournamentStructure(environment, {
           ...(form.value as UpdateTournamentStructureRequest),
           id: structure.id,
+          freezeOutEnabled,
         });
       } else {
-        await createTournamentStructure(
-          environment,
-          form.value as CreateTournamentStructureRequest
-        );
+        await createTournamentStructure(environment, {
+          ...(form.value as CreateTournamentStructureRequest),
+          freezeOutEnabled,
+        });
       }
       refetchTournamentStructures();
       close();
@@ -142,8 +147,8 @@ export const CreateStructureModal: FC<CreateStructureModalProps> = ({
                 <Typography.Text size="small">Финал игры</Typography.Text>
                 <Checkbox
                   size="small"
-                  checked={value}
-                  onCheckedChange={() => onChange(!value)}
+                  checked={value ?? false}
+                  onCheckedChange={() => onChange(!Boolean(value))}
                 />
               </Box>
             )}
