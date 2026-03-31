@@ -29,6 +29,21 @@ export const tournamentBonusLabels: Record<Bonus, string> = {
 export interface BountyKillEntry {
   readonly playerId: string;
   readonly playerName?: string;
+  /** Для отката POST .../bounty/eliminate/undo с телом { eventId }. */
+  readonly eventId?: string;
+}
+
+/** Одно событие выбивания жертвы (несколько убийц — одна операция, один откат). */
+export interface BountyEliminationEventRef {
+  readonly eventId: string;
+  readonly killerPlayerIds: readonly string[];
+}
+
+/** Событие из стейта игрока (v2 players): отображение и откат по eventId. */
+export interface BountyEliminationEventState {
+  readonly eventId: string;
+  readonly eliminatedPlayerId: string;
+  readonly killerPlayerIds: readonly string[];
 }
 
 export type BurnedStackSource = "Rebuy" | "Out";
@@ -50,10 +65,15 @@ export interface InGamePlayerState {
   readonly entyPaymentMethod?: PaymentMethod;
   readonly reentryByPaymentMethod: PaymentMethod[];
   readonly totalReentryCount: number;
+  /** Доли баунти допускаются (например 0.5 при split 1/2). */
   readonly bountyCount: number;
   /** ID жертв — playerId (строка или объект с playerId). */
   readonly bountyKills?: (BountyKillEntry | string)[];
   readonly eliminatedBy?: string[];
+  /** Если бэкенд отдаёт — один ряд = одно событие eliminate, откат по eventId. */
+  readonly eliminatedByEvents?: readonly BountyEliminationEventRef[];
+  /** События выбивания с сервера: для убийцы — свои участия, для жертвы — где eliminatedPlayerId = этот игрок. */
+  readonly bountyEliminationEvents?: readonly BountyEliminationEventState[];
   readonly bonuses: Bonus[];
   /** Переменные бонусы (фишки); каждое число — отдельный грант. */
   readonly customBonusChips?: readonly number[];

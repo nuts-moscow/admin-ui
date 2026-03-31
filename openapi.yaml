@@ -233,6 +233,88 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Unknown"
+  /v2/api/tournaments/{tournamentId}/bounty/eliminate:
+    post:
+      description: >
+        Record bounty elimination; killerPlayerIds required for normal elimination (split bounty 1/N).
+        With burnedStack true, killerPlayerIds may be empty per backend rules.
+      operationId: Bounty eliminate
+      parameters:
+        - name: tournamentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BountyEliminateRequest"
+      responses:
+        "200":
+          description: Created elimination event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BountyEliminateResponse"
+        "400":
+          description: Invalid body
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFound"
+        "500":
+          description: unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unknown"
+  /v2/api/tournaments/{tournamentId}/bounty/eliminate/undo:
+    post:
+      description: Full undo of one eliminate operation by eventId
+      operationId: Bounty eliminate undo
+      parameters:
+        - name: tournamentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BountyEliminateUndoRequest"
+      responses:
+        "200":
+          description: Undone
+        "204":
+          description: Undone (no body)
+        "400":
+          description: Invalid body
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFound"
+        "500":
+          description: unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unknown"
   /v1/tournaments/add-player-to-tournament:
     post:
       description: Adds player to tournament
@@ -519,6 +601,43 @@ components:
         duration:
           type: integer
           format: int64
+    BountyEliminateRequest:
+      required:
+        - eliminatedPlayerId
+        - type
+        - killerPlayerIds
+      type: object
+      properties:
+        eliminatedPlayerId:
+          type: string
+        type:
+          type: string
+          enum:
+            - Rebuy
+            - Out
+        killerPlayerIds:
+          type: array
+          items:
+            type: string
+        burnedStack:
+          type: boolean
+        burnedChips:
+          type: integer
+          format: int64
+    BountyEliminateResponse:
+      required:
+        - eventId
+      type: object
+      properties:
+        eventId:
+          type: string
+    BountyEliminateUndoRequest:
+      required:
+        - eventId
+      type: object
+      properties:
+        eventId:
+          type: string
     InGameBonusUpdateRequest:
       required:
         - bonus

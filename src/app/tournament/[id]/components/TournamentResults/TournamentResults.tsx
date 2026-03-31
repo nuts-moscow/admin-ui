@@ -11,9 +11,10 @@ import {
   BountyKillEntry,
   InGamePlayerState,
 } from "@/core/states/tournaments/common/InGamePlayerState";
+import { formatBountyCount } from "@/core/states/tournaments/common/formatBountyCount";
 import { refetchTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
 import { useTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
-import { bountyRemove } from "@/core/states/tournaments/requests/bountyRemove";
+import { bountyEliminateUndo } from "@/core/states/tournaments/requests/bountyEliminate";
 import { TournamentInfoResponse } from "@/core/states/tournaments/requests/getTournament";
 import { Copy, X } from "lucide-react";
 
@@ -42,8 +43,26 @@ const BountyListModal: FC<BountyListModalProps> = ({
   const environment = useEnvironment();
   const [removingId, setRemovingId] = useState<string | null>(null);
   const bountyKills = row?.bountyKills ?? [];
-  const killerPlayerId = row ? String(row.playerId) : "";
   const killerPlayerName = row?.playerName ?? "";
+
+  const killerId = row?.playerId ?? "";
+  const bountyEventsForKiller = useMemo(() => {
+    const raw = row?.bountyEliminationEvents ?? [];
+    const filtered = raw.filter((ev) =>
+      ev.killerPlayerIds.some((k) => String(k) === String(killerId)),
+    );
+    const seen = new Set<string>();
+    return filtered.filter((ev) => {
+      if (seen.has(ev.eventId)) {
+        return false;
+      }
+      seen.add(ev.eventId);
+      return true;
+    });
+  }, [row?.bountyEliminationEvents, killerId]);
+
+  const playerNameById = (id: string) =>
+    allPlayers.find((p) => String(p.playerId) === String(id))?.playerName ?? id;
 
   const getVictimDisplay = (kill: BountyKillEntry | string) => {
     const id =
@@ -55,19 +74,20 @@ const BountyListModal: FC<BountyListModalProps> = ({
       typeof kill === "object" && kill && "playerName" in kill
         ? kill.playerName
         : undefined;
+    const eventId =
+      typeof kill === "object" && kill && "eventId" in kill
+        ? kill.eventId
+        : undefined;
     return {
       name: victim?.playerName ?? nameFromKill ?? "-",
-      victimPlayerId: victim?.playerId ?? id,
+      eventId,
     };
   };
 
-  const handleRemove = async (victimPlayerId: string) => {
-    setRemovingId(victimPlayerId);
+  const handleUndo = async (eventId: string, rowKey: string) => {
+    setRemovingId(rowKey);
     try {
-      await bountyRemove(environment, tournamentId, {
-        killerPlayerId,
-        victimPlayerId,
-      });
+      await bountyEliminateUndo(environment, tournamentId, { eventId });
       onRemoved();
       close();
     } catch (error) {
@@ -83,20 +103,59 @@ const BountyListModal: FC<BountyListModalProps> = ({
       <Modal.Title showCloseButton>Баунти — {killerPlayerName}</Modal.Title>
       <Modal.Content minWidth={400}>
         <Box flex={{ col: true, gap: 2 }}>
-          {bountyKills.length === 0 ? (
+          {bountyEventsForKiller.length > 0 ? (
+            bountyEventsForKiller.map((ev, index) => {
+              const victimName = playerNameById(ev.eliminatedPlayerId);
+              const co = ev.killerPlayerIds.filter(
+                (k) => String(k) !== String(killerId),
+              );
+              const rowKey = `${ev.eventId}-${index}`;
+              return (
+                <Box
+                  key={rowKey}
+                  flex={{ align: "center", justify: "space-between", gap: 2 }}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: 10,
+                    border: "1px solid var(--border-color)",
+                  }}
+                >
+                  <Box flex={{ col: true, gap: 0 }}>
+                    <Typography.Text size="small">{victimName}</Typography.Text>
+                    {co.length > 0 ? (
+                      <Typography.Text type="secondary" size="xxSmall">
+                        вместе с{" "}
+                        {co.map((id) => playerNameById(id)).join(", ")}
+                      </Typography.Text>
+                    ) : null}
+                  </Box>
+                  <Button
+                    type="ghost"
+                    size="xxSmall"
+                    style={{ padding: 4 }}
+                    iconRight={<X size={16} color="var(--text-error)" />}
+                    onClick={() => handleUndo(ev.eventId, rowKey)}
+                    disabled={removingId !== null}
+                    loading={removingId === rowKey}
+                  />
+                </Box>
+              );
+            })
+          ) : bountyKills.length === 0 ? (
             <Typography.Text type="secondary" size="small">
               Нет выбиваний
             </Typography.Text>
           ) : (
             bountyKills.map((kill, index) => {
-                const { name, victimPlayerId } = getVictimDisplay(kill);
+                const { name, eventId } = getVictimDisplay(kill);
                 const keyId =
                   typeof kill === "string"
                     ? kill
                     : String((kill as BountyKillEntry).playerId ?? index);
+                const rowKey = `${keyId}-${index}`;
                 return (
                   <Box
-                    key={`${keyId}-${index}`}
+                    key={rowKey}
                   flex={{ align: "center", justify: "space-between", gap: 2 }}
                   style={{
                     padding: "8px 12px",
@@ -107,15 +166,21 @@ const BountyListModal: FC<BountyListModalProps> = ({
                   <Typography.Text size="small">
                     {name}
                   </Typography.Text>
-                  <Button
-                    type="ghost"
-                    size="xxSmall"
-                    style={{ padding: 4 }}
-                    iconRight={<X size={16} color="var(--text-error)" />}
-                    onClick={() => handleRemove(victimPlayerId)}
-                    disabled={removingId !== null}
-                    loading={removingId === victimPlayerId}
-                  />
+                  {eventId ? (
+                    <Button
+                      type="ghost"
+                      size="xxSmall"
+                      style={{ padding: 4 }}
+                      iconRight={<X size={16} color="var(--text-error)" />}
+                      onClick={() => handleUndo(eventId, rowKey)}
+                      disabled={removingId !== null}
+                      loading={removingId === rowKey}
+                    />
+                  ) : (
+                    <Typography.Text type="secondary" size="small">
+                      Нет eventId
+                    </Typography.Text>
+                  )}
                 </Box>
               );
             })
@@ -143,26 +208,34 @@ const EliminatedByModal: FC<EliminatedByModalProps> = ({
 }) => {
   const environment = useEnvironment();
   const [removingId, setRemovingId] = useState<string | null>(null);
-  const eliminatedByIds = row?.eliminatedBy ?? [];
-  const victimPlayerId = row ? String(row.playerId) : "";
-
-  const getKillerInfo = (id: string) => {
-    const killer = allPlayers.find(
-      (p) => String(p.playerId) === String(id),
+  const victimId = String(row?.playerId ?? "");
+  const bountyEventsAsVictim = useMemo(() => {
+    const raw = row?.bountyEliminationEvents ?? [];
+    const filtered = raw.filter(
+      (ev) => String(ev.eliminatedPlayerId) === victimId,
     );
-    return {
-      name: killer?.playerName ?? id,
-      killerPlayerId: killer ? String(killer.playerId) : String(id),
-    };
-  };
+    const seen = new Set<string>();
+    return filtered.filter((ev) => {
+      if (seen.has(ev.eventId)) {
+        return false;
+      }
+      seen.add(ev.eventId);
+      return true;
+    });
+  }, [row?.bountyEliminationEvents, victimId]);
+  const eliminatedByEvents = row?.eliminatedByEvents ?? [];
+  const eliminatedByIds = row?.eliminatedBy ?? [];
 
-  const handleRemove = async (killerPlayerId: string) => {
-    setRemovingId(killerPlayerId);
+  const killerNames = (ids: readonly string[]) =>
+    ids
+      .map((id) => allPlayers.find((p) => String(p.playerId) === String(id)))
+      .map((p, i) => p?.playerName ?? ids[i] ?? "—")
+      .join(", ");
+
+  const handleUndoEvent = async (eventId: string) => {
+    setRemovingId(eventId);
     try {
-      await bountyRemove(environment, tournamentId, {
-        killerPlayerId,
-        victimPlayerId,
-      });
+      await bountyEliminateUndo(environment, tournamentId, { eventId });
       onRemoved();
       close();
     } catch (error) {
@@ -173,6 +246,9 @@ const EliminatedByModal: FC<EliminatedByModalProps> = ({
     }
   };
 
+  const hasBountyVictimRows = bountyEventsAsVictim.length > 0;
+  const hasLegacyEventRows = eliminatedByEvents.length > 0;
+
   return (
     <Box flex={{ col: true }}>
       <Modal.Title showCloseButton>
@@ -180,13 +256,68 @@ const EliminatedByModal: FC<EliminatedByModalProps> = ({
       </Modal.Title>
       <Modal.Content minWidth={400}>
         <Box flex={{ col: true, gap: 2 }}>
-          {eliminatedByIds.length === 0 ? (
+          {!hasBountyVictimRows &&
+          !hasLegacyEventRows &&
+          eliminatedByIds.length === 0 ? (
             <Typography.Text type="secondary" size="small">
               Нет записей
             </Typography.Text>
+          ) : hasBountyVictimRows ? (
+            bountyEventsAsVictim.map((ev, index) => (
+              <Box
+                key={`${ev.eventId}-${index}`}
+                flex={{ align: "center", justify: "space-between", gap: 2 }}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: 10,
+                  border: "1px solid var(--border-color)",
+                }}
+              >
+                <Typography.Text size="small">
+                  {killerNames(ev.killerPlayerIds)}
+                </Typography.Text>
+                <Button
+                  type="ghost"
+                  size="xxSmall"
+                  style={{ padding: 4 }}
+                  iconRight={<X size={16} color="var(--text-error)" />}
+                  onClick={() => handleUndoEvent(ev.eventId)}
+                  disabled={removingId !== null}
+                  loading={removingId === ev.eventId}
+                />
+              </Box>
+            ))
+          ) : hasLegacyEventRows ? (
+            eliminatedByEvents.map((ev, index) => (
+              <Box
+                key={`${ev.eventId}-${index}`}
+                flex={{ align: "center", justify: "space-between", gap: 2 }}
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: 10,
+                  border: "1px solid var(--border-color)",
+                }}
+              >
+                <Typography.Text size="small">
+                  {killerNames(ev.killerPlayerIds)}
+                </Typography.Text>
+                <Button
+                  type="ghost"
+                  size="xxSmall"
+                  style={{ padding: 4 }}
+                  iconRight={<X size={16} color="var(--text-error)" />}
+                  onClick={() => handleUndoEvent(ev.eventId)}
+                  disabled={removingId !== null}
+                  loading={removingId === ev.eventId}
+                />
+              </Box>
+            ))
           ) : (
             eliminatedByIds.map((id, index) => {
-              const { name, killerPlayerId } = getKillerInfo(id);
+              const killer = allPlayers.find(
+                (p) => String(p.playerId) === String(id),
+              );
+              const name = killer?.playerName ?? id;
               return (
                 <Box
                   key={`${id}-${index}`}
@@ -198,15 +329,9 @@ const EliminatedByModal: FC<EliminatedByModalProps> = ({
                   }}
                 >
                   <Typography.Text size="small">{name}</Typography.Text>
-                  <Button
-                    type="ghost"
-                    size="xxSmall"
-                    style={{ padding: 4 }}
-                    iconRight={<X size={16} color="var(--text-error)" />}
-                    onClick={() => handleRemove(killerPlayerId)}
-                    disabled={removingId !== null}
-                    loading={removingId === killerPlayerId}
-                  />
+                  <Typography.Text type="secondary" size="small">
+                    Нет eventId для отката
+                  </Typography.Text>
                 </Box>
               );
             })
@@ -253,7 +378,7 @@ export const TournamentResults: FC<TournamentResultsProps> = ({
     const text = rows
       .map(
         (row) =>
-          `${placeNumber(row.placement) ?? "-"}. ${row.playerName} — Баунти: ${row.bountyCount}`
+          `${placeNumber(row.placement) ?? "-"}. ${row.playerName} — Баунти: ${formatBountyCount(row.bountyCount)}`
       )
       .join("\n");
     if (!text) {
@@ -372,7 +497,9 @@ export const TournamentResults: FC<TournamentResultsProps> = ({
             />
             <Typography.Text>{row.playerName}</Typography.Text>
             <Typography.Text type="secondary">-</Typography.Text>
-            <Typography.Text>{row.bountyCount} Баунти</Typography.Text>
+            <Typography.Text>
+              {formatBountyCount(row.bountyCount)} Баунти
+            </Typography.Text>
             <Box flex={{ gap: 2 }}>
               <Button
                 type="secondary"
