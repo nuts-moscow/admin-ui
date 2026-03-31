@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { Box } from "@/components/Box/Box";
 import { Button } from "@/components/Button/Button";
 import { Checkbox } from "@/components/Checkbox/Checkbox";
@@ -30,6 +30,7 @@ export interface CreatePlayerModalProps extends WithModalProps {
 
 export const CreatePlayerModal: FC<CreatePlayerModalProps> = ({
   close,
+  opened,
   player,
 }) => {
   const environment = useEnvironment();
@@ -53,6 +54,20 @@ export const CreatePlayerModal: FC<CreatePlayerModalProps> = ({
       ),
     },
   });
+
+  useEffect(() => {
+    if (!opened) {
+      return;
+    }
+    form.setValue({
+      nickname: player?.nickname ?? undefined,
+      name: player?.name,
+      tg: player?.tg,
+      phone: player?.phone,
+      notes: player?.notes,
+      signAgreement: player?.signAgreement ?? false,
+    });
+  }, [opened, player, form]);
 
   const handleSubmit = async () => {
     if (form.state === "error") {

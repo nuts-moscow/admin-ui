@@ -48,11 +48,17 @@ export const PlayersView = ({
 
   return (
     <Box flex={{ col: true, gap: 8, width: "100%" }}>
-      <CreatePlayerModalConnect player={selectedPlayer} />
+      <CreatePlayerModalConnect
+        player={selectedPlayer}
+        onClose={() => setSelectedPlayer(undefined)}
+      />
       <Button
         type="primary"
         size="medium"
-        onClick={() => openCreatePlayerModal()}
+        onClick={() => {
+          setSelectedPlayer(undefined);
+          openCreatePlayerModal();
+        }}
       >
         Создать игрока
       </Button>
