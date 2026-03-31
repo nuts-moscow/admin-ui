@@ -15,7 +15,7 @@ export const playerListCardCls = style({
   borderRadius: 16,
   overflow: "hidden",
   backgroundColor: "#fff",
-  border: "1px solid var(--border-primary)",
+  border: "1px solid var(--border-color)",
   boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
 });
 

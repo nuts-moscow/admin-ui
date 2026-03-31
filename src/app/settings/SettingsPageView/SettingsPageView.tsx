@@ -34,7 +34,7 @@ export const SettingsPageView: FC<SettingsPageViewProps> = ({
     <>
       <Box
         flex={{ col: true }}
-        style={{ minHeight: "100vh", backgroundColor: "var(--bg-primary)" }}
+        style={{ minHeight: "100vh", backgroundColor: "var(--background-primary)" }}
       >
         <PageHeader
           title="Турниры"

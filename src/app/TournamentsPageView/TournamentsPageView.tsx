@@ -58,7 +58,7 @@ export const TournamentsPageView: FC<TournamentsPageViewProps> = ({
       <CreateTournamentModal />
       <Box
         flex={{ col: true }}
-        style={{ minHeight: "100vh", backgroundColor: "var(--bg-primary)" }}
+        style={{ minHeight: "100vh", backgroundColor: "var(--background-primary)" }}
       >
         <PageHeader
           title="Турниры"

@@ -1,9 +1,9 @@
 import { style } from "@vanilla-extract/css";
 
 export const playerCardCls = style({
-  backgroundColor: "var(--bg-primary)",
+  backgroundColor: "var(--background-primary)",
   borderRadius: "16px",
-  border: "1px solid var(--border-primary)",
+  border: "1px solid var(--border-color)",
   boxShadow: "0 2px 8px rgba(0, 0, 0, 0.08)",
   transition: "all 0.2s ease-in-out",
   selectors: {
