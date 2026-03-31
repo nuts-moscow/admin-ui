@@ -190,6 +190,49 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Unknown"
+  /v2/api/tournaments/{tournamentId}/players/{playerId}/return-to-game:
+    post:
+      description: >
+        Return busted player (Out / OutNotPaid) to in-game without a table:
+        status InGamePaid or InGameNotPaid by entry payment, +1 unpaid rebuy,
+        clear tableId and placement; placements of later bust-outs are recomputed on server.
+      operationId: Return player to game
+      parameters:
+        - name: tournamentId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: playerId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Updated player state for the returning player
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InGamePlayerState"
+        "400":
+          description: Invalid status or business rules
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFound"
+        "500":
+          description: unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unknown"
   /v1/tournaments/add-player-to-tournament:
     post:
       description: Adds player to tournament

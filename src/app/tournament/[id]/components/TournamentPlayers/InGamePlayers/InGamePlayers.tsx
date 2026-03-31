@@ -20,6 +20,7 @@ import { TableSelectModal } from "../TableSelectModal/TableSelectModal";
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
 import {
   inGamePayment,
+  returnPlayerToGame,
   rollbackGameStart,
   setPlayerTableId,
 } from "@/core/states/tournaments/requests/updatePlayerState";
@@ -27,6 +28,7 @@ import {
   refetchTournamentPlayerState,
   useTournamentPlayerState,
 } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
+import { refetchTournamentRebuyCount } from "@/core/states/tournaments/hooks/useTournamentRebuyCount";
 import {
   addPlayerCustomBonusChips,
   addPlayerTournamentBonus,
@@ -477,6 +479,9 @@ export const InGamePlayers: FC<InGamePlayersProps> = ({
   const [playerBonusesPlayerId, setPlayerBonusesPlayerId] = useState<
     string | undefined
   >(undefined);
+  const [returningPlayerId, setReturningPlayerId] = useState<
+    string | undefined
+  >(undefined);
   const [BonusesModal, openBonusesModal] = useModal(PlayerBonusesModal);
   const { data: nonRegisteredPlayers } =
     useNonRegisteredTournamentPlayerState(tournamentId);
@@ -556,6 +561,41 @@ export const InGamePlayers: FC<InGamePlayersProps> = ({
                 <Typography.Text size="small" type="secondary">
                   Вылетел
                 </Typography.Text>
+              )}
+              {isOutOrOutNotPaid && (
+                <Button
+                  type="success"
+                  size="xxSmall"
+                  loading={returningPlayerId === row.playerId}
+                  disabled={
+                    returningPlayerId !== undefined &&
+                    returningPlayerId !== row.playerId
+                  }
+                  onClick={async () => {
+                    setReturningPlayerId(row.playerId);
+                    try {
+                      await returnPlayerToGame(
+                        environment,
+                        Number(tournamentId),
+                        row.playerId,
+                      );
+                      refetchTournamentPlayerState();
+                      refetchTournamentRebuyCount();
+                    } catch (error) {
+                      toast({
+                        type: "error",
+                        message:
+                          error instanceof Error
+                            ? error.message
+                            : "Не удалось вернуть в игру",
+                      });
+                    } finally {
+                      setReturningPlayerId(undefined);
+                    }
+                  }}
+                >
+                  В игру
+                </Button>
               )}
               {!hasEntryPayment && (
                 <Button

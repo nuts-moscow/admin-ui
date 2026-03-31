@@ -124,6 +124,30 @@ export const rollbackGameStart = async (
   });
 };
 
+/** Вернуть вылетевшего в игру без стола: статус по оплате входа + unpaid rebuy на бэкенде. */
+export const returnPlayerToGame = async (
+  environment: Environment,
+  tournamentId: number,
+  playerId: string,
+): Promise<InGamePlayerState> => {
+  return securedFetch<undefined, InGamePlayerState>({
+    method: "POST",
+    host: environment.apiUrl,
+    path: `/v2/api/tournaments/${tournamentId}/players/${playerId}/return-to-game`,
+    withCredentials: false,
+    body: undefined,
+    mapping: {
+      success: (res) => res.toJson(),
+      400: () =>
+        new Error(
+          "Нельзя вернуть в игру: неверный статус игрока или нарушены правила турнира",
+        ),
+      404: () => new Error("Player or tournament not found"),
+      500: () => new Error("Server error"),
+    },
+  });
+};
+
 const updateTournamentPlayerTable = async (
   environment: Environment,
   tournamentId: number,
