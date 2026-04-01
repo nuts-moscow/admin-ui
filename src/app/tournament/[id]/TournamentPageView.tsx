@@ -14,6 +14,7 @@ import { TournamentReentries } from "./components/TournamentReentries/Tournament
 import { TournamentCash } from "./components/TournamentCash/TournamentCash";
 import { TournamentChipPoolWindow } from "./components/TournamentChipPoolWindow/TournamentChipPoolWindow";
 import { TournamentResults } from "./components/TournamentResults/TournamentResults";
+import { TournamentSocial } from "./components/TournamentSocial/TournamentSocial";
 import { TournamentInfoResponse } from "@/core/states/tournaments/requests/getTournament";
 import { Formatter } from "@/components/Formatter/Formatter";
 import { tournamentStatusLabels } from "@/core/states/tournaments/common/TournamentStatus";
@@ -44,6 +45,11 @@ export const TournamentPageView: FC<TournamentPageViewProps> = ({
           title: "Турнирное окно",
           key: "chip-pool",
           content: <TournamentChipPoolWindow tournament={currentTournament} />,
+        },
+        {
+          title: "Социальные сети",
+          key: "social",
+          content: <TournamentSocial tournament={currentTournament} />,
         },
         {
           title: "Результаты",
@@ -87,6 +93,11 @@ export const TournamentPageView: FC<TournamentPageViewProps> = ({
         title: "Турнирное окно",
         key: "chip-pool",
         content: <TournamentChipPoolWindow tournament={currentTournament} />,
+      },
+      {
+        title: "Социальные сети",
+        key: "social",
+        content: <TournamentSocial tournament={currentTournament} />,
       },
       {
         title: "Результаты",

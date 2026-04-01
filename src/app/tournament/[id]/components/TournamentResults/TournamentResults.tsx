@@ -14,6 +14,10 @@ import {
 import { formatBountyCount } from "@/core/states/tournaments/common/formatBountyCount";
 import { refetchTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
 import { useTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
+import {
+  buildTournamentResultsCopyText,
+  sortTournamentResultsRows,
+} from "./tournamentResultsCopyText";
 import { bountyEliminateUndo } from "@/core/states/tournaments/requests/bountyEliminate";
 import { TournamentInfoResponse } from "@/core/states/tournaments/requests/getTournament";
 import { Copy, X } from "lucide-react";
@@ -351,36 +355,17 @@ export const TournamentResults: FC<TournamentResultsProps> = ({
   const [EliminatedByModalConnect, openEliminatedByModal] =
     useModal(EliminatedByModal);
 
-  const rows = useMemo(() => {
-    const list = [...players];
-    const noPlacement = list.filter((r) => r.placement == null);
-    const withPlacement = list.filter((r) => r.placement != null);
-    const byTournamentPlayerId = (a: InGamePlayerState, b: InGamePlayerState) => {
-      const idA = a.tournamentPlayerId ?? a.playerId;
-      const idB = b.tournamentPlayerId ?? b.playerId;
-      const nA = typeof idA === "number" ? idA : parseInt(String(idA), 10) || 0;
-      const nB = typeof idB === "number" ? idB : parseInt(String(idB), 10) || 0;
-      if (nA !== nB) return nA - nB;
-      return String(idA).localeCompare(String(idB));
-    };
-    const byPlacementDesc = (a: InGamePlayerState, b: InGamePlayerState) =>
-      (b.placement ?? 0) - (a.placement ?? 0);
-    noPlacement.sort(byTournamentPlayerId);
-    withPlacement.sort(byPlacementDesc);
-    return [...noPlacement, ...withPlacement];
-  }, [players]);
+  const rows = useMemo(
+    () => sortTournamentResultsRows(players),
+    [players],
+  );
 
   const totalPlayers = rows.length;
   const placeNumber = (placement: number | null | undefined) =>
     placement != null ? totalPlayers - placement + 1 : null;
 
   const copyResults = async () => {
-    const text = rows
-      .map(
-        (row) =>
-          `${placeNumber(row.placement) ?? "-"}. ${row.playerName} — Баунти: ${formatBountyCount(row.bountyCount)}`
-      )
-      .join("\n");
+    const text = buildTournamentResultsCopyText(players);
     if (!text) {
       return;
     }

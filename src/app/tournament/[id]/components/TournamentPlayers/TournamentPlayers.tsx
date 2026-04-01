@@ -16,10 +16,11 @@ export const TournamentPlayers: FC<TournamentPlayersProps> = ({
   tournament,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
+  const tournamentId = String(tournament.id);
 
   return (
     <Box flex={{ col: true, gap: 6, width: "100%" }}>
-      <TableList tournamentId={String(tournament.id)} />
+      <TableList tournamentId={tournamentId} />
       <input
         type="text"
         value={searchQuery}
@@ -37,11 +38,11 @@ export const TournamentPlayers: FC<TournamentPlayersProps> = ({
       />
       <div className={playerListCardContainerCls}>
         <WaitingListPlayers
-          tournamentId={String(tournament.id)}
+          tournamentId={tournamentId}
           searchQuery={searchQuery}
         />
         <InGamePlayers
-          tournamentId={String(tournament.id)}
+          tournamentId={tournamentId}
           searchQuery={searchQuery}
         />
       </div>
