@@ -17,6 +17,7 @@ import {
 } from "@/core/states/tournaments/common/InGamePlayerState";
 import { getPaymentMethodLabel } from "@/core/states/tournaments/common/paymentMethodLabels";
 import { TableSelectModal } from "../TableSelectModal/TableSelectModal";
+import { PlayerCorrectionModal } from "../PlayerCorrectionModal/PlayerCorrectionModal";
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
 import {
   inGamePayment,
@@ -479,10 +480,14 @@ export const InGamePlayers: FC<InGamePlayersProps> = ({
   const [playerBonusesPlayerId, setPlayerBonusesPlayerId] = useState<
     string | undefined
   >(undefined);
+  const [playerCorrection, setPlayerCorrection] = useState<
+    InGamePlayerState | undefined
+  >(undefined);
   const [returningPlayerId, setReturningPlayerId] = useState<
     string | undefined
   >(undefined);
   const [BonusesModal, openBonusesModal] = useModal(PlayerBonusesModal);
+  const [CorrectionModal, openCorrectionModal] = useModal(PlayerCorrectionModal);
   const { data: nonRegisteredPlayers } =
     useNonRegisteredTournamentPlayerState(tournamentId);
   const filteredPlayers = useMemo(() => {
@@ -523,6 +528,10 @@ export const InGamePlayers: FC<InGamePlayersProps> = ({
         tournamentId={tournamentId}
         playerId={playerBonusesPlayerId}
       />
+      <CorrectionModal
+        tournamentId={tournamentId}
+        player={playerCorrection}
+      />
       <SetTableModal
         tournamentId={tournamentId}
         player={playerToSetTable}
@@ -556,6 +565,16 @@ export const InGamePlayers: FC<InGamePlayersProps> = ({
                 }}
               >
                 Бонусы
+              </Button>
+              <Button
+                type="secondary"
+                size="xxSmall"
+                onClick={() => {
+                  setPlayerCorrection(row);
+                  openCorrectionModal();
+                }}
+              >
+                Коррекция
               </Button>
               {isOutOrOutNotPaid && (
                 <Typography.Text size="small" type="secondary">

@@ -21,6 +21,7 @@ import { removePlayerFromTournament } from "@/core/states/tournaments/requests/r
 import { refetchTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
 import { playerGameStart } from "@/core/states/tournaments/requests/updatePlayerState";
 import { TableSelectModal } from "../TableSelectModal/TableSelectModal";
+import { PlayerCorrectionModal } from "../PlayerCorrectionModal/PlayerCorrectionModal";
 import { tableListCls } from "../TableList/TableList.css";
 import { useTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
 
@@ -328,6 +329,10 @@ export const WaitingListPlayers: FC<WaitingListPlayersProps> = ({
   const [SetArrivedAndPaidModal, openSetArrivedAndPaidModal] = useModal(
     SetArrivedAndPaidConfirmModal,
   );
+  const [playerCorrection, setPlayerCorrection] = useState<
+    InGamePlayerState | undefined
+  >(undefined);
+  const [CorrectionModal, openCorrectionModal] = useModal(PlayerCorrectionModal);
   const { data: registeredPlayers } =
     useRegisteredTournamentPlayerState(tournamentId);
   const rows = useMemo(() => {
@@ -368,6 +373,10 @@ export const WaitingListPlayers: FC<WaitingListPlayersProps> = ({
         tournamentId={tournamentId}
         player={playerToArriveAndPay}
       />
+      <CorrectionModal
+        tournamentId={tournamentId}
+        player={playerCorrection}
+      />
       <PlayerListCard
         title={
           <Box flex={{ align: "center", gap: 2 }}>
@@ -400,6 +409,16 @@ export const WaitingListPlayers: FC<WaitingListPlayersProps> = ({
               }}
             >
               Пришел
+            </Button>
+            <Button
+              type="secondary"
+              size="xxSmall"
+              onClick={() => {
+                setPlayerCorrection(row);
+                openCorrectionModal();
+              }}
+            >
+              Коррекция
             </Button>
             <Button
               type="ghost"

@@ -233,6 +233,61 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Unknown"
+  /v2/api/tournaments/{tournamentId}/players/{playerId}/bounty/remove:
+    post:
+      description: >
+        Admin correction: subtract bounty share and/or reduce counted reentries.
+        Does not sync with bounty eliminate events or kill lists; reentry removal
+        does not mutate eliminate/kill records.
+      operationId: Remove tournament player bounty or reentries
+      parameters:
+        - name: tournamentId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: playerId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TournamentPlayerBountyRemoveRequest"
+      responses:
+        "200":
+          description: Updated player state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InGamePlayerState"
+        "400":
+          description: Invalid body or business rules
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFound"
+        "409":
+          description: Conflict (bounty or reentry limits; message from server)
+          content:
+            text/plain:
+              schema:
+                type: string
+        "500":
+          description: unknown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Unknown"
   /v2/api/tournaments/{tournamentId}/bounty/eliminate:
     post:
       description: >
@@ -624,6 +679,19 @@ components:
         burnedChips:
           type: integer
           format: int64
+    TournamentPlayerBountyRemoveRequest:
+      type: object
+      description: >
+        At least one field should be present. Omitted or zero means no change for that axis.
+      properties:
+        bountyCountToRemove:
+          type: number
+          format: double
+          description: Bounty share to subtract (fractional allowed).
+        reentryCountToRemove:
+          type: integer
+          minimum: 1
+          description: Number of counted reentries to remove.
     BountyEliminateResponse:
       required:
         - eventId
