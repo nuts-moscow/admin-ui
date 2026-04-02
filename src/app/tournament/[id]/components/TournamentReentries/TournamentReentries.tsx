@@ -560,14 +560,7 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
       const valid = prev.filter((id) =>
         killerCandidates.some((c) => c.playerId === id),
       );
-      const deduped = [...new Set(valid)];
-      if (deduped.length > 0) {
-        return deduped;
-      }
-      if (killerCandidates.length > 0) {
-        return [killerCandidates[0].playerId];
-      }
-      return [];
+      return [...new Set(valid)];
     });
   }, [player?.playerId, killerCandidateIdsKey]);
 
@@ -671,27 +664,37 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
                 Кто выбил (можно несколько):
               </Typography.Text>
               <Box
-                flex={{ col: true, gap: 2 }}
+                flex={{ col: true, gap: 0 }}
                 style={{
-                  maxHeight: 220,
+                  maxHeight: 300,
                   overflow: "auto",
-                  padding: "4px 0",
+                  padding: "2px 0",
                 }}
               >
-                {killerCandidates.map((c) => (
+                {killerCandidates.map((c) => {
+                  const isKillerSelected = killerPlayerIds.includes(c.playerId);
+                  return (
                   <label
                     key={c.playerId}
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: 8,
+                      gap: 6,
                       cursor: isSaving ? "default" : "pointer",
                       userSelect: "none",
+                      padding: "2px 6px",
+                      borderRadius: 6,
+                      backgroundColor: isKillerSelected
+                        ? "rgba(99, 102, 241, 0.16)"
+                        : "transparent",
+                      border: isKillerSelected
+                        ? "1px solid var(--border-color)"
+                        : "1px solid transparent",
                     }}
                   >
                     <input
                       type="checkbox"
-                      checked={killerPlayerIds.includes(c.playerId)}
+                      checked={isKillerSelected}
                       onChange={() => {
                         setKillerPlayerIds((prev) => {
                           const next = new Set(prev);
@@ -709,8 +712,21 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
                       {c.playerName} ({c.playerId})
                     </Typography.Text>
                   </label>
-                ))}
+                  );
+                })}
               </Box>
+              {killerPlayerIds.length > 0 ? (
+                <Typography.Text type="secondary" size="small">
+                  Выбрано:{" "}
+                  {killerPlayerIds
+                    .map(
+                      (id) =>
+                        killerCandidates.find((c) => c.playerId === id)
+                          ?.playerName ?? id,
+                    )
+                    .join(", ")}
+                </Typography.Text>
+              ) : null}
               {killerPlayerIds.length > 1 ? (
                 <Typography.Text type="secondary" size="small">
                   Каждый получит 1/{killerPlayerIds.length} полного баунти

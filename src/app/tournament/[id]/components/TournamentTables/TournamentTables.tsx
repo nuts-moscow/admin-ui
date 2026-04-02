@@ -192,14 +192,7 @@ const SetOutPlayerModal: FC<SetOutPlayerModalProps> = ({
       const valid = prev.filter((id) =>
         candidates.some((c) => c.playerId === id),
       );
-      const deduped = [...new Set(valid)];
-      if (deduped.length > 0) {
-        return deduped;
-      }
-      if (candidates.length > 0) {
-        return [candidates[0].playerId];
-      }
-      return [];
+      return [...new Set(valid)];
     });
   }, [bustedPlayer?.playerId, candidateIdsKey]);
 
@@ -309,23 +302,35 @@ const SetOutPlayerModal: FC<SetOutPlayerModalProps> = ({
                 Кто выбил (можно несколько):
               </Typography.Text>
               <Box
-                flex={{ col: true, gap: 2 }}
-                style={{ maxHeight: 220, overflow: "auto", padding: "4px 0" }}
+                flex={{ col: true, gap: 0 }}
+                style={{ maxHeight: 300, overflow: "auto", padding: "2px 0" }}
               >
-                {candidates.map((player) => (
+                {candidates.map((player) => {
+                  const isKillerSelected = selectedKillerIds.includes(
+                    player.playerId,
+                  );
+                  return (
                   <label
                     key={player.playerId}
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: 8,
+                      gap: 6,
                       cursor: isLoading ? "default" : "pointer",
                       userSelect: "none",
+                      padding: "2px 6px",
+                      borderRadius: 6,
+                      backgroundColor: isKillerSelected
+                        ? "rgba(99, 102, 241, 0.16)"
+                        : "transparent",
+                      border: isKillerSelected
+                        ? "1px solid var(--border-color)"
+                        : "1px solid transparent",
                     }}
                   >
                     <input
                       type="checkbox"
-                      checked={selectedKillerIds.includes(player.playerId)}
+                      checked={isKillerSelected}
                       onChange={() => {
                         setSelectedKillerIds((prev) => {
                           const next = new Set(prev);
@@ -343,8 +348,21 @@ const SetOutPlayerModal: FC<SetOutPlayerModalProps> = ({
                       {player.playerName} (ID: {player.playerId})
                     </Typography.Text>
                   </label>
-                ))}
+                  );
+                })}
               </Box>
+              {selectedKillerIds.length > 0 ? (
+                <Typography.Text type="secondary" size="small">
+                  Выбрано:{" "}
+                  {selectedKillerIds
+                    .map(
+                      (id) =>
+                        candidates.find((c) => c.playerId === id)?.playerName ??
+                        id,
+                    )
+                    .join(", ")}
+                </Typography.Text>
+              ) : null}
               {selectedKillerIds.length > 1 ? (
                 <Typography.Text type="secondary" size="small">
                   Каждый получит 1/{selectedKillerIds.length} полного баунти
