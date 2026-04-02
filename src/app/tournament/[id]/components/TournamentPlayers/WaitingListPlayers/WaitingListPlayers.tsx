@@ -24,10 +24,16 @@ import { TableSelectModal } from "../TableSelectModal/TableSelectModal";
 import { PlayerCorrectionModal } from "../PlayerCorrectionModal/PlayerCorrectionModal";
 import { tableListCls } from "../TableList/TableList.css";
 import { useTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
+import { toast } from "@/components/Toast/Toast";
+import { formatApiErrorForUser } from "@/core/utils/misc/formatApiErrorForUser";
+import { parseEntryPaidAmountForApi } from "@/core/states/tournaments/common/tournamentPaymentAmounts";
+import { EntryPaidAmountInput } from "../../EntryPaidAmountInput";
 
 export interface WaitingListPlayersProps {
   readonly tournamentId: string;
   readonly searchQuery?: string;
+  /** Цена входа из структуры турнира (подсказка / лимит скидки). */
+  readonly entryPrice?: number;
 }
 
 interface RemovePlayerConfirmModalProps extends WithModalProps {
@@ -38,6 +44,7 @@ interface RemovePlayerConfirmModalProps extends WithModalProps {
 interface SetArrivedAndPaidConfirmModalProps extends WithModalProps {
   readonly tournamentId: string;
   readonly player?: InGamePlayerState;
+  readonly entryPrice?: number;
 }
 
 const TABLE_OPTIONS = Array.from({ length: 10 }, (_, i) => i + 1);
@@ -57,6 +64,7 @@ const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
   close,
   tournamentId,
   player,
+  entryPrice,
 }) => {
   const environment = useEnvironment();
   const { data: players } = useTournamentPlayerState(tournamentId);
@@ -66,6 +74,7 @@ const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
   );
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CreditCard");
   const [earlyBird, setEarlyBird] = useState(false);
+  const [entryPaidInput, setEntryPaidInput] = useState("");
   const paymentMethodOptions = useMemo<PaymentMethod[]>(() => {
     const baseOptions: PaymentMethod[] = ["CreditCard", "Cache"];
     if (playerHasFreeEntryOption(player)) {
@@ -89,6 +98,7 @@ const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
     setSelectedTableId(undefined);
     setPaymentMethod("CreditCard");
     setEarlyBird(false);
+    setEntryPaidInput("");
   }, [player?.playerId]);
 
   useEffect(() => {
@@ -105,6 +115,15 @@ const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
     if (!player || isLoading) {
       return;
     }
+    const parsed = parseEntryPaidAmountForApi(
+      entryPrice,
+      entryPaidInput,
+      paymentMethod,
+    );
+    if (!parsed.ok) {
+      toast({ type: "error", message: parsed.message });
+      return;
+    }
     setIsLoading(true);
     try {
       await playerGameStart(
@@ -115,12 +134,19 @@ const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
           entryPaymentMethod: paymentMethod,
           ...(selectedTableId ? { tableId: String(selectedTableId) } : {}),
           earlyBirdFlag: earlyBird,
+          ...(parsed.entryPaidAmount != null
+            ? { entryPaidAmount: parsed.entryPaidAmount }
+            : {}),
         },
       );
       refetchTournamentPlayerState();
       close();
     } catch (error) {
       console.error(error);
+      toast({
+        type: "error",
+        message: formatApiErrorForUser(error),
+      });
     } finally {
       setIsLoading(false);
     }
@@ -139,6 +165,11 @@ const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
               <Typography.Text type="secondary" size="small">
                 № в турнире {player.tournamentPlayerId}
               </Typography.Text>
+              {player.entryPaidAmount != null ? (
+                <Typography.Text type="secondary" size="xSmall">
+                  Учтённый вход: {player.entryPaidAmount}
+                </Typography.Text>
+              ) : null}
             </Box>
           ) : null}
           <Typography.Text type="secondary" size="small">
@@ -163,6 +194,13 @@ const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
               </option>
             ))}
           </select>
+          <EntryPaidAmountInput
+            entryPrice={entryPrice}
+            value={entryPaidInput}
+            onChange={setEntryPaidInput}
+            paymentMethod={paymentMethod}
+            disabled={isLoading}
+          />
           <Box flex={{ align: "center", gap: 2 }}>
             <Checkbox
               size="medium"
@@ -311,6 +349,7 @@ const RemovePlayerConfirmModal: FC<RemovePlayerConfirmModalProps> = ({
 export const WaitingListPlayers: FC<WaitingListPlayersProps> = ({
   tournamentId,
   searchQuery = "",
+  entryPrice,
 }) => {
   const environment = useEnvironment();
   const [playerToRemove, setPlayerToRemove] = useState<
@@ -372,6 +411,7 @@ export const WaitingListPlayers: FC<WaitingListPlayersProps> = ({
       <SetArrivedAndPaidModal
         tournamentId={tournamentId}
         player={playerToArriveAndPay}
+        entryPrice={entryPrice}
       />
       <CorrectionModal
         tournamentId={tournamentId}

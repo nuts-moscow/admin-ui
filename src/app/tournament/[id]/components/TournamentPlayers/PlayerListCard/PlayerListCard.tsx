@@ -11,7 +11,7 @@ import {
   playerListRowMutedCls,
   playerListRowNoAgreementCls,
   playerListRowNumberCls,
-  playerListRowNameCls,
+  playerListRowNameBlockCls,
   playerListRowActionsCls,
 } from "./PlayerListCard.css";
 
@@ -47,6 +47,14 @@ export const PlayerListCard: FC<PlayerListCardProps> = ({
             row.status === "InGameNotPaid" ||
             (isOutOrOutNotPaid && !hasEntryPayment);
 
+          const paymentSummary: string[] = [];
+          if (row.entryPaidAmount != null) {
+            paymentSummary.push(`Вход учтён: ${row.entryPaidAmount}`);
+          }
+          if (row.reentryPaidAmounts != null && row.reentryPaidAmounts.length > 0) {
+            paymentSummary.push(`Ребаи: ${row.reentryPaidAmounts.join(", ")}`);
+          }
+
           return (
             <div
               key={index}
@@ -64,9 +72,14 @@ export const PlayerListCard: FC<PlayerListCardProps> = ({
               >
                 {row.tournamentPlayerId ?? row.playerId}
               </Typography.Text>
-              <Typography.Text size="small" className={playerListRowNameCls}>
-                {row.playerName}
-              </Typography.Text>
+              <div className={playerListRowNameBlockCls}>
+                <Typography.Text size="small">{row.playerName}</Typography.Text>
+                {paymentSummary.length > 0 ? (
+                  <Typography.Text size="xSmall" type="secondary">
+                    {paymentSummary.join(" · ")}
+                  </Typography.Text>
+                ) : null}
+              </div>
               {actions && (
                 <div className={playerListRowActionsCls}>{actions}</div>
               )}

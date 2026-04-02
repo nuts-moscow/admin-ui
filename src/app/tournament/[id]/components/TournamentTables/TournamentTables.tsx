@@ -23,6 +23,10 @@ import {
 } from "@/core/states/tournaments/requests/updatePlayerState";
 import { refetchTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
 import { bountyEliminate } from "@/core/states/tournaments/requests/bountyEliminate";
+import { toast } from "@/components/Toast/Toast";
+import { formatApiErrorForUser } from "@/core/utils/misc/formatApiErrorForUser";
+import { parseEntryPaidAmountForApi } from "@/core/states/tournaments/common/tournamentPaymentAmounts";
+import { EntryPaidAmountInput } from "../EntryPaidAmountInput";
 
 const EMPTY_TABLE_PLAYERS: InGamePlayerState[] = [];
 
@@ -33,6 +37,7 @@ export interface TournamentTablesProps {
 interface PayPlayerModalProps extends WithModalProps {
   readonly tournamentId: string;
   readonly player?: InGamePlayerState;
+  readonly entryPrice?: number;
 }
 
 interface SetOutPlayerModalProps extends WithModalProps {
@@ -51,9 +56,11 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({
   close,
   tournamentId,
   player,
+  entryPrice,
 }) => {
   const environment = useEnvironment();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CreditCard");
+  const [entryPaidInput, setEntryPaidInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const paymentMethodOptions = useMemo<PaymentMethod[]>(() => {
     const baseOptions: PaymentMethod[] = ["CreditCard", "Cache"];
@@ -69,8 +76,21 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({
     }
   }, [paymentMethod, player]);
 
+  useEffect(() => {
+    setEntryPaidInput("");
+  }, [player?.playerId]);
+
   const handleSave = async () => {
     if (!player || isLoading) {
+      return;
+    }
+    const parsed = parseEntryPaidAmountForApi(
+      entryPrice,
+      entryPaidInput,
+      paymentMethod,
+    );
+    if (!parsed.ok) {
+      toast({ type: "error", message: parsed.message });
       return;
     }
     setIsLoading(true);
@@ -79,12 +99,21 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({
         environment,
         Number(tournamentId),
         player.playerId,
-        { entryPaymentMethod: paymentMethod },
+        {
+          entryPaymentMethod: paymentMethod,
+          ...(parsed.entryPaidAmount != null
+            ? { entryPaidAmount: parsed.entryPaidAmount }
+            : {}),
+        },
       );
       refetchTournamentPlayerState();
       close();
     } catch (error) {
       console.error(error);
+      toast({
+        type: "error",
+        message: formatApiErrorForUser(error),
+      });
     } finally {
       setIsLoading(false);
     }
@@ -103,6 +132,11 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({
               <Typography.Text type="secondary" size="small">
                 № в турнире {player.tournamentPlayerId}
               </Typography.Text>
+              {player.entryPaidAmount != null ? (
+                <Typography.Text type="secondary" size="xSmall">
+                  Учтённый вход: {player.entryPaidAmount}
+                </Typography.Text>
+              ) : null}
             </Box>
           ) : null}
           <Typography.Text type="secondary" size="small">
@@ -127,6 +161,13 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({
               </option>
             ))}
           </select>
+          <EntryPaidAmountInput
+            entryPrice={entryPrice}
+            value={entryPaidInput}
+            onChange={setEntryPaidInput}
+            paymentMethod={paymentMethod}
+            disabled={isLoading}
+          />
           <Box flex={{ gap: 4, width: "100%" }}>
             <Button
               type="secondary"
@@ -450,6 +491,7 @@ export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
       <PayPlayerModalConnect
         tournamentId={String(tournament.id)}
         player={playerToPay}
+        entryPrice={tournament.structure?.entryPrice}
       />
       <SetTableModal
         tournamentId={String(tournament.id)}

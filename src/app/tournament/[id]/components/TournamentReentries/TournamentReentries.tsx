@@ -22,6 +22,8 @@ import {
   useTournamentPlayerState,
 } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
 import { addReentryPayment } from "@/core/states/tournaments/requests/addReentryPayment";
+import { formatApiErrorForUser } from "@/core/utils/misc/formatApiErrorForUser";
+import { buildReentryPaidAmountsForApi } from "@/core/states/tournaments/common/tournamentPaymentAmounts";
 import {
   bountyEliminate,
   bountyEliminateUndo,
@@ -61,6 +63,7 @@ interface AddReentryModalProps extends WithModalProps {
 interface PayReentriesModalProps extends WithModalProps {
   readonly tournamentId: string;
   readonly player?: InGamePlayerState;
+  readonly reentryPrice?: number;
 }
 
 interface BountyListModalProps {
@@ -792,10 +795,12 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
   close,
   tournamentId,
   player,
+  reentryPrice,
 }) => {
   const environment = useEnvironment();
   const [isSaving, setIsSaving] = useState(false);
   const [methods, setMethods] = useState<PaymentMethod[]>([]);
+  const [paidInputs, setPaidInputs] = useState<string[]>([]);
 
   const unpaidTotal = toSafeNumber(player?.unpaidReentryCount);
   /** По одному способу оплаты на каждый неоплаченный ребай; считаем по unpaidReentryCount, а не по разнице с длиной reentryByPaymentMethod. */
@@ -823,12 +828,29 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
     });
   }, [player?.playerId, paymentFormCount, payReentryMethodOptions]);
 
+  useEffect(() => {
+    setPaidInputs((prev) =>
+      Array.from({ length: paymentFormCount }, (_, i) => prev[i] ?? ""),
+    );
+  }, [paymentFormCount, player?.playerId]);
+
   const handleMethodChange = (index: number, value: PaymentMethod) => {
     setMethods((prev) => prev.map((item, i) => (i === index ? value : item)));
   };
 
+  const handlePaidInputChange = (index: number, value: string) => {
+    setPaidInputs((prev) =>
+      prev.map((item, i) => (i === index ? value : item)),
+    );
+  };
+
   const handleSave = async () => {
     if (!player || isSaving) {
+      return;
+    }
+    const built = buildReentryPaidAmountsForApi(methods, paidInputs, reentryPrice);
+    if (!built.ok) {
+      toast({ type: "error", message: built.message });
       return;
     }
     setIsSaving(true);
@@ -838,13 +860,21 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
         Number(tournamentId),
         player.playerId,
         {
-        payments: methods,
-        }
+          payments: methods,
+          ...(built.paidAmounts != null
+            ? { paidAmounts: built.paidAmounts }
+            : {}),
+        },
       );
       refetchTournamentPlayerState();
+      refetchTournamentRebuyCount();
       close();
     } catch (error) {
       console.error(error);
+      toast({
+        type: "error",
+        message: formatApiErrorForUser(error),
+      });
     } finally {
       setIsSaving(false);
     }
@@ -864,6 +894,19 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
               <Typography.Text type="secondary" size="small">
                 Неоплачено ребаев: {unpaidTotal}
               </Typography.Text>
+              {reentryPrice != null ? (
+                <Typography.Text type="secondary" size="xSmall">
+                  Полная цена одного ребая: {reentryPrice} (пустое поле ниже =
+                  полная цена)
+                </Typography.Text>
+              ) : null}
+              {player.reentryPaidAmounts != null &&
+              player.reentryPaidAmounts.length > 0 ? (
+                <Typography.Text type="secondary" size="xSmall">
+                  Учтённые суммы по ребеям:{" "}
+                  {player.reentryPaidAmounts.join(", ")}
+                </Typography.Text>
+              ) : null}
             </Box>
           ) : (
             <Typography.Text type="secondary" size="small">
@@ -875,38 +918,69 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
           </Typography.Text>
           <Box flex={{ col: true, gap: 2 }}>
             {methods.map((method, index) => (
-              <Box key={index} flex={{ align: "center", gap: 2 }}>
-                <Typography.Text
-                  size="small"
-                  type="secondary"
-                  flexItem={{ minWidth: 70 }}
-                >
-                  Ребай {index + 1}
-                </Typography.Text>
-                <select
-                  value={method}
-                  onChange={(event) =>
-                    handleMethodChange(
-                      index,
-                      event.target.value as PaymentMethod,
-                    )
-                  }
-                  style={{
-                    width: "100%",
-                    borderRadius: 12,
-                    border: "1px solid var(--border-color)",
-                    minHeight: 40,
-                    padding: "0 12px",
-                    backgroundColor: "var(--background-primary)",
-                    color: "var(--text-primary)",
-                  }}
-                >
-                  {payReentryMethodOptions.map((methodOption) => (
-                    <option key={methodOption.value} value={methodOption.value}>
-                      {getPaymentMethodLabel(methodOption.label)}
-                    </option>
-                  ))}
-                </select>
+              <Box key={index} flex={{ col: true, gap: 1 }}>
+                <Box flex={{ align: "center", gap: 2 }}>
+                  <Typography.Text
+                    size="small"
+                    type="secondary"
+                    flexItem={{ minWidth: 70 }}
+                  >
+                    Ребай {index + 1}
+                  </Typography.Text>
+                  <select
+                    value={method}
+                    onChange={(event) =>
+                      handleMethodChange(
+                        index,
+                        event.target.value as PaymentMethod,
+                      )
+                    }
+                    style={{
+                      width: "100%",
+                      borderRadius: 12,
+                      border: "1px solid var(--border-color)",
+                      minHeight: 40,
+                      padding: "0 12px",
+                      backgroundColor: "var(--background-primary)",
+                      color: "var(--text-primary)",
+                    }}
+                  >
+                    {payReentryMethodOptions.map((methodOption) => (
+                      <option key={methodOption.value} value={methodOption.value}>
+                        {getPaymentMethodLabel(methodOption.label)}
+                      </option>
+                    ))}
+                  </select>
+                </Box>
+                {method !== "Free" ? (
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    step={1}
+                    placeholder={
+                      reentryPrice != null ? String(reentryPrice) : "Сумма"
+                    }
+                    value={paidInputs[index] ?? ""}
+                    onChange={(e) =>
+                      handlePaidInputChange(index, e.target.value)
+                    }
+                    disabled={isSaving}
+                    style={{
+                      width: "100%",
+                      borderRadius: 12,
+                      border: "1px solid var(--border-color)",
+                      minHeight: 40,
+                      padding: "0 12px",
+                      backgroundColor: "var(--background-primary)",
+                      color: "var(--text-primary)",
+                    }}
+                  />
+                ) : (
+                  <Typography.Text type="secondary" size="xSmall">
+                    Free — сумма 0
+                  </Typography.Text>
+                )}
               </Box>
             ))}
           </Box>
@@ -1020,6 +1094,7 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
       <PayReentriesModalConnect
         tournamentId={String(tournament.id)}
         player={playerToPayReentries}
+        reentryPrice={tournament.structure?.reentryPrice}
       />
       <BountyModal
         tournamentId={String(tournament.id)}

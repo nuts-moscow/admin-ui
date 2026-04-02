@@ -40,10 +40,12 @@ export const TournamentPlayers: FC<TournamentPlayersProps> = ({
         <WaitingListPlayers
           tournamentId={tournamentId}
           searchQuery={searchQuery}
+          entryPrice={tournament.structure?.entryPrice}
         />
         <InGamePlayers
           tournamentId={tournamentId}
           searchQuery={searchQuery}
+          entryPrice={tournament.structure?.entryPrice}
         />
       </div>
     </Box>

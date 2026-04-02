@@ -69,6 +69,14 @@ export const playerListRowNameCls = style({
   minWidth: 0,
 });
 
+export const playerListRowNameBlockCls = style({
+  flex: 1,
+  minWidth: 0,
+  display: "flex",
+  flexDirection: "column",
+  gap: getGutter(0.5),
+});
+
 export const playerListRowActionsCls = style({
   display: "flex",
   alignItems: "center",

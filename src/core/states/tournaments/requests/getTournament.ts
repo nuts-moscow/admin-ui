@@ -14,6 +14,31 @@ export interface TournamentInfoResponse {
   readonly structure?: TournamentsStructureResponse;
 }
 
+function pickFiniteNumber(...vals: unknown[]): number | undefined {
+  for (const v of vals) {
+    if (typeof v === "number" && Number.isFinite(v)) {
+      return v;
+    }
+  }
+  return undefined;
+}
+
+function normalizeStructure(
+  raw: TournamentsStructureResponse | null,
+): TournamentsStructureResponse | undefined {
+  if (!raw) {
+    return undefined;
+  }
+  const s = raw as unknown as Record<string, unknown>;
+  const entryPrice = pickFiniteNumber(s.entryPrice, s.entry_price);
+  const reentryPrice = pickFiniteNumber(s.reentryPrice, s.reentry_price);
+  return {
+    ...raw,
+    ...(entryPrice != null ? { entryPrice } : {}),
+    ...(reentryPrice != null ? { reentryPrice } : {}),
+  };
+}
+
 /** Ответ GET /v2/api/tournaments/{id} (TournamentWithStructureResponse). */
 interface TournamentWithStructureResponse {
   readonly id: number;
@@ -47,7 +72,7 @@ export const getTournament = async (
           name: j.name,
           status: normalizeTournamentStatus(j.status),
           date: j.date,
-          structure: j.structure ?? undefined,
+          structure: normalizeStructure(j.structure),
         };
       },
       404: () => null,

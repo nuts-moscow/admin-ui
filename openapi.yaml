@@ -764,6 +764,16 @@ components:
         paidReentryCount:
           type: integer
           format: int64
+        entryPaidAmount:
+          type: integer
+          format: int64
+          description: Factually recorded entry payment (e.g. after discount).
+        reentryPaidAmounts:
+          type: array
+          items:
+            type: integer
+            format: int64
+          description: Paid amounts per reentry, same order as expanded payment methods list.
         bonuses:
           type: array
           items:
@@ -848,6 +858,14 @@ components:
         smallBlindOnStart:
           type: integer
           format: int64
+        entry_price:
+          type: integer
+          format: int64
+          description: Default full entry price (same units as cash register).
+        reentry_price:
+          type: integer
+          format: int64
+          description: Default full price for one reentry.
     Tuple2_A_B:
       required:
         - _1

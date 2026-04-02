@@ -64,6 +64,13 @@ export interface InGamePlayerState {
   // Legacy typo field; keep optional until all usages are migrated.
   readonly entyPaymentMethod?: PaymentMethod;
   readonly reentryByPaymentMethod: PaymentMethod[];
+  /** Фактически учтённая сумма входа (после оплаты со скидкой и т.п.), если отдаёт API. */
+  readonly entryPaidAmount?: number;
+  /**
+   * Суммы по оплаченным ребеям в том же порядке, что развёрнутый список методов реентри.
+   * Если отдаёт API.
+   */
+  readonly reentryPaidAmounts?: readonly number[];
   readonly totalReentryCount: number;
   /** Доли баунти допускаются (например 0.5 при split 1/2). */
   readonly bountyCount: number;

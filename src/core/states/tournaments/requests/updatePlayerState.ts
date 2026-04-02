@@ -34,8 +34,10 @@ interface UpdateTournamentPlayerTableRequest {
   readonly tableId: string;
 }
 
-interface UpdateTournamentPlayerEntryPaymentRequest {
+export interface UpdateTournamentPlayerEntryPaymentRequest {
   readonly entryPaymentMethod: PaymentMethod;
+  /** Опционально: фактически взято с игрока; без поля — цена входа из настроек турнира. */
+  readonly entryPaidAmount?: number;
 }
 
 interface AddTournamentPlayerBountyRequest {
@@ -90,15 +92,23 @@ export const inGamePayment = async (
   playerId: string,
   request: UpdateTournamentPlayerEntryPaymentRequest,
 ): Promise<InGamePlayerState> => {
-  return securedFetch<UpdateTournamentPlayerEntryPaymentRequest, InGamePlayerState>({
+  const body: Record<string, unknown> = {
+    entryPaymentMethod: request.entryPaymentMethod,
+  };
+  if (
+    request.entryPaidAmount != null &&
+    Number.isFinite(request.entryPaidAmount)
+  ) {
+    body.entryPaidAmount = Math.round(request.entryPaidAmount);
+  }
+  return securedFetch<Record<string, unknown>, InGamePlayerState>({
     method: "POST",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${tournamentId}/players/${playerId}/in-game-payment`,
     withCredentials: false,
-    body: request,
+    body,
     mapping: {
       success: (res) => res.toJson(),
-      400: () => new Error("Invalid body or player must be in InGameNotPaid status"),
       404: () => new Error("Player or tournament not found"),
       500: () => new Error("Server error"),
     },
@@ -214,6 +224,8 @@ export interface PlayerGameStartBody {
   readonly tableId?: string;
   /** EarlyBird при посадке за стол (POST game-start, поле EarlyBirdFlag). */
   readonly earlyBirdFlag?: boolean;
+  /** Фактически оплаченный вход; без поля — entry_price турнира. */
+  readonly entryPaidAmount?: number;
 }
 
 export const playerGameStart = async (
@@ -232,6 +244,12 @@ export const playerGameStart = async (
   if (body.earlyBirdFlag !== undefined) {
     requestBody.EarlyBirdFlag = body.earlyBirdFlag;
   }
+  if (
+    body.entryPaidAmount != null &&
+    Number.isFinite(body.entryPaidAmount)
+  ) {
+    requestBody.entryPaidAmount = Math.round(body.entryPaidAmount);
+  }
   return securedFetch<Record<string, unknown>, InGamePlayerState>({
     method: "POST",
     host: environment.apiUrl,
@@ -240,7 +258,6 @@ export const playerGameStart = async (
     body: requestBody,
     mapping: {
       success: (res) => res.toJson(),
-      400: () => new Error("Player must be in Registered status, or table has too many players (max 10)"),
       404: () => new Error("Player or tournament not found"),
       500: () => new Error("Server error"),
     },
