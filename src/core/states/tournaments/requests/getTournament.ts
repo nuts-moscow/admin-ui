@@ -37,12 +37,18 @@ function normalizeStructure(
     s.allowedReentryCount,
     s.allowed_reentry_count,
   );
+  const entryFreeOnlyRaw = s.entryFreeOnly ?? s.entry_free_only;
+  const entryFreeOnly =
+    entryFreeOnlyRaw === true ||
+    entryFreeOnlyRaw === "true" ||
+    entryFreeOnlyRaw === 1;
   return {
     ...raw,
     ...(entryPrice != null ? { entryPrice } : {}),
     ...(reentryPrice != null ? { reentryPrice } : {}),
     ...(maxReentries != null ? { maxReentries } : {}),
     ...(allowedReentryCount != null ? { allowedReentryCount } : {}),
+    entryFreeOnly,
   };
 }
 

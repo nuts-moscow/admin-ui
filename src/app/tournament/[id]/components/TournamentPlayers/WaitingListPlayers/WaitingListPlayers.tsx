@@ -10,11 +10,7 @@ import { X } from "lucide-react";
 import { PlayerListCard } from "../PlayerListCard/PlayerListCard";
 import { AddPlayerButton } from "./AddPlayerButton/AddPlayerButton";
 import { useRegisteredTournamentPlayerState } from "@/core/states/tournaments/hooks/useRegisteredTournamentPlayerState";
-import {
-  InGamePlayerState,
-  PaymentMethod,
-  playerHasFreeEntryOption,
-} from "@/core/states/tournaments/common/InGamePlayerState";
+import { InGamePlayerState, PaymentMethod } from "@/core/states/tournaments/common/InGamePlayerState";
 import { getPaymentMethodLabel } from "@/core/states/tournaments/common/paymentMethodLabels";
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
 import { removePlayerFromTournament } from "@/core/states/tournaments/requests/removePlayerFromTournament";
@@ -27,6 +23,7 @@ import { useTournamentPlayerState } from "@/core/states/tournaments/hooks/useTou
 import { toast } from "@/components/Toast/Toast";
 import { formatApiErrorForUser } from "@/core/utils/misc/formatApiErrorForUser";
 import { parseEntryPaidAmountForApi } from "@/core/states/tournaments/common/tournamentPaymentAmounts";
+import { useFirstEntryPaymentMethodState } from "@/core/states/tournaments/common/useFirstEntryPaymentMethodState";
 import { EntryPaidAmountInput } from "../../EntryPaidAmountInput";
 
 export interface WaitingListPlayersProps {
@@ -34,6 +31,8 @@ export interface WaitingListPlayersProps {
   readonly searchQuery?: string;
   /** Цена входа из структуры турнира (подсказка / лимит скидки). */
   readonly entryPrice?: number;
+  /** Первый бай-ин только Free (из structure турнира). */
+  readonly entryFreeOnly?: boolean;
 }
 
 interface RemovePlayerConfirmModalProps extends WithModalProps {
@@ -45,6 +44,7 @@ interface SetArrivedAndPaidConfirmModalProps extends WithModalProps {
   readonly tournamentId: string;
   readonly player?: InGamePlayerState;
   readonly entryPrice?: number;
+  readonly entryFreeOnly?: boolean;
 }
 
 const TABLE_OPTIONS = Array.from({ length: 10 }, (_, i) => i + 1);
@@ -65,6 +65,7 @@ const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
   tournamentId,
   player,
   entryPrice,
+  entryFreeOnly = false,
 }) => {
   const environment = useEnvironment();
   const { data: players } = useTournamentPlayerState(tournamentId);
@@ -72,16 +73,14 @@ const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
   const [selectedTableId, setSelectedTableId] = useState<number | undefined>(
     undefined,
   );
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CreditCard");
+  const {
+    paymentMethod,
+    setPaymentMethod,
+    paymentMethodOptions,
+    freeOnlyBlocked,
+  } = useFirstEntryPaymentMethodState(player, entryFreeOnly);
   const [earlyBird, setEarlyBird] = useState(false);
   const [entryPaidInput, setEntryPaidInput] = useState("");
-  const paymentMethodOptions = useMemo<PaymentMethod[]>(() => {
-    const baseOptions: PaymentMethod[] = ["CreditCard", "Cache"];
-    if (playerHasFreeEntryOption(player)) {
-      return [...baseOptions, "Free"];
-    }
-    return baseOptions;
-  }, [player]);
 
   const occupiedByTable = useMemo(() => {
     const tableMap = new Map<number, number>();
@@ -96,7 +95,6 @@ const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
 
   useEffect(() => {
     setSelectedTableId(undefined);
-    setPaymentMethod("CreditCard");
     setEarlyBird(false);
     setEntryPaidInput("");
   }, [player?.playerId]);
@@ -105,14 +103,8 @@ const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
     setSelectedTableId(parseTableNumber(player?.tableId));
   }, [player?.playerId, player?.tableId]);
 
-  useEffect(() => {
-    if (paymentMethod === "Free" && !playerHasFreeEntryOption(player)) {
-      setPaymentMethod("CreditCard");
-    }
-  }, [paymentMethod, player]);
-
   const handleSave = async () => {
-    if (!player || isLoading) {
+    if (!player || isLoading || freeOnlyBlocked) {
       return;
     }
     const parsed = parseEntryPaidAmountForApi(
@@ -174,10 +166,20 @@ const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
           ) : null}
           <Typography.Text type="secondary" size="small">
             Способ оплаты входа
+            {entryFreeOnly
+              ? " (только бесплатный по настройке турнира; реентри не ограничены)"
+              : ""}
           </Typography.Text>
+          {freeOnlyBlocked ? (
+            <Typography.Text type="error" size="small">
+              Нет доступных бесплатных входов у игрока — зафиксировать бай-ин Free
+              нельзя.
+            </Typography.Text>
+          ) : null}
           <select
             value={paymentMethod}
             onChange={(event) => setPaymentMethod(event.target.value as PaymentMethod)}
+            disabled={entryFreeOnly || isLoading}
             style={{
               width: "100%",
               borderRadius: 12,
@@ -186,6 +188,7 @@ const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
               padding: "0 12px",
               backgroundColor: "var(--background-primary)",
               color: "var(--text-primary)",
+              opacity: entryFreeOnly ? 0.85 : 1,
             }}
           >
             {paymentMethodOptions.map((method) => (
@@ -270,7 +273,7 @@ const SetArrivedAndPaidConfirmModal: FC<SetArrivedAndPaidConfirmModalProps> = ({
               onClick={handleSave}
               flexItem={{ flex: 1 }}
               loading={isLoading}
-              disabled={!player}
+              disabled={!player || freeOnlyBlocked}
             >
               Сохранить
             </Button>
@@ -350,6 +353,7 @@ export const WaitingListPlayers: FC<WaitingListPlayersProps> = ({
   tournamentId,
   searchQuery = "",
   entryPrice,
+  entryFreeOnly = false,
 }) => {
   const environment = useEnvironment();
   const [playerToRemove, setPlayerToRemove] = useState<
@@ -412,6 +416,7 @@ export const WaitingListPlayers: FC<WaitingListPlayersProps> = ({
         tournamentId={tournamentId}
         player={playerToArriveAndPay}
         entryPrice={entryPrice}
+        entryFreeOnly={entryFreeOnly}
       />
       <CorrectionModal
         tournamentId={tournamentId}

@@ -41,6 +41,7 @@ export const TournamentPlayers: FC<TournamentPlayersProps> = ({
           tournamentId={tournamentId}
           searchQuery={searchQuery}
           entryPrice={tournament.structure?.entryPrice}
+          entryFreeOnly={tournament.structure?.entryFreeOnly === true}
         />
         <InGamePlayers
           tournamentId={tournamentId}

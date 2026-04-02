@@ -6,6 +6,7 @@ export interface MakeTournamentStructureRequest {
   readonly playersLimit: number;
   readonly stackSize: number;
   readonly freezeOutEnabled: boolean;
+  readonly entryFreeOnly?: boolean;
   /** Не freeze-out; если не передать — дефолт на бэке 5. */
   readonly maxReentries?: number;
   readonly blindsStructure?: Blinds;

@@ -8,11 +8,7 @@ import { Modal, WithModalProps, useModal } from "@/components/Modal/Modal";
 import { TournamentInfoResponse } from "@/core/states/tournaments/requests/getTournament";
 import { TableList } from "../TournamentPlayers/TableList/TableList";
 import { useNonRegisteredTournamentPlayerState } from "@/core/states/tournaments/hooks/useNonRegisteredTournamentPlayerState";
-import {
-  InGamePlayerState,
-  PaymentMethod,
-  playerHasFreeEntryOption,
-} from "@/core/states/tournaments/common/InGamePlayerState";
+import { InGamePlayerState, PaymentMethod } from "@/core/states/tournaments/common/InGamePlayerState";
 import { getPaymentMethodLabel } from "@/core/states/tournaments/common/paymentMethodLabels";
 import { TableSelectModal } from "../TournamentPlayers/TableSelectModal/TableSelectModal";
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
@@ -26,6 +22,7 @@ import { bountyEliminate } from "@/core/states/tournaments/requests/bountyElimin
 import { toast } from "@/components/Toast/Toast";
 import { formatApiErrorForUser } from "@/core/utils/misc/formatApiErrorForUser";
 import { parseEntryPaidAmountForApi } from "@/core/states/tournaments/common/tournamentPaymentAmounts";
+import { useFirstEntryPaymentMethodState } from "@/core/states/tournaments/common/useFirstEntryPaymentMethodState";
 import { EntryPaidAmountInput } from "../EntryPaidAmountInput";
 
 const EMPTY_TABLE_PLAYERS: InGamePlayerState[] = [];
@@ -38,6 +35,7 @@ interface PayPlayerModalProps extends WithModalProps {
   readonly tournamentId: string;
   readonly player?: InGamePlayerState;
   readonly entryPrice?: number;
+  readonly entryFreeOnly?: boolean;
 }
 
 interface SetOutPlayerModalProps extends WithModalProps {
@@ -57,31 +55,24 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({
   tournamentId,
   player,
   entryPrice,
+  entryFreeOnly = false,
 }) => {
   const environment = useEnvironment();
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CreditCard");
+  const {
+    paymentMethod,
+    setPaymentMethod,
+    paymentMethodOptions,
+    freeOnlyBlocked,
+  } = useFirstEntryPaymentMethodState(player, entryFreeOnly);
   const [entryPaidInput, setEntryPaidInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const paymentMethodOptions = useMemo<PaymentMethod[]>(() => {
-    const baseOptions: PaymentMethod[] = ["CreditCard", "Cache"];
-    if (playerHasFreeEntryOption(player)) {
-      return [...baseOptions, "Free"];
-    }
-    return baseOptions;
-  }, [player]);
-
-  useEffect(() => {
-    if (paymentMethod === "Free" && !playerHasFreeEntryOption(player)) {
-      setPaymentMethod("CreditCard");
-    }
-  }, [paymentMethod, player]);
 
   useEffect(() => {
     setEntryPaidInput("");
   }, [player?.playerId]);
 
   const handleSave = async () => {
-    if (!player || isLoading) {
+    if (!player || isLoading || freeOnlyBlocked) {
       return;
     }
     const parsed = parseEntryPaidAmountForApi(
@@ -141,10 +132,19 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({
           ) : null}
           <Typography.Text type="secondary" size="small">
             Способ оплаты входа
+            {entryFreeOnly
+              ? " (только Free для бай-ина; реентри не ограничены)"
+              : ""}
           </Typography.Text>
+          {freeOnlyBlocked ? (
+            <Typography.Text type="error" size="small">
+              Нет доступных бесплатных входов — оплатить вход Free нельзя.
+            </Typography.Text>
+          ) : null}
           <select
             value={paymentMethod}
             onChange={(event) => setPaymentMethod(event.target.value as PaymentMethod)}
+            disabled={entryFreeOnly || isLoading}
             style={{
               width: "100%",
               borderRadius: 12,
@@ -153,6 +153,7 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({
               padding: "0 12px",
               backgroundColor: "var(--background-primary)",
               color: "var(--text-primary)",
+              opacity: entryFreeOnly ? 0.85 : 1,
             }}
           >
             {paymentMethodOptions.map((method) => (
@@ -184,7 +185,7 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({
               onClick={handleSave}
               flexItem={{ flex: 1 }}
               loading={isLoading}
-              disabled={!player}
+              disabled={!player || freeOnlyBlocked}
             >
               Сохранить
             </Button>
@@ -492,6 +493,7 @@ export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
         tournamentId={String(tournament.id)}
         player={playerToPay}
         entryPrice={tournament.structure?.entryPrice}
+        entryFreeOnly={tournament.structure?.entryFreeOnly === true}
       />
       <SetTableModal
         tournamentId={String(tournament.id)}

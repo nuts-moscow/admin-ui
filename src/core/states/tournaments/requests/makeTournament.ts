@@ -12,6 +12,7 @@ export interface MakeTournamentRequest {
     readonly playersLimit: number;
     readonly stackSize: number;
     readonly freezeOutEnabled: boolean;
+    readonly entryFreeOnly?: boolean;
     readonly maxReentries?: number;
     readonly blinds: Blinds;
   };
@@ -26,6 +27,7 @@ interface MakeTournamentBody {
     readonly playersLimit: number;
     readonly stackSize: number;
     readonly freezeOutEnabled: boolean;
+    readonly entryFreeOnly: boolean;
     readonly blinds: ReturnType<typeof normalizeBlindsForApi>;
     readonly maxReentries?: number;
   };
@@ -51,6 +53,7 @@ function toMakeTournamentBody(request: MakeTournamentRequest): MakeTournamentBod
       playersLimit: request.structure.playersLimit,
       stackSize: request.structure.stackSize,
       freezeOutEnabled: request.structure.freezeOutEnabled,
+      entryFreeOnly: request.structure.entryFreeOnly === true,
       blinds: normalizeBlindsForApi(request.structure.blinds),
       ...(mr != null && Number.isFinite(mr) && mr >= 0
         ? { maxReentries: Math.floor(mr) }

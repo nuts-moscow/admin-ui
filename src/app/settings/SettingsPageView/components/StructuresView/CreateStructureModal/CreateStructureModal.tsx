@@ -78,6 +78,10 @@ export const CreateStructureModal: FC<CreateStructureModalProps> = ({
         structure?.freezeOutEnabled ?? false,
         [],
       ),
+      entryFreeOnly: toCtrlParam<boolean | undefined>(
+        structure?.entryFreeOnly ?? false,
+        [],
+      ),
       maxReentries: toCtrlParam<number | undefined>(structure?.maxReentries, [
         {
           validate: (v) => {
@@ -116,16 +120,19 @@ export const CreateStructureModal: FC<CreateStructureModalProps> = ({
     setIsLoading(true);
     try {
       const freezeOutEnabled = form.value.freezeOutEnabled === true;
+      const entryFreeOnly = form.value.entryFreeOnly === true;
       if (structure) {
         await updateTournamentStructure(environment, {
           ...(form.value as UpdateTournamentStructureRequest),
           id: structure.id,
           freezeOutEnabled,
+          entryFreeOnly,
         });
       } else {
         await createTournamentStructure(environment, {
           ...(form.value as CreateTournamentStructureRequest),
           freezeOutEnabled,
+          entryFreeOnly,
         });
       }
       refetchTournamentStructures();
@@ -198,6 +205,26 @@ export const CreateStructureModal: FC<CreateStructureModalProps> = ({
               </Typography.Text>
             ) : null}
           </Box>
+
+          <Form.Control name="entryFreeOnly">
+            {({ value, onChange }) => (
+              <Box flex={{ col: true, gap: 1 }}>
+                <Box flex={{ gap: 2, align: "center" }}>
+                  <Typography.Text size="small">
+                    Вход только бесплатно (первый бай-ин)
+                  </Typography.Text>
+                  <Checkbox
+                    size="small"
+                    checked={value ?? false}
+                    onCheckedChange={() => onChange(!Boolean(value))}
+                  />
+                </Box>
+                <Typography.Text type="secondary" size="xxSmall">
+                  Реентри можно оплачивать как обычно (карта, наличные, Free).
+                </Typography.Text>
+              </Box>
+            )}
+          </Form.Control>
 
           <Box flex={{ align: "center", gap: 4, width: "100%" }}>
             <Form.Control name="playersLimit">

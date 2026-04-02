@@ -16,6 +16,7 @@ interface MakeTournamentStructureBody {
   readonly playersLimit: number;
   readonly stackSize: number;
   readonly freezeOutEnabled: boolean;
+  readonly entryFreeOnly: boolean;
   readonly blinds: ReturnType<typeof normalizeBlindsForApi>;
   readonly maxReentries?: number;
 }
@@ -33,6 +34,7 @@ function toUpdateBody(
     playersLimit: request.playersLimit,
     stackSize: request.stackSize,
     freezeOutEnabled: request.freezeOutEnabled === true,
+    entryFreeOnly: request.entryFreeOnly === true,
     blinds: normalizeBlindsForApi(blinds),
     ...(mr != null && Number.isFinite(mr) && mr >= 0
       ? { maxReentries: Math.floor(mr) }

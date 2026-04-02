@@ -79,7 +79,20 @@ const updateTournamentPlayerEntryPayment = async (
     body: request,
     mapping: {
       success: (res) => res.toJson(),
-      400: () => new Error("Invalid player entry payment data"),
+      400: async (err) => {
+        try {
+          const j = (await err.toJson()) as { error?: string; code?: string };
+          return new Error(
+            JSON.stringify({
+              error: typeof j?.error === "string" ? j.error : "Bad request",
+              ...(typeof j?.code === "string" ? { code: j.code } : {}),
+            }),
+          );
+        } catch {
+          const t = (await err.toText()).trim();
+          return new Error(t || "Invalid player entry payment data");
+        }
+      },
       404: () => new Error("Player or tournament not found"),
       500: () => new Error("Server error"),
     },
@@ -109,6 +122,20 @@ export const inGamePayment = async (
     body,
     mapping: {
       success: (res) => res.toJson(),
+      400: async (err) => {
+        try {
+          const j = (await err.toJson()) as { error?: string; code?: string };
+          return new Error(
+            JSON.stringify({
+              error: typeof j?.error === "string" ? j.error : "Bad request",
+              ...(typeof j?.code === "string" ? { code: j.code } : {}),
+            }),
+          );
+        } catch {
+          const t = (await err.toText()).trim();
+          return new Error(t || "Bad request");
+        }
+      },
       404: () => new Error("Player or tournament not found"),
       500: () => new Error("Server error"),
     },
@@ -258,6 +285,20 @@ export const playerGameStart = async (
     body: requestBody,
     mapping: {
       success: (res) => res.toJson(),
+      400: async (err) => {
+        try {
+          const j = (await err.toJson()) as { error?: string; code?: string };
+          return new Error(
+            JSON.stringify({
+              error: typeof j?.error === "string" ? j.error : "Bad request",
+              ...(typeof j?.code === "string" ? { code: j.code } : {}),
+            }),
+          );
+        } catch {
+          const t = (await err.toText()).trim();
+          return new Error(t || "Bad request");
+        }
+      },
       404: () => new Error("Player or tournament not found"),
       500: () => new Error("Server error"),
     },

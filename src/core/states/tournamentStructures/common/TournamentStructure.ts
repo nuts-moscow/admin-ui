@@ -6,6 +6,8 @@ export interface TournamentStructure {
   readonly playersLimit: number;
   readonly stackSize: number;
   readonly freezeOutEnabled: boolean;
+  /** Первый вход только Free; реентри без ограничения. */
+  readonly entryFreeOnly?: boolean;
   /** Лимит реентри на игрока (не freeze-out); может отсутствовать до первого сохранения. */
   readonly maxReentries?: number;
   readonly blindsStructure: Blinds;

@@ -80,6 +80,7 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({ close }) => {
           playersLimit: form.value.structure.playersLimit,
           stackSize: form.value.structure.stackSize,
           freezeOutEnabled: form.value.structure.freezeOutEnabled,
+          entryFreeOnly: form.value.structure.entryFreeOnly === true,
           ...(form.value.structure.maxReentries != null &&
           Number.isFinite(form.value.structure.maxReentries)
             ? { maxReentries: form.value.structure.maxReentries }

@@ -63,6 +63,14 @@ export const InfoStep: FC = () => {
                     {value.freezeOutEnabled ? "Да" : "Нет"}
                   </Typography.Text>
                 </Box>
+                <Box flex={{ align: "center", gap: 2 }}>
+                  <Typography.Text type="secondary">
+                    Вход только Free:
+                  </Typography.Text>
+                  <Typography.Text>
+                    {value.entryFreeOnly === true ? "Да" : "Нет"}
+                  </Typography.Text>
+                </Box>
                 <Box flexItem={{ marginTop: 2 }} />
                 <BlindList
                   value={value.blindsStructure}

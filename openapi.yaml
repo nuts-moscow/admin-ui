@@ -817,6 +817,11 @@ components:
           format: int64
         freezeOutEnabled:
           type: boolean
+        entryFreeOnly:
+          type: boolean
+          description: >
+            If true, first entry (buy-in) must use payment method Free only; reentries unaffected.
+            Default false when omitted.
         maxReentries:
           type: integer
           format: int64
@@ -889,6 +894,9 @@ components:
           format: int64
           minimum: 0
           description: Effective reentry limit derived from freeze-out and maxReentries.
+        entry_free_only:
+          type: boolean
+          description: First buy-in only via Free; omit/false for normal paid entry.
     Tuple2_A_B:
       required:
         - _1

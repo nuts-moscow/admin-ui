@@ -141,7 +141,9 @@ export interface SecuredFetchConfig<B, JR, R = JR> {
     /** Handler for successful responses (2xx status) */
     success: (response: SecuredSuccessResponse<JR>) => Promise<R> | R;
     /** Handler for 400 Bad Request */
-    400?: <ER>(response: SecuredErrorResponse<ER>) => Error | Promise<R> | R;
+    400?: <ER>(
+      response: SecuredErrorResponse<ER>,
+    ) => Error | Promise<Error> | Promise<R> | R;
     /** Handler for 401 Unauthorized (session expired) */
     401?: <ER>(response: SecuredErrorResponse<ER>) => Error | Promise<R> | R;
     /** Handler for 403 Forbidden (no permission) */
@@ -290,8 +292,8 @@ export const securedFetch = async <B, JR, R = JR>({
     if (!error401Factory) {
       throw new Error("session expired");
     }
-    const error401FactoryResult = error401Factory(
-      SecuredErrorResponse.create(response)
+    const error401FactoryResult = await Promise.resolve(
+      error401Factory(SecuredErrorResponse.create(response)),
     );
     if (error401FactoryResult instanceof Error) {
       throw error401FactoryResult;
@@ -312,8 +314,8 @@ export const securedFetch = async <B, JR, R = JR>({
     );
   }
 
-  const anyErrorFactoryResult = anyErrorFactory(
-    SecuredErrorResponse.create(response)
+  const anyErrorFactoryResult = await Promise.resolve(
+    anyErrorFactory(SecuredErrorResponse.create(response)),
   );
 
   if (anyErrorFactoryResult instanceof Error) {

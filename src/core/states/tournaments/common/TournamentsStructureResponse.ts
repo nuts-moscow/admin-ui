@@ -7,6 +7,11 @@ export interface TournamentsStructureResponse {
   readonly playersLimit: number;
   readonly blindsStructure?: Blinds;
   readonly freezeOutEnabled: boolean;
+  /**
+   * Первый бай-ин только способом Free (при отсутствии поля — false).
+   * На реентри не влияет.
+   */
+  readonly entryFreeOnly?: boolean;
   /** Сохранённый лимит реентри; при отсутствии на бэке при сохранении подставляется 5. */
   readonly maxReentries?: number;
   /**

@@ -40,6 +40,7 @@ export const TournamentInfoForm: FC<TournamentInfoFormProps> = ({ tournament }) 
             playersLimit: tournament.structure.playersLimit,
             stackSize: tournament.structure.stackSize,
             freezeOutEnabled: tournament.structure.freezeOutEnabled,
+            entryFreeOnly: tournament.structure.entryFreeOnly === true,
             ...(tournament.structure.maxReentries != null &&
             Number.isFinite(tournament.structure.maxReentries)
               ? { maxReentries: tournament.structure.maxReentries }
@@ -90,6 +91,15 @@ export const TournamentInfoForm: FC<TournamentInfoFormProps> = ({ tournament }) 
           <Typography.Text type="secondary">Финал игры:</Typography.Text>
           <Typography.Text>
             {tournament.structure?.freezeOutEnabled ? "Да" : "Нет"}
+          </Typography.Text>
+        </Box>
+
+        <Box flex={{ align: "center", gap: 2 }}>
+          <Typography.Text type="secondary">
+            Вход только Free:
+          </Typography.Text>
+          <Typography.Text>
+            {tournament.structure?.entryFreeOnly === true ? "Да" : "Нет"}
           </Typography.Text>
         </Box>
 

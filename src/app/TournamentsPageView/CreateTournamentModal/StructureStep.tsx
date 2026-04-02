@@ -65,6 +65,9 @@ export const StructureStep: FC = () => {
                             : "по ум. 5"
                         }`
                       : ""}
+                    {structure.entryFreeOnly === true
+                      ? " • Вход только Free"
+                      : ""}
                   </Typography.Text>
                 </SimpleList.Column>
               </SimpleList.Card>

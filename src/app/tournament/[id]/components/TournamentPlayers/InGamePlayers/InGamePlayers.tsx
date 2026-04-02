@@ -39,6 +39,7 @@ import {
 import { toast } from "@/components/Toast/Toast";
 import { formatApiErrorForUser } from "@/core/utils/misc/formatApiErrorForUser";
 import { parseEntryPaidAmountForApi } from "@/core/states/tournaments/common/tournamentPaymentAmounts";
+import { useFirstEntryPaymentMethodState } from "@/core/states/tournaments/common/useFirstEntryPaymentMethodState";
 import { EntryPaidAmountInput } from "../../EntryPaidAmountInput";
 import { Formatter } from "@/components/Formatter/Formatter";
 import { X } from "lucide-react";
@@ -56,6 +57,7 @@ interface PayPlayerModalProps extends WithModalProps {
   readonly tournamentId: string;
   readonly player?: InGamePlayerState;
   readonly entryPrice?: number;
+  readonly entryFreeOnly?: boolean;
 }
 
 const BONUS_OPTIONS: Bonus[] = Object.values(InGameBonus);
@@ -370,32 +372,24 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({
   tournamentId,
   player,
   entryPrice,
+  entryFreeOnly = false,
 }) => {
   const environment = useEnvironment();
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("CreditCard");
+  const {
+    paymentMethod,
+    setPaymentMethod,
+    paymentMethodOptions,
+    freeOnlyBlocked,
+  } = useFirstEntryPaymentMethodState(player, entryFreeOnly);
   const [entryPaidInput, setEntryPaidInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const paymentMethodOptions = useMemo<PaymentMethod[]>(() => {
-    const baseOptions: PaymentMethod[] = ["CreditCard", "Cache"];
-    if (playerHasFreeEntryOption(player)) {
-      return [...baseOptions, "Free"];
-    }
-    return baseOptions;
-  }, [player]);
 
   useEffect(() => {
-    setPaymentMethod(getPlayerPaymentMethod(player) ?? "CreditCard");
     setEntryPaidInput("");
   }, [player?.playerId, player?.entryPaymentMethod, player?.entyPaymentMethod]);
 
-  useEffect(() => {
-    if (paymentMethod === "Free" && !playerHasFreeEntryOption(player)) {
-      setPaymentMethod("CreditCard");
-    }
-  }, [paymentMethod, player]);
-
   const handleSave = async () => {
-    if (!player || isLoading) {
+    if (!player || isLoading || freeOnlyBlocked) {
       return;
     }
     const parsed = parseEntryPaidAmountForApi(
@@ -455,10 +449,19 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({
           ) : null}
           <Typography.Text type="secondary" size="small">
             Способ оплаты входа
+            {entryFreeOnly
+              ? " (только Free для бай-ина; реентри не ограничены)"
+              : ""}
           </Typography.Text>
+          {freeOnlyBlocked ? (
+            <Typography.Text type="error" size="small">
+              Нет доступных бесплатных входов — оплатить вход Free нельзя.
+            </Typography.Text>
+          ) : null}
           <select
             value={paymentMethod}
             onChange={(event) => setPaymentMethod(event.target.value as PaymentMethod)}
+            disabled={entryFreeOnly || isLoading}
             style={{
               width: "100%",
               borderRadius: 12,
@@ -467,6 +470,7 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({
               padding: "0 12px",
               backgroundColor: "var(--background-primary)",
               color: "var(--text-primary)",
+              opacity: entryFreeOnly ? 0.85 : 1,
             }}
           >
             {paymentMethodOptions.map((method) => (
@@ -498,7 +502,7 @@ const PayPlayerModal: FC<PayPlayerModalProps> = ({
               onClick={handleSave}
               flexItem={{ flex: 1 }}
               loading={isLoading}
-              disabled={!player}
+              disabled={!player || freeOnlyBlocked}
             >
               Сохранить
             </Button>
@@ -574,6 +578,7 @@ export const InGamePlayers: FC<InGamePlayersProps> = ({
         tournamentId={tournamentId}
         player={playerToPay}
         entryPrice={entryPrice}
+        entryFreeOnly={reentryStructure?.entryFreeOnly === true}
       />
       <BonusesModal
         tournamentId={tournamentId}
