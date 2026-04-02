@@ -1,6 +1,7 @@
 "use client";
 
 import { FC, ReactNode } from "react";
+import Image from "next/image";
 import { Formatter } from "@/components/Formatter/Formatter";
 import { Typography } from "@/components/Typography/Typography";
 import { useTournamentChipPoolSummary } from "@/core/states/tournaments/hooks/useTournamentChipPoolSummary";
@@ -11,6 +12,8 @@ import { formatClockDuration } from "@/core/states/tournaments/common/Tournament
 import {
   chipPoolCenterColumnCls,
   chipPoolHeaderGridCls,
+  chipPoolHeaderLogoImgCls,
+  chipPoolHeaderLogoWrapCls,
   chipPoolHeaderSideCls,
   chipPoolLeftColumnCls,
   chipPoolMainGridCls,
@@ -93,7 +96,17 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
 
   const header = (
     <header className={chipPoolHeaderGridCls}>
-      <div className={chipPoolHeaderSideCls} aria-hidden />
+      <div className={chipPoolHeaderLogoWrapCls}>
+        <Image
+          src="/nuts-family-logo.png"
+          alt="NUTS FAMILY"
+          width={200}
+          height={240}
+          className={chipPoolHeaderLogoImgCls}
+          priority
+          sizes="(max-width: 768px) 90px, 120px"
+        />
+      </div>
       <h1 className={chipPoolTitleCls}>{tournament.name}</h1>
       <div className={chipPoolHeaderSideCls} aria-hidden />
     </header>

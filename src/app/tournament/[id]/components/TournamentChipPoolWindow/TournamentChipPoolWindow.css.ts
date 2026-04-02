@@ -6,6 +6,9 @@ import {
   CHIP_POOL_INK_SOFT,
 } from "./chipPoolTokens";
 
+/** Общий левый сдвиг для лого и колонки статов. */
+const chipPoolLeftContentInset = "clamp(16px, 4.5vw, 56px)";
+
 /** SVG grain (feTurbulence) — лёгкая «бумажная» фактура поверх градиента. */
 const grainSvg = encodeURIComponent(
   `<svg xmlns='http://www.w3.org/2000/svg' width='256' height='256' viewBox='0 0 256 256'><filter id='g' x='0' y='0'><feTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(#g)' opacity='0.33'/></svg>`,
@@ -58,6 +61,23 @@ export const chipPoolHeaderSideCls = style({
   minWidth: 0,
 });
 
+export const chipPoolHeaderLogoWrapCls = style({
+  display: "flex",
+  justifyContent: "flex-start",
+  alignItems: "center",
+  minHeight: 40,
+  minWidth: 0,
+  paddingLeft: chipPoolLeftContentInset,
+});
+
+export const chipPoolHeaderLogoImgCls = style({
+  height: "clamp(48px, 9vw, 88px)",
+  width: "auto",
+  objectFit: "contain",
+  /** Белый фон растра «вычитается»: тёмные элементы лого остаются на песочном градиенте. */
+  mixBlendMode: "multiply",
+});
+
 export const chipPoolTitleCls = style({
   margin: 0,
   textAlign: "center",
@@ -104,7 +124,7 @@ export const chipPoolLeftColumnCls = style({
   flexDirection: "column",
   minWidth: 0,
   /** Сдвиг контента от левого края к центру экрана (симметрия с пустой правой колонкой). */
-  paddingLeft: "clamp(16px, 4.5vw, 56px)",
+  paddingLeft: chipPoolLeftContentInset,
 });
 
 export const chipPoolStatStackCls = style({
