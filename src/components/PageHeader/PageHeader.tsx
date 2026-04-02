@@ -39,12 +39,12 @@ export const PageHeader: FC<PageHeaderProps> = ({
       {(title || subtitle) && (
         <Box flex={{ col: true, gap: 2 }}>
           {title && (
-            <Typography.Text
-              size="large"
-              style={{ margin: 0, lineHeight: 1, fontWeight: 600 }}
+            <Typography.Title
+              level={4}
+              style={{ margin: 0, lineHeight: 1.15, fontWeight: 700 }}
             >
               {title}
-            </Typography.Text>
+            </Typography.Title>
           )}
           {subtitle && (
             <Typography.Text

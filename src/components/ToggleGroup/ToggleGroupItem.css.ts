@@ -15,7 +15,7 @@ export const toggleGroupItemCls = recipe({
     color: 'var(--text-primary)',
     font: 'var(--font-small)',
     fontStyle: 'normal',
-    fontFamily: 'var(--primary-font-family), serif',
+    fontFamily: 'var(--primary-font-family)',
     fontWeight: '400',
     transition: 'all 0.3s ease-in-out',
     background: 'transparent',
@@ -23,7 +23,7 @@ export const toggleGroupItemCls = recipe({
   variants: {
     titan: {
       true: {
-        fontFamily: 'var(--titan-font-family), serif',
+        fontFamily: 'var(--primary-font-family)',
         fontWeight: 300,
       },
     },
@@ -138,31 +138,31 @@ export const toggleGroupItemCls = recipe({
     fontSize: {
       xxSmall: {
         font: 'var(--font-xx-small)',
-        fontFamily: 'var(--titan-font-family), serif',
+        fontFamily: 'var(--primary-font-family)',
       },
       xSmall: {
         font: 'var(--font-x-small)',
-        fontFamily: 'var(--titan-font-family), serif',
+        fontFamily: 'var(--primary-font-family)',
       },
       small: {
         font: 'var(--font-small)',
-        fontFamily: 'var(--titan-font-family), serif',
+        fontFamily: 'var(--primary-font-family)',
       },
       medium: {
         font: 'var(--font-medium)',
-        fontFamily: 'var(--titan-font-family), serif',
+        fontFamily: 'var(--primary-font-family)',
       },
       large: {
         font: 'var(--font-large)',
-        fontFamily: 'var(--titan-font-family), serif',
+        fontFamily: 'var(--primary-font-family)',
       },
       xLarge: {
         font: 'var(--font-x-large)',
-        fontFamily: 'var(--titan-font-family), serif',
+        fontFamily: 'var(--primary-font-family)',
       },
       xxLarge: {
         font: 'var(--font-xx-large)',
-        fontFamily: 'var(--titan-font-family), serif',
+        fontFamily: 'var(--primary-font-family)',
       },
     },
     itemsType: {

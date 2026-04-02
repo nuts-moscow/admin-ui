@@ -6,7 +6,7 @@ export const controlRootCls = recipe({
     alignItems: "center",
     cursor: "text",
     font: "var(--font-medium)",
-    fontFamily: "var(--primary-font-family), serif",
+    fontFamily: "var(--primary-font-family)",
     fontWeight: 700,
     transition: "background-color 0.2s, border-color 0.2s",
     willChange: "background-color, border-color",

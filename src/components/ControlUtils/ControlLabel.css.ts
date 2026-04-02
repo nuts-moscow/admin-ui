@@ -4,7 +4,7 @@ import { SIZES } from '@/core/states/device/Sizes';
 export const controlLabelCls = recipe({
   base: {
     font: 'var(--font-small)',
-    fontFamily: 'var(--primary-font-family), serif',
+    fontFamily: 'var(--primary-font-family)',
     color: 'var(--text-primary)',
     fontSize: 12,
     '@media': {

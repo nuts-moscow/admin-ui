@@ -18,6 +18,10 @@ import {
   type TournamentClockBinding,
   type TournamentClockConnectionStatus,
 } from "@/core/states/tournaments/hooks/useTournamentClock";
+import {
+  CHIP_POOL_INK,
+  CHIP_POOL_INK_SOFT,
+} from "../TournamentChipPoolWindow/chipPoolTokens";
 
 function isBlind(item: BlindType): item is Blind {
   return item != null && "smallBlind" in item;
@@ -106,6 +110,8 @@ export interface TournamentClockPanelProps {
    */
   readonly clockBinding?: TournamentClockBinding;
   readonly layout?: TournamentClockPanelLayout;
+  /** Светлый текст на тёмном фоне (турнирное окно / эфир). */
+  readonly onDarkBackground?: boolean;
 }
 
 export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
@@ -114,6 +120,7 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
   enabled = true,
   clockBinding,
   layout = "compact",
+  onDarkBackground = false,
 }) => {
   const hookResult = useTournamentClock(tournamentId, {
     enabled: clockBinding ? false : enabled,
@@ -159,6 +166,14 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
 
   const muted = { color: "#6b7280" };
   const ink = { color: "#111827" };
+  const dark = {
+    /** Светло-серый крем, не чистый белый. */
+    ink: "rgba(235, 230, 223, 0.96)",
+    muted: "rgba(198, 190, 180, 0.78)",
+    /** Тёплое «стекло» под песочный тёмный фон турнирного окна. */
+    timerBg: "rgba(26, 22, 18, 0.48)",
+    timerBorder: "rgba(255, 255, 255, 0.1)",
+  };
 
   const timerText =
     tick?.secondsRemaining != null
@@ -166,6 +181,11 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
       : "—";
 
   if (layout === "broadcast") {
+    const cInkStr = onDarkBackground ? dark.ink : CHIP_POOL_INK;
+    const cMutedStr = onDarkBackground ? dark.muted : CHIP_POOL_INK_SOFT;
+    const dimStyle = { color: cMutedStr };
+    const primaryStyle = { color: cInkStr };
+
     return (
       <Box
         flex={{ col: true, align: "center", gap: 2 }}
@@ -173,31 +193,31 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
         style={{ textAlign: "center" }}
       >
         {connectionStatus === "connecting" && tick == null && (
-          <Typography.Text type="secondary" size="small">
+          <Typography.Text type="secondary" size="small" style={dimStyle}>
             Подключение…
           </Typography.Text>
         )}
 
         {connectionStatus === "error" && tick == null && (
-          <Typography.Text type="secondary" size="small">
+          <Typography.Text type="secondary" size="small" style={dimStyle}>
             Не удалось подключиться. Повтор…
           </Typography.Text>
         )}
 
         {connectionStatus === "closed" && tick == null && (
-          <Typography.Text type="secondary" size="small">
+          <Typography.Text type="secondary" size="small" style={dimStyle}>
             Соединение закрыто, переподключение…
           </Typography.Text>
         )}
 
         {completedOrFinished && (
-          <Typography.Text size="medium">
+          <Typography.Text size="medium" style={primaryStyle}>
             Турнир завершён — активный отсчёт недоступен.
           </Typography.Text>
         )}
 
         {tick && clockInactive && !completedOrFinished && (
-          <Typography.Text type="secondary" size="small">
+          <Typography.Text type="secondary" size="small" style={dimStyle}>
             Часы неактивны.
           </Typography.Text>
         )}
@@ -206,40 +226,64 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
           <>
             {currentStepItem && isBlind(currentStepItem) ? (
               <>
-                <Typography.Text size="medium">
+                <Typography.Text
+                  size="medium"
+                  bold
+                  style={{
+                    ...primaryStyle,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    fontSize: "92%",
+                  }}
+                >
                   Уровень {currentStepItem.level}
                 </Typography.Text>
                 <Typography.Text
-                  size="xLarge"
                   bold
-                  style={{ fontVariantNumeric: "tabular-nums" }}
+                  style={{
+                    fontVariantNumeric: "tabular-nums",
+                    color: cInkStr,
+                    fontSize: "clamp(2.25rem, 7vw, 4rem)",
+                    lineHeight: 1.05,
+                  }}
                 >
                   {formatSbBb(
                     currentStepItem.smallBlind,
-                    currentStepItem.bigBlind
+                    currentStepItem.bigBlind,
                   )}
                 </Typography.Text>
-                <Typography.Text type="secondary" size="small">
+                <Typography.Text
+                  type="secondary"
+                  size="small"
+                  style={{
+                    ...dimStyle,
+                    ...(currentStepItem.ante
+                      ? { textTransform: "uppercase", letterSpacing: "0.06em" }
+                      : {}),
+                  }}
+                >
                   {currentStepItem.ante
-                    ? `Анте ${currentStepItem.bigBlind} (вкл.)`
-                    : "Анте выкл."}
+                    ? `BB Ante ${currentStepItem.bigBlind}`
+                    : "Без анте"}
                 </Typography.Text>
               </>
             ) : currentStepItem && isBreak(currentStepItem) ? (
               <>
-                <Typography.Text size="medium">Перерыв</Typography.Text>
-                <Typography.Text type="secondary" size="small">
+                <Typography.Text size="medium" style={primaryStyle}>
+                  Перерыв
+                </Typography.Text>
+                <Typography.Text type="secondary" size="small" style={dimStyle}>
                   {currentStepItem.duration} мин
                 </Typography.Text>
               </>
             ) : (
               <>
-                <Typography.Text size="medium">
+                <Typography.Text size="medium" style={primaryStyle}>
                   {tick.currentStepIndex !== null
                     ? `Шаг ${tick.currentStepIndex + 1}`
                     : "Шаг"}
                 </Typography.Text>
-                <Typography.Text type="secondary" size="small">
+                <Typography.Text type="secondary" size="small" style={dimStyle}>
                   {label}
                 </Typography.Text>
               </>
@@ -247,32 +291,57 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
 
             <Box
               flex={{ justify: "center", align: "center" }}
+              width="100%"
               style={{
-                marginTop: 8,
-                marginBottom: 8,
-                padding: "16px 32px",
-                minWidth: 200,
-                border: "1px solid rgba(0, 0, 0, 0.12)",
-                borderRadius: 8,
+                marginTop: 12,
+                marginBottom: 12,
+                padding: "clamp(22px, 5.5vw, 52px) clamp(40px, 20vw, 280px)",
+                minWidth: "min(100%, 760px)",
+                border: onDarkBackground
+                  ? `1px solid ${dark.timerBorder}`
+                  : "1px solid rgba(74, 63, 53, 0.14)",
+                borderRadius: onDarkBackground ? 4 : 6,
+                backgroundColor: onDarkBackground
+                  ? dark.timerBg
+                  : "rgba(255, 250, 242, 0.62)",
+                boxSizing: "border-box",
+                backdropFilter: "blur(14px)",
+                WebkitBackdropFilter: "blur(14px)",
               }}
             >
               <Typography.Text
-                size="xLarge"
                 bold
-                style={{ fontVariantNumeric: "tabular-nums" }}
+                style={{
+                  fontVariantNumeric: "tabular-nums",
+                  color: cInkStr,
+                  fontSize: "clamp(2.75rem, 11vw, 6rem)",
+                  lineHeight: 1,
+                  letterSpacing: "0.04em",
+                  fontWeight: 800,
+                  fontFamily: "var(--primary-font-family)",
+                }}
               >
                 {timerText}
               </Typography.Text>
             </Box>
 
             {nextSbBb ? (
-              <Typography.Text size="small">
+              <Typography.Text
+                size="small"
+                style={{
+                  ...dimStyle,
+                  marginTop: 8,
+                  letterSpacing: "0.04em",
+                  textTransform: "uppercase",
+                  fontWeight: 600,
+                }}
+              >
                 Следующие блайнды: {nextSbBb}
               </Typography.Text>
             ) : (
               blindsStructure &&
               blindsStructure.length > 0 && (
-                <Typography.Text type="secondary" size="small">
+                <Typography.Text type="secondary" size="small" style={dimStyle}>
                   Следующих блайндов в структуре нет
                 </Typography.Text>
               )

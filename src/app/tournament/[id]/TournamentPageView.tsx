@@ -134,9 +134,10 @@ export const TournamentPageView: FC<TournamentPageViewProps> = ({
           }
         />
 
-        <PageLayout>
+        <PageLayout fillRemainingViewport>
           <Box
-            width="100%"
+            flex={{ col: true, width: "100%" }}
+            flexItem={{ flex: 1, minHeight: 0 }}
             onTabChange={(tabKey) => setActiveTab(tabKey)}
             tabsType="tab"
             tabsPadding={[4, 0]}

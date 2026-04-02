@@ -107,14 +107,14 @@ export const typographyTextCls = recipe({
     titan: {
       true: {
         fontStyle: 'normal',
-        fontFamily: 'var(--titan-font-family), serif',
-        fontWeight: 300,
+        fontFamily: 'var(--display-font-family)',
+        fontWeight: 400,
       },
     },
     primary: {
       true: {
         fontStyle: 'normal',
-        fontFamily: 'var(--primary-font-family), serif',
+        fontFamily: 'var(--primary-font-family)',
       },
     },
   },
@@ -167,26 +167,27 @@ export const typographyTitleCls = recipe({
     level: {
       1: {
         font: 'var(--h1-font)',
-        fontFamily: 'var(--titan-font-family)',
+        fontFamily: 'var(--display-font-family)',
       },
       2: {
         font: 'var(--h2-font)',
-        fontFamily: 'var(--titan-font-family)',
+        fontFamily: 'var(--display-font-family)',
       },
       3: {
         font: 'var(--h3-font)',
-        fontFamily: 'var(--titan-font-family)',
+        fontFamily: 'var(--display-font-family)',
       },
       4: {
         font: 'var(--h4-font)',
-        fontFamily: 'var(--titan-font-family)',
+        fontFamily: 'var(--display-font-family)',
       },
       5: {
         font: 'var(--h5-font)',
-        fontFamily: 'var(--titan-font-family)',
+        fontFamily: 'var(--display-font-family)',
       },
       6: {
         font: 'var(--h6-font)',
+        fontFamily: 'var(--display-font-family)',
       },
     },
     bold: {

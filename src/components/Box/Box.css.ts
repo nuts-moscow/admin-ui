@@ -80,7 +80,9 @@ export const boxCls = recipe({
 export const boxTabsContainerCls = style({
   display: 'flex',
   flexDirection: 'column',
-  height: '100%',
+  flex: 1,
+  minHeight: 0,
+  width: '100%',
 });
 
 export const boxTabsWrapperCls = recipe({
@@ -88,7 +90,7 @@ export const boxTabsWrapperCls = recipe({
     display: 'flex',
     alignItems: 'center',
     width: '100%',
-    height: '100%',
+    flexShrink: 0,
     marginBottom: getGutter(4),
   },
   variants: {
@@ -128,7 +130,6 @@ export const boxExtraCls = style({
 export const boxActiveTabCls = style({
   display: 'flex',
   flex: 1,
-  minHeight: 1,
+  minHeight: 0,
   width: '100%',
-  height: '100%',
 });
