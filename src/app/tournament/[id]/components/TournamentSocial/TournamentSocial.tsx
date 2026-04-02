@@ -7,6 +7,7 @@ import { Typography } from "@/components/Typography/Typography";
 import { Copy } from "lucide-react";
 import { toast } from "@/components/Toast/Toast";
 import { TournamentInfoResponse } from "@/core/states/tournaments/requests/getTournament";
+import { useTournament } from "@/core/states/tournaments/hooks/useTournament";
 import { useTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
 import { buildTelegramParticipantsListText } from "../TournamentPlayers/buildTelegramParticipantsList";
 import { buildTournamentResultsCopyText } from "../TournamentResults/tournamentResultsCopyText";
@@ -19,6 +20,8 @@ export const TournamentSocial: FC<TournamentSocialProps> = ({
   tournament,
 }) => {
   const tournamentId = String(tournament.id);
+  const { data: liveTournament } = useTournament(tournamentId);
+  const tournamentStatus = liveTournament?.status ?? tournament.status;
   const { data: allPlayers = [] } = useTournamentPlayerState(tournamentId);
 
   const copyTgParticipantsList = async () => {
@@ -45,7 +48,7 @@ export const TournamentSocial: FC<TournamentSocialProps> = ({
   };
 
   const copyResults = async () => {
-    const text = buildTournamentResultsCopyText(allPlayers);
+    const text = buildTournamentResultsCopyText(allPlayers, tournamentStatus);
     if (!text) {
       return;
     }

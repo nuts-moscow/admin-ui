@@ -16,10 +16,12 @@ import { refetchTournamentPlayerState } from "@/core/states/tournaments/hooks/us
 import { useTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
 import {
   buildTournamentResultsCopyText,
+  displayPlaceNumber,
   sortTournamentResultsRows,
 } from "./tournamentResultsCopyText";
 import { bountyEliminateUndo } from "@/core/states/tournaments/requests/bountyEliminate";
 import { TournamentInfoResponse } from "@/core/states/tournaments/requests/getTournament";
+import { useTournament } from "@/core/states/tournaments/hooks/useTournament";
 import { Copy, X } from "lucide-react";
 
 export interface TournamentResultsProps {
@@ -350,22 +352,24 @@ export const TournamentResults: FC<TournamentResultsProps> = ({
   tournament,
 }) => {
   const tournamentId = String(tournament.id);
+  const { data: liveTournament } = useTournament(tournamentId);
+  const tournamentStatus = liveTournament?.status ?? tournament.status;
   const { data: players = [], loading } = useTournamentPlayerState(tournamentId);
   const [BountyModal, openBountyModal] = useModal(BountyListModal);
   const [EliminatedByModalConnect, openEliminatedByModal] =
     useModal(EliminatedByModal);
 
   const rows = useMemo(
-    () => sortTournamentResultsRows(players),
-    [players],
+    () => sortTournamentResultsRows(players, tournamentStatus),
+    [players, tournamentStatus],
   );
 
   const totalPlayers = rows.length;
   const placeNumber = (placement: number | null | undefined) =>
-    placement != null ? totalPlayers - placement + 1 : null;
+    displayPlaceNumber(placement, totalPlayers, tournamentStatus);
 
   const copyResults = async () => {
-    const text = buildTournamentResultsCopyText(players);
+    const text = buildTournamentResultsCopyText(players, tournamentStatus);
     if (!text) {
       return;
     }
