@@ -71,8 +71,10 @@ export const chipPoolTitleCls = style({
   textShadow: "0 1px 0 rgba(255, 255, 255, 0.45)",
 });
 
+/** Полоса правил по ширине бежевого блока (как заголовок и сетка), без выхода за края. */
 export const chipPoolSubHeaderCls = style({
   width: "100%",
+  boxSizing: "border-box",
   textAlign: "center",
   fontFamily: "var(--primary-font-family)",
   fontSize: "clamp(0.75rem, 1.35vw, 0.95rem)",

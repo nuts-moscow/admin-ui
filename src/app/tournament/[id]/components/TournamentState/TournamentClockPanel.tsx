@@ -241,8 +241,9 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
                 <Typography.Text
                   bold
                   style={{
+                    ...primaryStyle,
+                    fontFamily: "var(--primary-font-family)",
                     fontVariantNumeric: "tabular-nums",
-                    color: cInkStr,
                     fontSize: "clamp(2.25rem, 7vw, 4rem)",
                     lineHeight: 1.05,
                   }}
@@ -312,13 +313,12 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
               <Typography.Text
                 bold
                 style={{
+                  ...primaryStyle,
+                  fontFamily: "var(--primary-font-family)",
                   fontVariantNumeric: "tabular-nums",
-                  color: cInkStr,
                   fontSize: "clamp(2.75rem, 11vw, 6rem)",
                   lineHeight: 1,
                   letterSpacing: "0.04em",
-                  fontWeight: 800,
-                  fontFamily: "var(--primary-font-family)",
                 }}
               >
                 {timerText}
