@@ -86,6 +86,7 @@ interface MakeTournamentStructureBody {
   readonly stackSize: number;
   readonly freezeOutEnabled: boolean;
   readonly blinds: ReturnType<typeof normalizeBlindsForApi>;
+  readonly maxReentries?: number;
 }
 
 async function updateTournamentStructureCache(
@@ -118,11 +119,15 @@ export const updateStructure = async (
   if (!blindsList?.length) {
     throw new Error("Blinds are required");
   }
+  const mr = structure.maxReentries;
   await updateTournamentStructureCache(environment, request.id, {
     name: structure.name,
     playersLimit: structure.playersLimit,
     stackSize: structure.stackSize,
     freezeOutEnabled: structure.freezeOutEnabled,
     blinds: normalizeBlindsForApi(blindsList),
+    ...(mr != null && Number.isFinite(mr) && mr >= 0
+      ? { maxReentries: Math.floor(mr) }
+      : {}),
   });
 };

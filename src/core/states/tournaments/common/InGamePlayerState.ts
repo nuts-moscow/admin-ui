@@ -72,6 +72,11 @@ export interface InGamePlayerState {
    */
   readonly reentryPaidAmounts?: readonly number[];
   readonly totalReentryCount: number;
+  /**
+   * Эффективный максимум реентри на турнир (0 при freeze-out, иначе maxReentries).
+   * Брать с API, не вычислять по freezeOut на фронте.
+   */
+  readonly allowedReentryCount?: number;
   /** Доли баунти допускаются (например 0.5 при split 1/2). */
   readonly bountyCount: number;
   /** ID жертв — playerId (строка или объект с playerId). */

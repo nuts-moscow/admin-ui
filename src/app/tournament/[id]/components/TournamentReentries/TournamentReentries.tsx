@@ -14,6 +14,11 @@ import {
   PaymentMethod,
   playerHasFreeReentryOption,
 } from "@/core/states/tournaments/common/InGamePlayerState";
+import { TournamentsStructureResponse } from "@/core/states/tournaments/common/TournamentsStructureResponse";
+import {
+  getAllowedReentryCount,
+  getReentryRemaining,
+} from "@/core/states/tournaments/common/reentryLimits";
 import { formatBountyCount } from "@/core/states/tournaments/common/formatBountyCount";
 import { getPaymentMethodLabel } from "@/core/states/tournaments/common/paymentMethodLabels";
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
@@ -58,6 +63,7 @@ interface AddReentryModalProps extends WithModalProps {
   readonly tournamentId: string;
   readonly player?: InGamePlayerState;
   readonly players: InGamePlayerState[];
+  readonly reentryStructure?: TournamentsStructureResponse | null;
 }
 
 interface PayReentriesModalProps extends WithModalProps {
@@ -526,6 +532,7 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
   tournamentId,
   player,
   players,
+  reentryStructure,
 }) => {
   const environment = useEnvironment();
   const [count, setCount] = useState<number>(1);
@@ -552,11 +559,26 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
     [killerCandidates],
   );
 
+  const remainingReentries = useMemo(
+    () =>
+      player ? getReentryRemaining(player, reentryStructure) : 0,
+    [player, reentryStructure],
+  );
+
   useEffect(() => {
     setCount(1);
     setBurnedStack(false);
     setBurnedChipsInput("");
   }, [player?.playerId]);
+
+  useEffect(() => {
+    if (!player || remainingReentries <= 0) {
+      return;
+    }
+    setCount((prev) =>
+      Math.min(Math.max(1, prev), remainingReentries),
+    );
+  }, [player?.playerId, remainingReentries, player]);
 
   useEffect(() => {
     setKillerPlayerIds((prev) => {
@@ -568,7 +590,13 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
   }, [player?.playerId, killerCandidateIdsKey]);
 
   const handleSave = async () => {
-    if (!player || count <= 0 || isSaving) {
+    if (
+      !player ||
+      count <= 0 ||
+      isSaving ||
+      remainingReentries <= 0 ||
+      count > remainingReentries
+    ) {
       return;
     }
     let payload: BountyEliminateBody;
@@ -597,7 +625,8 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
     }
     setIsSaving(true);
     try {
-      for (let i = 0; i < count; i += 1) {
+      const iterations = Math.min(count, remainingReentries);
+      for (let i = 0; i < iterations; i += 1) {
         await bountyEliminate(environment, Number(tournamentId), payload);
       }
       refetchTournamentPlayerState();
@@ -620,6 +649,15 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
               ? `Игрок: ${getPlayerLabel(player)}`
               : "Укажи количество ребаев для игрока"}
           </Typography.Text>
+          {player && remainingReentries <= 0 ? (
+            <Typography.Text type="error" size="small">
+              Реентри недоступны (лимит 0 или исчерпан).
+            </Typography.Text>
+          ) : player ? (
+            <Typography.Text type="secondary" size="xxSmall">
+              Можно добавить не больше {remainingReentries} (остаток до потолка).
+            </Typography.Text>
+          ) : null}
           <label
             style={{
               display: "flex",
@@ -740,10 +778,18 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
           <input
             type="number"
             min={1}
-            value={count}
-            onChange={(event) =>
-              setCount(Math.max(1, Number(event.target.value || 1)))
+            max={
+              remainingReentries > 0 ? remainingReentries : undefined
             }
+            value={count}
+            onChange={(event) => {
+              const raw = Number(event.target.value || 1);
+              const cap =
+                remainingReentries > 0
+                  ? remainingReentries
+                  : Number.POSITIVE_INFINITY;
+              setCount(Math.min(Math.max(1, raw), cap));
+            }}
             style={{
               width: "100%",
               borderRadius: 12,
@@ -774,6 +820,8 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
                 !player ||
                 count <= 0 ||
                 isSaving ||
+                remainingReentries <= 0 ||
+                count > remainingReentries ||
                 (burnedStack
                   ? !Number.isFinite(
                       Number.parseInt(burnedChipsInput.trim(), 10),
@@ -1014,7 +1062,6 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
 export const TournamentReentries: FC<TournamentReentriesProps> = ({
   tournament,
 }) => {
-  const REENTRY_LIMIT = 5;
   const ACTIONS_COLUMN_WIDTH = 420;
   const [searchQuery, setSearchQuery] = useState("");
   const [playerToAddReentry, setPlayerToAddReentry] = useState<
@@ -1090,6 +1137,7 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
         tournamentId={String(tournament.id)}
         player={playerToAddReentry}
         players={playersForModals}
+        reentryStructure={tournament.structure}
       />
       <PayReentriesModalConnect
         tournamentId={String(tournament.id)}
@@ -1122,6 +1170,12 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
           {rebuyCountResponse?.rebuyCount ?? rows.length}
         </Typography.Text>
       </Box>
+      {!tournament.structure ? (
+        <Typography.Text type="secondary" size="small">
+          Структура турнира недоступна — отображаемый лимит реентри может не совпадать
+          с настройками; ориентируйтесь на ответ API при сомнениях.
+        </Typography.Text>
+      ) : null}
       <input
         type="text"
         value={searchQuery}
@@ -1181,6 +1235,14 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
             unpaidReentryCount - paidReentryCount,
           );
           const totalReentryCount = toSafeNumber(player.totalReentryCount);
+          const reentryLimit = getAllowedReentryCount(
+            player,
+            tournament.structure,
+          );
+          const reentryRemaining = getReentryRemaining(
+            player,
+            tournament.structure,
+          );
           const hasUnpaidReentry = unpaidReentryCount > 0;
           const rowBackgroundColor =
             player.signAgreement === false
@@ -1206,13 +1268,13 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
                 {getPlayerLabel(player)}
               </Typography.Text>
               <Typography.Text bold flexItem={{ minWidth: 110 }}>
-                {totalReentryCount}/{REENTRY_LIMIT}
+                {totalReentryCount}/{reentryLimit}
               </Typography.Text>
               <Typography.Text bold flexItem={{ minWidth: 96 }}>
-                {freeReentryCount}/{REENTRY_LIMIT}
+                {freeReentryCount}/{reentryLimit}
               </Typography.Text>
               <Typography.Text bold flexItem={{ minWidth: 96 }}>
-                {toPayReentryCount}/{REENTRY_LIMIT}
+                {toPayReentryCount}/{reentryLimit}
               </Typography.Text>
               <Box
                 flexItem={{ minWidth: ACTIONS_COLUMN_WIDTH }}
@@ -1239,6 +1301,12 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
                   <Button
                     type="secondary"
                     size="xxSmall"
+                    disabled={reentryRemaining <= 0}
+                    title={
+                      reentryRemaining <= 0
+                        ? "Лимит реентри исчерпан или турнир freeze-out"
+                        : undefined
+                    }
                     onClick={() => {
                       setPlayerToAddReentry(player);
                       openAddReentryModal();

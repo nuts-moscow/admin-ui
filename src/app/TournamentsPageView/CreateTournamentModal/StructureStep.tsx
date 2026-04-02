@@ -58,6 +58,13 @@ export const StructureStep: FC = () => {
                     {structure.stackSize} • Старт:{" "}
                     {getFirstBlindLevel(structure.blindsStructure)} • Финал игры:{" "}
                     {structure.freezeOutEnabled ? "Да" : "Нет"}
+                    {!structure.freezeOutEnabled
+                      ? ` • Макс. реентри: ${
+                          structure.maxReentries != null
+                            ? structure.maxReentries
+                            : "по ум. 5"
+                        }`
+                      : ""}
                   </Typography.Text>
                 </SimpleList.Column>
               </SimpleList.Card>

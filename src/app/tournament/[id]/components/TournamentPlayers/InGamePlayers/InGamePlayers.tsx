@@ -42,11 +42,14 @@ import { parseEntryPaidAmountForApi } from "@/core/states/tournaments/common/tou
 import { EntryPaidAmountInput } from "../../EntryPaidAmountInput";
 import { Formatter } from "@/components/Formatter/Formatter";
 import { X } from "lucide-react";
+import { getReentryRemaining } from "@/core/states/tournaments/common/reentryLimits";
+import { TournamentsStructureResponse } from "@/core/states/tournaments/common/TournamentsStructureResponse";
 
 export interface InGamePlayersProps {
   readonly tournamentId: string;
   readonly searchQuery?: string;
   readonly entryPrice?: number;
+  readonly reentryStructure?: TournamentsStructureResponse | null;
 }
 
 interface PayPlayerModalProps extends WithModalProps {
@@ -510,6 +513,7 @@ export const InGamePlayers: FC<InGamePlayersProps> = ({
   tournamentId,
   searchQuery = "",
   entryPrice,
+  reentryStructure,
 }) => {
   const environment = useEnvironment();
   const [playerToSetTable, setPlayerToSetTable] = useState<
@@ -601,6 +605,8 @@ export const InGamePlayers: FC<InGamePlayersProps> = ({
             (row.entryPaymentMethod ?? row.entyPaymentMethod) != null;
           const isOutOrOutNotPaid =
             row.status === "Out" || row.status === "OutNotPaid";
+          const reentryRemaining = getReentryRemaining(row, reentryStructure);
+          const returnDisabledByReentry = reentryRemaining <= 0;
           return (
             <>
               <Button
@@ -634,8 +640,14 @@ export const InGamePlayers: FC<InGamePlayersProps> = ({
                   size="xxSmall"
                   loading={returningPlayerId === row.playerId}
                   disabled={
-                    returningPlayerId !== undefined &&
-                    returningPlayerId !== row.playerId
+                    returnDisabledByReentry ||
+                    (returningPlayerId !== undefined &&
+                      returningPlayerId !== row.playerId)
+                  }
+                  title={
+                    returnDisabledByReentry
+                      ? "Лимит реентри исчерпан или турнир freeze-out"
+                      : undefined
                   }
                   onClick={async () => {
                     setReturningPlayerId(row.playerId);

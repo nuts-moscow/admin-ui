@@ -54,7 +54,7 @@ export const CreateStructureModal: FC<CreateStructureModalProps> = ({
   const environment = useEnvironment();
   const [isLoading, setIsLoading] = useState(false);
   const [ready, setReady] = useState(false);
-  const [form] = useForm<Partial<CreateTournamentStructureRequest>>({
+  const [form, formValue] = useForm<Partial<CreateTournamentStructureRequest>>({
     controls: {
       name: toCtrlParam<string | undefined>(structure?.name, [
         {
@@ -78,6 +78,18 @@ export const CreateStructureModal: FC<CreateStructureModalProps> = ({
         structure?.freezeOutEnabled ?? false,
         [],
       ),
+      maxReentries: toCtrlParam<number | undefined>(structure?.maxReentries, [
+        {
+          validate: (v) => {
+            if (v === undefined || v === null) return undefined;
+            if (!Number.isFinite(v) || !Number.isInteger(v) || v < 0) {
+              return "Целое число ≥ 0";
+            }
+            return undefined;
+          },
+          level: "error",
+        },
+      ]),
       blinds: toCtrlParam<Blinds | undefined>(structure?.blindsStructure, [
         {
           validate: (blinds) => {
@@ -144,7 +156,7 @@ export const CreateStructureModal: FC<CreateStructureModalProps> = ({
           <Form.Control name="freezeOutEnabled">
             {({ value, onChange }) => (
               <Box flex={{ gap: 2, align: "center" }}>
-                <Typography.Text size="small">Финал игры</Typography.Text>
+                <Typography.Text size="small">Финал игры (freeze-out)</Typography.Text>
                 <Checkbox
                   size="small"
                   checked={value ?? false}
@@ -153,6 +165,39 @@ export const CreateStructureModal: FC<CreateStructureModalProps> = ({
               </Box>
             )}
           </Form.Control>
+
+          <Box
+            flex={{ col: true, gap: 1 }}
+            style={{
+              opacity: formValue.freezeOutEnabled === true ? 0.55 : 1,
+            }}
+          >
+            <Form.Control name="maxReentries">
+              {({ value, onChange }) => (
+                <Input.Number
+                  rounded
+                  decimalScale={0}
+                  allowNegative={false}
+                  label="Макс. реентри на игрока"
+                  placeholder="Пусто — по умолчанию 5 на сервере"
+                  value={value ?? ""}
+                  onValueChange={(v) => {
+                    if (v.value === "" || v.floatValue === undefined) {
+                      onChange(undefined);
+                    } else {
+                      onChange(Math.trunc(v.floatValue));
+                    }
+                  }}
+                />
+              )}
+            </Form.Control>
+            {formValue.freezeOutEnabled === true ? (
+              <Typography.Text type="secondary" size="xxSmall">
+                В freeze-out реентри в игре отключены (эффективный лимит 0); значение
+                можно оставить в шаблоне на будущее.
+              </Typography.Text>
+            ) : null}
+          </Box>
 
           <Box flex={{ align: "center", gap: 4, width: "100%" }}>
             <Form.Control name="playersLimit">

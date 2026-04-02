@@ -12,6 +12,7 @@ export interface MakeTournamentRequest {
     readonly playersLimit: number;
     readonly stackSize: number;
     readonly freezeOutEnabled: boolean;
+    readonly maxReentries?: number;
     readonly blinds: Blinds;
   };
 }
@@ -26,6 +27,7 @@ interface MakeTournamentBody {
     readonly stackSize: number;
     readonly freezeOutEnabled: boolean;
     readonly blinds: ReturnType<typeof normalizeBlindsForApi>;
+    readonly maxReentries?: number;
   };
 }
 
@@ -40,6 +42,7 @@ function toMakeTournamentBody(request: MakeTournamentRequest): MakeTournamentBod
   if (!request.structure.blinds?.length) {
     throw new Error("Structure blinds are required");
   }
+  const mr = request.structure.maxReentries;
   return {
     name: request.name,
     date: request.date,
@@ -49,6 +52,9 @@ function toMakeTournamentBody(request: MakeTournamentRequest): MakeTournamentBod
       stackSize: request.structure.stackSize,
       freezeOutEnabled: request.structure.freezeOutEnabled,
       blinds: normalizeBlindsForApi(request.structure.blinds),
+      ...(mr != null && Number.isFinite(mr) && mr >= 0
+        ? { maxReentries: Math.floor(mr) }
+        : {}),
     },
   };
 }

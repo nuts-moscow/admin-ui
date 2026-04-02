@@ -8,6 +8,7 @@ export interface CreateTournamentStructureRequest {
   readonly playersLimit: number;
   readonly stackSize: number;
   readonly freezeOutEnabled: boolean;
+  readonly maxReentries?: number;
   readonly blinds?: Blinds;
 }
 
@@ -18,6 +19,7 @@ interface MakeTournamentStructureBody {
   readonly stackSize: number;
   readonly freezeOutEnabled: boolean;
   readonly blinds: ReturnType<typeof normalizeBlindsForApi>;
+  readonly maxReentries?: number;
 }
 
 function toCreateBody(
@@ -26,12 +28,16 @@ function toCreateBody(
   if (!request.blinds?.length) {
     throw new Error("Blinds are required");
   }
+  const mr = request.maxReentries;
   return {
     name: request.name,
     playersLimit: request.playersLimit,
     stackSize: request.stackSize,
     freezeOutEnabled: request.freezeOutEnabled === true,
     blinds: normalizeBlindsForApi(request.blinds),
+    ...(mr != null && Number.isFinite(mr) && mr >= 0
+      ? { maxReentries: Math.floor(mr) }
+      : {}),
   };
 }
 

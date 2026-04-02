@@ -764,6 +764,13 @@ components:
         paidReentryCount:
           type: integer
           format: int64
+        allowedReentryCount:
+          type: integer
+          format: int64
+          minimum: 0
+          description: >
+            Effective max reentries for this tournament (0 if freeze-out, else maxReentries).
+            Use for UI limits; always a number when present.
         entryPaidAmount:
           type: integer
           format: int64
@@ -810,6 +817,12 @@ components:
           format: int64
         freezeOutEnabled:
           type: boolean
+        maxReentries:
+          type: integer
+          format: int64
+          minimum: 0
+          description: >
+            Max reentries per player when not freeze-out; omit to use server default (e.g. 5).
         blinds:
           type: array
           items:
@@ -866,6 +879,16 @@ components:
           type: integer
           format: int64
           description: Default full price for one reentry.
+        max_reentries:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Saved reentry cap per player (non-freeze-out); server default if omitted.
+        allowed_reentry_count:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Effective reentry limit derived from freeze-out and maxReentries.
     Tuple2_A_B:
       required:
         - _1

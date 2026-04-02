@@ -32,10 +32,17 @@ function normalizeStructure(
   const s = raw as unknown as Record<string, unknown>;
   const entryPrice = pickFiniteNumber(s.entryPrice, s.entry_price);
   const reentryPrice = pickFiniteNumber(s.reentryPrice, s.reentry_price);
+  const maxReentries = pickFiniteNumber(s.maxReentries, s.max_reentries);
+  const allowedReentryCount = pickFiniteNumber(
+    s.allowedReentryCount,
+    s.allowed_reentry_count,
+  );
   return {
     ...raw,
     ...(entryPrice != null ? { entryPrice } : {}),
     ...(reentryPrice != null ? { reentryPrice } : {}),
+    ...(maxReentries != null ? { maxReentries } : {}),
+    ...(allowedReentryCount != null ? { allowedReentryCount } : {}),
   };
 }
 

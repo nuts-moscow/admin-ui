@@ -46,6 +46,7 @@ export const TournamentPlayers: FC<TournamentPlayersProps> = ({
           tournamentId={tournamentId}
           searchQuery={searchQuery}
           entryPrice={tournament.structure?.entryPrice}
+          reentryStructure={tournament.structure}
         />
       </div>
     </Box>
