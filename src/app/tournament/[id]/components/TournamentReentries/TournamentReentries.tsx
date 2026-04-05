@@ -839,6 +839,12 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
   );
 };
 
+type ReentryPayRowState = {
+  readonly payThis: boolean;
+  readonly method: PaymentMethod;
+  readonly paidInput: string;
+};
+
 const PayReentriesModal: FC<PayReentriesModalProps> = ({
   close,
   tournamentId,
@@ -847,11 +853,10 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
 }) => {
   const environment = useEnvironment();
   const [isSaving, setIsSaving] = useState(false);
-  const [methods, setMethods] = useState<PaymentMethod[]>([]);
-  const [paidInputs, setPaidInputs] = useState<string[]>([]);
+  const [payRows, setPayRows] = useState<ReentryPayRowState[]>([]);
 
   const unpaidTotal = toSafeNumber(player?.unpaidReentryCount);
-  /** По одному способу оплаты на каждый неоплаченный ребай; считаем по unpaidReentryCount, а не по разнице с длиной reentryByPaymentMethod. */
+  /** По одному слоту на каждый неоплаченный ребай; в запрос уходят только строки с учётом оплаты. */
   const paymentFormCount = unpaidTotal > 0 ? unpaidTotal : 0;
 
   const payReentryMethodOptions = useMemo(
@@ -859,36 +864,46 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
     [player],
   );
 
+  const includedPayCount = useMemo(
+    () => payRows.filter((row) => row.payThis).length,
+    [payRows],
+  );
+
   useEffect(() => {
     const allowed = new Set(
       payReentryMethodOptions.map((option) => option.value),
     );
-    setMethods((prev) => {
-      if (prev.length !== paymentFormCount) {
-        return Array.from({ length: paymentFormCount }, (_, index) => {
-          const method = prev[index];
-          return method && allowed.has(method) ? method : "CreditCard";
-        });
-      }
-      return prev.map((method) =>
-        allowed.has(method) ? method : "CreditCard",
-      );
-    });
+    setPayRows((prev) =>
+      Array.from({ length: paymentFormCount }, (_, index) => {
+        const old = prev[index];
+        const methodRaw = old?.method ?? "CreditCard";
+        const method = allowed.has(methodRaw) ? methodRaw : "CreditCard";
+        if (!old) {
+          return { payThis: false, method, paidInput: "" };
+        }
+        if (prev.length === paymentFormCount) {
+          return { payThis: old.payThis, method, paidInput: old.paidInput };
+        }
+        return { payThis: false, method, paidInput: old.paidInput };
+      }),
+    );
   }, [player?.playerId, paymentFormCount, payReentryMethodOptions]);
 
-  useEffect(() => {
-    setPaidInputs((prev) =>
-      Array.from({ length: paymentFormCount }, (_, i) => prev[i] ?? ""),
+  const handlePayThisChange = (index: number, payThis: boolean) => {
+    setPayRows((prev) =>
+      prev.map((row, i) => (i === index ? { ...row, payThis } : row)),
     );
-  }, [paymentFormCount, player?.playerId]);
+  };
 
   const handleMethodChange = (index: number, value: PaymentMethod) => {
-    setMethods((prev) => prev.map((item, i) => (i === index ? value : item)));
+    setPayRows((prev) =>
+      prev.map((row, i) => (i === index ? { ...row, method: value } : row)),
+    );
   };
 
   const handlePaidInputChange = (index: number, value: string) => {
-    setPaidInputs((prev) =>
-      prev.map((item, i) => (i === index ? value : item)),
+    setPayRows((prev) =>
+      prev.map((row, i) => (i === index ? { ...row, paidInput: value } : row)),
     );
   };
 
@@ -896,7 +911,22 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
     if (!player || isSaving) {
       return;
     }
-    const built = buildReentryPaidAmountsForApi(methods, paidInputs, reentryPrice);
+    const includedRows = payRows.filter((row) => row.payThis);
+    if (includedRows.length === 0) {
+      toast({
+        type: "error",
+        message:
+          "Отметьте хотя бы один ребай с оплатой или оставьте «Не оплатил» для тех, что сейчас не проводите.",
+      });
+      return;
+    }
+    const methods = includedRows.map((row) => row.method);
+    const paidInputs = includedRows.map((row) => row.paidInput);
+    const built = buildReentryPaidAmountsForApi(
+      methods,
+      paidInputs,
+      reentryPrice,
+    );
     if (!built.ok) {
       toast({ type: "error", message: built.message });
       return;
@@ -962,71 +992,121 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
             </Typography.Text>
           )}
           <Typography.Text type="secondary" size="small">
-            Способ оплаты по каждому ребаю
+            Учитывайте в этой оплате только нужные ребаи. «Не оплатил» не отправляет
+            ребай в кассу (останется неоплаченным).
           </Typography.Text>
           <Box flex={{ col: true, gap: 2 }}>
-            {methods.map((method, index) => (
-              <Box key={index} flex={{ col: true, gap: 1 }}>
-                <Box flex={{ align: "center", gap: 2 }}>
+            {payRows.map((row, index) => (
+              <Box
+                key={index}
+                flex={{ col: true, gap: 1 }}
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  border: "1px solid var(--border-color)",
+                  backgroundColor: row.payThis
+                    ? "transparent"
+                    : "var(--background-secondary, rgba(0,0,0,0.03))",
+                }}
+              >
+                <Box
+                  flex={{ align: "center", gap: 2, justify: "space-between" }}
+                  style={{ flexWrap: "wrap" }}
+                >
                   <Typography.Text
                     size="small"
                     type="secondary"
-                    flexItem={{ minWidth: 70 }}
+                    flexItem={{ minWidth: 72 }}
                   >
                     Ребай {index + 1}
                   </Typography.Text>
-                  <select
-                    value={method}
-                    onChange={(event) =>
-                      handleMethodChange(
-                        index,
-                        event.target.value as PaymentMethod,
-                      )
-                    }
-                    style={{
-                      width: "100%",
-                      borderRadius: 12,
-                      border: "1px solid var(--border-color)",
-                      minHeight: 40,
-                      padding: "0 12px",
-                      backgroundColor: "var(--background-primary)",
-                      color: "var(--text-primary)",
-                    }}
-                  >
-                    {payReentryMethodOptions.map((methodOption) => (
-                      <option key={methodOption.value} value={methodOption.value}>
-                        {getPaymentMethodLabel(methodOption.label)}
-                      </option>
-                    ))}
-                  </select>
+                  {row.payThis ? (
+                    <Button
+                      type="ghost"
+                      size="xxSmall"
+                      htmlType="button"
+                      onClick={() => handlePayThisChange(index, false)}
+                      disabled={isSaving}
+                    >
+                      Не оплатил
+                    </Button>
+                  ) : (
+                    <Button
+                      type="secondary"
+                      size="xxSmall"
+                      htmlType="button"
+                      onClick={() => handlePayThisChange(index, true)}
+                      disabled={isSaving}
+                    >
+                      Учесть оплату
+                    </Button>
+                  )}
                 </Box>
-                {method !== "Free" ? (
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    min={0}
-                    step={1}
-                    placeholder={
-                      reentryPrice != null ? String(reentryPrice) : "Сумма"
-                    }
-                    value={paidInputs[index] ?? ""}
-                    onChange={(e) =>
-                      handlePaidInputChange(index, e.target.value)
-                    }
-                    disabled={isSaving}
-                    style={{
-                      width: "100%",
-                      borderRadius: 12,
-                      border: "1px solid var(--border-color)",
-                      minHeight: 40,
-                      padding: "0 12px",
-                      backgroundColor: "var(--background-primary)",
-                      color: "var(--text-primary)",
-                    }}
-                  />
+                {row.payThis ? (
+                  <>
+                    <select
+                      value={row.method}
+                      onChange={(event) =>
+                        handleMethodChange(
+                          index,
+                          event.target.value as PaymentMethod,
+                        )
+                      }
+                      disabled={isSaving}
+                      style={{
+                        width: "100%",
+                        borderRadius: 12,
+                        border: "1px solid var(--border-color)",
+                        minHeight: 40,
+                        padding: "0 12px",
+                        backgroundColor: "var(--background-primary)",
+                        color: "var(--text-primary)",
+                      }}
+                    >
+                      {payReentryMethodOptions.map((methodOption) => (
+                        <option
+                          key={methodOption.value}
+                          value={methodOption.value}
+                        >
+                          {getPaymentMethodLabel(methodOption.label)}
+                        </option>
+                      ))}
+                    </select>
+                    {row.method !== "Free" ? (
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        min={0}
+                        step={1}
+                        placeholder={
+                          reentryPrice != null
+                            ? String(reentryPrice)
+                            : "Сумма"
+                        }
+                        value={row.paidInput}
+                        onChange={(e) =>
+                          handlePaidInputChange(index, e.target.value)
+                        }
+                        disabled={isSaving}
+                        style={{
+                          width: "100%",
+                          borderRadius: 12,
+                          border: "1px solid var(--border-color)",
+                          minHeight: 40,
+                          padding: "0 12px",
+                          backgroundColor: "var(--background-primary)",
+                          color: "var(--text-primary)",
+                        }}
+                      />
+                    ) : (
+                      <Typography.Text type="secondary" size="xSmall">
+                        Free — сумма 0
+                      </Typography.Text>
+                    )}
+                  </>
                 ) : (
                   <Typography.Text type="secondary" size="xSmall">
-                    Free — сумма 0
+                    Не в этой оплате.
                   </Typography.Text>
                 )}
               </Box>
@@ -1048,7 +1128,12 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
               onClick={handleSave}
               flexItem={{ flex: 1 }}
               loading={isSaving}
-              disabled={!player || paymentFormCount <= 0}
+              disabled={
+                !player ||
+                paymentFormCount <= 0 ||
+                includedPayCount < 1 ||
+                isSaving
+              }
             >
               Сохранить
             </Button>
