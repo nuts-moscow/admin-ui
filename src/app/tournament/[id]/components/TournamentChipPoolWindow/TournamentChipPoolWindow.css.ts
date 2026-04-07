@@ -6,8 +6,8 @@ import {
   CHIP_POOL_INK_SOFT,
 } from "./chipPoolTokens";
 
-/** Общий левый сдвиг для лого и колонки статов. */
-const chipPoolLeftContentInset = "clamp(16px, 4.5vw, 56px)";
+/** Общий левый сдвиг для лого и колонки статов (шире под эфир). */
+const chipPoolLeftContentInset = "clamp(24px, 6vw, 88px)";
 
 /** SVG grain (feTurbulence) — лёгкая «бумажная» фактура поверх градиента. */
 const grainSvg = encodeURIComponent(
@@ -25,11 +25,9 @@ export const chipPoolShellCls = style({
   display: "flex",
   flexDirection: "column",
   fontFamily: "var(--primary-font-family)",
-  padding: getGutter([4, 5, 5, 5]),
+  padding: getGutter([3, 4, 4, 4]),
   position: "relative",
   isolation: "isolate",
-  borderRadius: "clamp(18px, 2.8vw, 32px)",
-  overflow: "hidden",
   backgroundColor: "#e8dfd4",
   backgroundImage: `
     url("data:image/svg+xml,${grainSvg}"),
@@ -90,7 +88,6 @@ export const chipPoolTitleCls = style({
   textTransform: "uppercase",
   lineHeight: 1.15,
   color: CHIP_POOL_INK,
-  textShadow: "0 1px 0 rgba(255, 255, 255, 0.45)",
 });
 
 /** Полоса правил по ширине бежевого блока (как заголовок и сетка), без выхода за края. */
@@ -106,14 +103,18 @@ export const chipPoolSubHeaderCls = style({
   color: CHIP_POOL_INK_MUTED,
   padding: `${getGutter(4)} ${getGutter(3)}`,
   marginBottom: getGutter(4),
-  borderRadius: "clamp(12px, 1.8vw, 20px)",
-  border: "1px solid rgba(120, 100, 85, 0.13)",
-  backgroundColor: "rgba(255, 252, 248, 0.42)",
+  borderRadius: 0,
+  border: "1px solid rgba(120, 100, 85, 0.14)",
+  backgroundColor: "rgba(218, 208, 195, 0.5)",
 });
 
 export const chipPoolMainGridCls = style({
   display: "grid",
-  gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)",
+  /**
+   * 1fr | auto | 1fr — средняя колонка (часы) по горизонтали по центру экрана,
+   * боковые поля одинаковой ширины; статы слева в своей половине.
+   */
+  gridTemplateColumns: "minmax(0, 1fr) auto minmax(0, 1fr)",
   gap: getGutter(4),
   alignItems: "stretch",
   flex: 1,
@@ -127,6 +128,8 @@ export const chipPoolLeftColumnCls = style({
   justifyContent: "center",
   alignItems: "flex-start",
   minWidth: 0,
+  justifySelf: "start",
+  maxWidth: "100%",
   /** Сдвиг контента от левого края к центру экрана (симметрия с пустой правой колонкой). */
   paddingLeft: chipPoolLeftContentInset,
 });
@@ -134,20 +137,20 @@ export const chipPoolLeftColumnCls = style({
 export const chipPoolStatStackCls = style({
   display: "flex",
   flexDirection: "column",
-  gap: getGutter(4),
+  gap: getGutter(5),
 });
 
 export const chipPoolStatLabelCls = style({
-  fontSize: "clamp(0.7rem, 1.1vw, 0.82rem)",
+  fontSize: "clamp(0.85rem, 1.45vw, 1.05rem)",
   fontWeight: 600,
   letterSpacing: "0.05em",
   textTransform: "uppercase",
   color: CHIP_POOL_INK_SOFT,
-  marginBottom: 4,
+  marginBottom: 6,
 });
 
 export const chipPoolStatValueCls = style({
-  fontSize: "clamp(1.35rem, 2.4vw, 2rem)",
+  fontSize: "clamp(1.85rem, 3.4vw, 3.1rem)",
   fontWeight: 700,
   fontVariantNumeric: "tabular-nums",
   color: CHIP_POOL_INK,
@@ -159,11 +162,16 @@ export const chipPoolCenterColumnCls = style({
   flexDirection: "column",
   alignItems: "center",
   justifyContent: "center",
+  justifySelf: "center",
+  width: "fit-content",
+  maxWidth: "min(100%, 92vw)",
   minWidth: 0,
+  textAlign: "center",
 });
 
 export const chipPoolRightSpacerCls = style({
   minWidth: 0,
   minHeight: 1,
-  // колонка занимает место под prize/payouts, контента нет
+  justifySelf: "stretch",
+  // симметрия с левым 1fr — контента нет
 });

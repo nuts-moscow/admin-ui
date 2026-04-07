@@ -189,8 +189,13 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
     return (
       <Box
         flex={{ col: true, align: "center", gap: 2 }}
-        width="100%"
-        style={{ textAlign: "center" }}
+        style={{
+          textAlign: "center",
+          width: "fit-content",
+          maxWidth: "100%",
+          marginLeft: "auto",
+          marginRight: "auto",
+        }}
       >
         {connectionStatus === "connecting" && tick == null && (
           <Typography.Text type="secondary" size="small" style={dimStyle}>
@@ -225,27 +230,38 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
         {tick && !completedOrFinished && tick.clockActive && (
           <>
             {currentStepItem && isBlind(currentStepItem) ? (
-              <>
+              <Box
+                flex={{ col: true, align: "center", gap: 8 }}
+                flexItem={{ alignSelf: "stretch" }}
+                width="100%"
+                style={{ textAlign: "center" }}
+              >
                 <Typography.Text
-                  size="medium"
                   bold
+                  textAlign="center"
                   style={{
                     ...primaryStyle,
+                    display: "block",
                     letterSpacing: "0.08em",
                     textTransform: "uppercase",
-                    fontSize: "92%",
+                    fontSize: "clamp(1.15rem, 2.8vw, 2rem)",
+                    lineHeight: 1.35,
+                    width: "100%",
                   }}
                 >
                   Уровень {currentStepItem.level}
                 </Typography.Text>
                 <Typography.Text
                   bold
+                  textAlign="center"
                   style={{
                     ...primaryStyle,
+                    display: "block",
                     fontFamily: "var(--primary-font-family)",
                     fontVariantNumeric: "tabular-nums",
-                    fontSize: "clamp(2.25rem, 7vw, 4rem)",
-                    lineHeight: 1.05,
+                    fontSize: "clamp(3rem, 11vw, 6rem)",
+                    lineHeight: 1.12,
+                    width: "100%",
                   }}
                 >
                   {formatSbBb(
@@ -254,11 +270,15 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
                   )}
                 </Typography.Text>
                 <Typography.Text
-                  size="large"
+                  textAlign="center"
                   style={{
                     ...dimStyle,
+                    display: "block",
                     fontWeight: 600,
                     letterSpacing: "0.04em",
+                    fontSize: "clamp(1.2rem, 2.8vw, 1.85rem)",
+                    lineHeight: 1.35,
+                    width: "100%",
                     ...(currentStepItem.ante
                       ? { textTransform: "uppercase" }
                       : {}),
@@ -268,7 +288,7 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
                     ? `BB Ante ${currentStepItem.bigBlind}`
                     : "Без анте"}
                 </Typography.Text>
-              </>
+              </Box>
             ) : currentStepItem && isBreak(currentStepItem) ? (
               <>
                 <Typography.Text size="medium" style={primaryStyle}>
@@ -297,8 +317,11 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
               style={{
                 marginTop: 12,
                 marginBottom: 12,
-                padding: "clamp(22px, 5.5vw, 52px) clamp(40px, 20vw, 280px)",
-                minWidth: "min(100%, 760px)",
+                marginLeft: "auto",
+                marginRight: "auto",
+                padding: "clamp(20px, 5vw, 48px) clamp(28px, 10vw, 140px)",
+                minWidth: "min(100%, 720px)",
+                maxWidth: "min(100%, 720px)",
                 border: onDarkBackground
                   ? `1px solid ${dark.timerBorder}`
                   : "1px solid rgba(74, 63, 53, 0.14)",
@@ -317,9 +340,12 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
                   ...primaryStyle,
                   fontFamily: "var(--primary-font-family)",
                   fontVariantNumeric: "tabular-nums",
-                  fontSize: "clamp(2.75rem, 11vw, 6rem)",
+                  fontSize: "clamp(3rem, 11.5vw, 7rem)",
                   lineHeight: 1,
                   letterSpacing: "0.04em",
+                  textAlign: "center",
+                  display: "block",
+                  width: "100%",
                 }}
               >
                 {timerText}
@@ -328,13 +354,16 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
 
             {nextSbBb ? (
               <Typography.Text
-                size="large"
                 style={{
                   ...dimStyle,
                   marginTop: 8,
                   letterSpacing: "0.04em",
                   textTransform: "uppercase",
                   fontWeight: 600,
+                  fontSize: "clamp(1.15rem, 2.8vw, 1.75rem)",
+                  textAlign: "center",
+                  width: "100%",
+                  display: "block",
                 }}
               >
                 Следующие блайнды: {nextSbBb}

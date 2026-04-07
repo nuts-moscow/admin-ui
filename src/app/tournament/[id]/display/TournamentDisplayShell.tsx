@@ -31,6 +31,8 @@ export const TournamentDisplayShell: FC<TournamentDisplayShellProps> = ({
         flexDirection: "column",
         boxSizing: "border-box",
         position: "relative",
+        /** Совпадает с фоном турнирного окна — нет «белых» углов за скруглением. */
+        backgroundColor: "#e8dfd4",
       }}
     >
       <div
