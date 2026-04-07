@@ -131,7 +131,7 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
           height={240}
           className={chipPoolHeaderLogoImgCls}
           priority
-          sizes="(max-width: 768px) 90px, 120px"
+          sizes="(max-width: 768px) 112px, 156px"
         />
       </div>
       <h1 className={chipPoolTitleRowCls}>

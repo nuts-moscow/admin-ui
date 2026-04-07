@@ -83,7 +83,7 @@ export const chipPoolHeaderLogoWrapCls = style({
 });
 
 export const chipPoolHeaderLogoImgCls = style({
-  height: "clamp(48px, 9vw, 88px)",
+  height: "clamp(60px, 11vw, 104px)",
   width: "auto",
   objectFit: "contain",
   /** Белый фон растра «вычитается»: тёмные элементы лого остаются на песочном градиенте. */
@@ -139,7 +139,7 @@ export const chipPoolSubHeaderCls = style({
   color: CHIP_POOL_INK_MUTED,
   padding: `${getGutter(4)} ${getGutter(3)}`,
   marginTop: getGutter(6),
-  marginBottom: getGutter(4),
+  marginBottom: getGutter(2),
   borderRadius: "clamp(12px, 1.5vw, 18px)",
   border: "1px solid rgba(120, 100, 85, 0.14)",
   backgroundColor: "rgba(218, 208, 195, 0.5)",
