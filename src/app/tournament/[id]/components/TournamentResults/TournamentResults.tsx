@@ -28,8 +28,9 @@ export interface TournamentResultsProps {
   readonly tournament: TournamentInfoResponse;
 }
 
+/** Последняя колонка — две кнопки; 140px было мало и обрезало «Кто меня выбил». */
 const GRID_TEMPLATE =
-  "64px 56px minmax(180px, 1fr) minmax(180px, 1fr) 140px 140px";
+  "64px 56px minmax(140px, 1fr) minmax(120px, 1fr) minmax(100px, max-content) minmax(260px, 1.35fr)";
 
 interface BountyListModalProps {
   close: () => void;
@@ -435,6 +436,7 @@ export const TournamentResults: FC<TournamentResultsProps> = ({
           overflow: "hidden",
         }}
       >
+        <Box style={{ overflowX: "auto", minWidth: 0, width: "100%" }}>
         <Box
           style={{
             display: "grid",
@@ -494,7 +496,10 @@ export const TournamentResults: FC<TournamentResultsProps> = ({
             <Typography.Text>
               {formatBountyCount(row.bountyCount)} Баунти
             </Typography.Text>
-            <Box flex={{ gap: 2 }}>
+            <Box
+              flex={{ gap: 2, flexWrap: "wrap", align: "flex-start" }}
+              style={{ minWidth: 240 }}
+            >
               <Button
                 type="secondary"
                 size="xxSmall"
@@ -526,6 +531,7 @@ export const TournamentResults: FC<TournamentResultsProps> = ({
             <Typography.Text type="secondary">Нет результатов</Typography.Text>
           </Box>
         )}
+        </Box>
       </Box>
     </Box>
   );
