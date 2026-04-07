@@ -51,7 +51,8 @@ export const chipPoolShellCls = style({
 
 export const chipPoolHeaderGridCls = style({
   display: "grid",
-  gridTemplateColumns: "1fr 1fr 1fr",
+  /** minmax(0,1fr) — длинное название турнира переносится, а не обрезается по краю колонки. */
+  gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)",
   alignItems: "center",
   gap: getGutter(2),
   width: "100%",
@@ -81,16 +82,40 @@ export const chipPoolHeaderLogoImgCls = style({
   mixBlendMode: "multiply",
 });
 
-export const chipPoolTitleCls = style({
+/** Строка заголовка: название + дата, как в TournamentClockPanel для блайндов — цифры на primary. */
+export const chipPoolTitleRowCls = style({
   margin: 0,
+  minWidth: 0,
+  maxWidth: "100%",
+  display: "flex",
+  flexWrap: "wrap",
+  alignItems: "baseline",
+  justifyContent: "center",
+  columnGap: "clamp(14px, 2.8vw, 32px)",
+  rowGap: "0.35em",
   textAlign: "center",
+  color: CHIP_POOL_INK,
+});
+
+export const chipPoolTitleNameCls = style({
   fontFamily: "var(--display-font-family)",
   fontSize: "clamp(1.25rem, 3.2vw, 2.35rem)",
   fontWeight: 800,
   letterSpacing: "0.06em",
   textTransform: "uppercase",
   lineHeight: 1.15,
-  color: CHIP_POOL_INK,
+  overflowWrap: "anywhere",
+});
+
+/** Те же параметры шрифта цифр, что у строки блайндов в эфире (primary + tabular-nums). */
+export const chipPoolTitleDateCls = style({
+  fontFamily: "var(--primary-font-family)",
+  fontVariantNumeric: "tabular-nums",
+  fontSize: "clamp(1.05rem, 2.65vw, 1.95rem)",
+  fontWeight: 800,
+  letterSpacing: "0.04em",
+  lineHeight: 1.15,
+  textTransform: "none",
 });
 
 /** Полоса правил по ширине бежевого блока (как заголовок и сетка), без выхода за края. */

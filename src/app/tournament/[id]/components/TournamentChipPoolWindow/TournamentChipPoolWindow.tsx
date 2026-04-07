@@ -26,7 +26,9 @@ import {
   chipPoolStatStackCls,
   chipPoolStatValueCls,
   chipPoolSubHeaderCls,
-  chipPoolTitleCls,
+  chipPoolTitleDateCls,
+  chipPoolTitleNameCls,
+  chipPoolTitleRowCls,
 } from "./TournamentChipPoolWindow.css";
 import { CHIP_POOL_INK_MUTED } from "./chipPoolTokens";
 
@@ -132,7 +134,12 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
           sizes="(max-width: 768px) 90px, 120px"
         />
       </div>
-      <h1 className={chipPoolTitleCls}>{tournament.name}</h1>
+      <h1 className={chipPoolTitleRowCls}>
+        <span className={chipPoolTitleNameCls}>{tournament.name}</span>
+        <span className={chipPoolTitleDateCls}>
+          <Formatter.dateTime value={tournament.date} type="date" />
+        </span>
+      </h1>
       <div className={chipPoolHeaderSideCls} aria-hidden />
     </header>
   );

@@ -116,7 +116,7 @@ export const TournamentPageView: FC<TournamentPageViewProps> = ({
         <PageHeader
           title={
             <>
-              {tournament.name}{" "}
+              {currentTournament.name}{" "}
               <Formatter.dateTime value={currentTournament.date} type="date" />
             </>
           }

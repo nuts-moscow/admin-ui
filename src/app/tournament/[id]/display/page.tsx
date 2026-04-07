@@ -1,6 +1,7 @@
 import { TournamentDisplayShell } from "@/app/tournament/[id]/display/TournamentDisplayShell";
 import { getEnvironmentWithReqCookies } from "@/core/states/environment/environmentSsr";
 import { getTournament } from "@/core/states/tournaments/requests/getTournament";
+import { formatTournamentPageTitle } from "@/core/states/tournaments/common/formatTournamentPageTitle";
 import { cookies } from "next/dist/server/request/cookies";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
@@ -20,7 +21,7 @@ export async function generateMetadata({
     return { title: "Турнирное окно" };
   }
   return {
-    title: `${tournament.name} — эфир`,
+    title: formatTournamentPageTitle(tournament),
     description: "Турнирное окно для вывода на экран",
   };
 }
