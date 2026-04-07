@@ -302,7 +302,7 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
                 border: onDarkBackground
                   ? `1px solid ${dark.timerBorder}`
                   : "1px solid rgba(74, 63, 53, 0.14)",
-                borderRadius: onDarkBackground ? 4 : 6,
+                borderRadius: onDarkBackground ? 14 : 20,
                 backgroundColor: onDarkBackground
                   ? dark.timerBg
                   : "rgba(255, 250, 242, 0.62)",
@@ -358,7 +358,7 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
       flex={{ col: true, gap: 3, width: "100%" }}
       style={{
         padding: "16px",
-        borderRadius: 8,
+        borderRadius: 18,
         border: "1px solid #e5e7eb",
         backgroundColor: "#ffffff",
       }}

@@ -28,6 +28,8 @@ export const chipPoolShellCls = style({
   padding: getGutter([4, 5, 5, 5]),
   position: "relative",
   isolation: "isolate",
+  borderRadius: "clamp(18px, 2.8vw, 32px)",
+  overflow: "hidden",
   backgroundColor: "#e8dfd4",
   backgroundImage: `
     url("data:image/svg+xml,${grainSvg}"),
@@ -104,8 +106,8 @@ export const chipPoolSubHeaderCls = style({
   color: CHIP_POOL_INK_MUTED,
   padding: `${getGutter(4)} ${getGutter(3)}`,
   marginBottom: getGutter(4),
-  borderTop: "1px solid rgba(120, 100, 85, 0.14)",
-  borderBottom: "1px solid rgba(120, 100, 85, 0.12)",
+  borderRadius: "clamp(12px, 1.8vw, 20px)",
+  border: "1px solid rgba(120, 100, 85, 0.13)",
   backgroundColor: "rgba(255, 252, 248, 0.42)",
 });
 
@@ -122,6 +124,8 @@ export const chipPoolMainGridCls = style({
 export const chipPoolLeftColumnCls = style({
   display: "flex",
   flexDirection: "column",
+  justifyContent: "center",
+  alignItems: "flex-start",
   minWidth: 0,
   /** Сдвиг контента от левого края к центру экрана (симметрия с пустой правой колонкой). */
   paddingLeft: chipPoolLeftContentInset,
