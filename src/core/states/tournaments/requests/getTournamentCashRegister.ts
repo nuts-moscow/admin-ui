@@ -4,7 +4,10 @@ import { Environment } from "../../environment/Environment";
 export interface PaymentMethodSummary {
   readonly entryCount: number;
   readonly reentryCount: number;
+  /** Сумма по всем операциям категории (total.amount с бэка). */
   readonly sum: number;
+  readonly entrySum: number;
+  readonly reentrySum: number;
 }
 
 export interface TournamentCashRegisterResponse {
@@ -40,6 +43,8 @@ function toPaymentMethodSummary(cat: CashDeskCategory): PaymentMethodSummary {
     entryCount: cat.entries?.quantity ?? 0,
     reentryCount: cat.rebuys?.quantity ?? 0,
     sum: cat.total?.amount ?? 0,
+    entrySum: cat.entries?.amount ?? 0,
+    reentrySum: cat.rebuys?.amount ?? 0,
   };
 }
 

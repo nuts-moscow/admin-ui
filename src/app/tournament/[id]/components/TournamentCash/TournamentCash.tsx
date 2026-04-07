@@ -44,12 +44,12 @@ const CashCard: FC<CashCardProps> = ({ title, summary }) => {
     {
       title: "Входы",
       count: summary?.entryCount,
-      sum: undefined,
+      sum: summary?.entrySum,
     },
     {
       title: "Ребаи",
       count: summary?.reentryCount,
-      sum: undefined,
+      sum: summary?.reentrySum,
     },
   ];
 
