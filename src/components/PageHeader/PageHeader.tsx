@@ -22,7 +22,6 @@ export const PageHeader: FC<PageHeaderProps> = ({
   return (
     <Box
       flex={{ gap: 4, align: "center" }}
-      padding={4}
       className={pageHeaderCls}
       style={{ width: "100%", minHeight: "auto" }}
     >

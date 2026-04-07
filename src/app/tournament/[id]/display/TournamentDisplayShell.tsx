@@ -14,7 +14,12 @@ export const TournamentDisplayShell: FC<TournamentDisplayShellProps> = ({
   return (
     <div
       style={{
-        minHeight: "100vh",
+        /**
+         * Одного min-height мало: контейнер остаётся «по контенту», flex:1 у дочернего
+         * чип-пула не получает остаток — снизу пустой градиент. Фиксируем высоту вьюпорта.
+         */
+        minHeight: "var(--app-min-page-height)",
+        height: "var(--app-min-page-height)",
         width: "100%",
         display: "flex",
         flexDirection: "column",
@@ -27,6 +32,7 @@ export const TournamentDisplayShell: FC<TournamentDisplayShellProps> = ({
       <TournamentChipPoolWindow
         tournament={tournament}
         showTvBroadcastLink={false}
+        style={{ flex: "1 1 0%", minHeight: 0, width: "100%" }}
       />
     </div>
   );

@@ -22,6 +22,7 @@ import {
   CHIP_POOL_INK,
   CHIP_POOL_INK_SOFT,
 } from "../TournamentChipPoolWindow/chipPoolTokens";
+import { tournamentClockBroadcastRootCls } from "./TournamentClockPanel.css";
 
 function isBlind(item: BlindType): item is Blind {
   return item != null && "smallBlind" in item;
@@ -187,16 +188,7 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
     const primaryStyle = { color: cInkStr };
 
     return (
-      <Box
-        flex={{ col: true, align: "center", gap: 2 }}
-        style={{
-          textAlign: "center",
-          width: "fit-content",
-          maxWidth: "100%",
-          marginLeft: "auto",
-          marginRight: "auto",
-        }}
-      >
+      <div className={tournamentClockBroadcastRootCls}>
         {connectionStatus === "connecting" && tick == null && (
           <Typography.Text type="secondary" size="small" style={dimStyle}>
             Подключение…
@@ -231,10 +223,13 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
           <>
             {currentStepItem && isBlind(currentStepItem) ? (
               <Box
-                flex={{ col: true, align: "center", gap: 8 }}
+                flex={{ col: true, align: "center" }}
                 flexItem={{ alignSelf: "stretch" }}
                 width="100%"
-                style={{ textAlign: "center" }}
+                style={{
+                  textAlign: "center",
+                  gap: "var(--chip-broadcast-inner-blinds-gap)",
+                }}
               >
                 <Typography.Text
                   bold
@@ -244,7 +239,7 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
                     display: "block",
                     letterSpacing: "0.08em",
                     textTransform: "uppercase",
-                    fontSize: "clamp(1.15rem, 2.8vw, 2rem)",
+                    fontSize: "var(--bc-font-level)",
                     lineHeight: 1.35,
                     width: "100%",
                   }}
@@ -259,7 +254,7 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
                     display: "block",
                     fontFamily: "var(--primary-font-family)",
                     fontVariantNumeric: "tabular-nums",
-                    fontSize: "clamp(3rem, 11vw, 6rem)",
+                    fontSize: "var(--bc-font-blinds)",
                     lineHeight: 1.12,
                     width: "100%",
                   }}
@@ -276,7 +271,7 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
                     display: "block",
                     fontWeight: 600,
                     letterSpacing: "0.04em",
-                    fontSize: "clamp(1.2rem, 2.8vw, 1.85rem)",
+                    fontSize: "var(--bc-font-ante)",
                     lineHeight: 1.35,
                     width: "100%",
                     ...(currentStepItem.ante
@@ -319,9 +314,9 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
                 marginBottom: 12,
                 marginLeft: "auto",
                 marginRight: "auto",
-                padding: "clamp(20px, 5vw, 48px) clamp(28px, 10vw, 140px)",
-                minWidth: "min(100%, 720px)",
-                maxWidth: "min(100%, 720px)",
+                padding: "var(--bc-timer-pad-y) var(--bc-timer-pad-x)",
+                minWidth: "var(--bc-timer-max-width)",
+                maxWidth: "var(--bc-timer-max-width)",
                 border: onDarkBackground
                   ? `1px solid ${dark.timerBorder}`
                   : "1px solid rgba(74, 63, 53, 0.14)",
@@ -340,7 +335,7 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
                   ...primaryStyle,
                   fontFamily: "var(--primary-font-family)",
                   fontVariantNumeric: "tabular-nums",
-                  fontSize: "clamp(3rem, 11.5vw, 7rem)",
+                  fontSize: "var(--bc-font-timer)",
                   lineHeight: 1,
                   letterSpacing: "0.04em",
                   textAlign: "center",
@@ -360,7 +355,7 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
                   letterSpacing: "0.04em",
                   textTransform: "uppercase",
                   fontWeight: 600,
-                  fontSize: "clamp(1.15rem, 2.8vw, 1.75rem)",
+                  fontSize: "var(--bc-font-next)",
                   textAlign: "center",
                   width: "100%",
                   display: "block",
@@ -378,7 +373,7 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
             )}
           </>
         )}
-      </Box>
+      </div>
     );
   }
 

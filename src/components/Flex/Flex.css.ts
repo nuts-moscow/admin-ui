@@ -70,6 +70,9 @@ export const flexCls = recipe({
       'space-around': {
         justifyContent: 'space-around',
       },
+      'space-evenly': {
+        justifyContent: 'space-evenly',
+      },
     },
     align: {
       'flex-start': {

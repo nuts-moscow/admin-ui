@@ -25,7 +25,8 @@ export interface WithFlex {
           | 'flex-end'
           | 'center'
           | 'space-between'
-          | 'space-around';
+          | 'space-around'
+          | 'space-evenly';
         align?: 'flex-start' | 'stretch' | 'flex-end' | 'center';
         gap?: Gutter;
         flexWrap?: 'wrap' | 'nowrap' | 'wrap-reverse';

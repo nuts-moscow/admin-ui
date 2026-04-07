@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Montserrat, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { cookies } from "next/headers";
@@ -26,6 +26,12 @@ export const metadata: Metadata = {
   description: "NUTS FAMILY Administration Panel",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -39,9 +45,6 @@ export default async function RootLayout({
       lang="en"
       className={`light ${uiSans.variable} ${displaySerif.variable}`}
     >
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      </head>
       <body suppressHydrationWarning={true}>
         <BodyLayout environment={environment}>{children}</BodyLayout>
       </body>

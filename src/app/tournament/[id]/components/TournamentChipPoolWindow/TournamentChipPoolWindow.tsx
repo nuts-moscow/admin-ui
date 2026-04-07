@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, ReactNode, useCallback } from "react";
+import { CSSProperties, FC, ReactNode, useCallback } from "react";
 import Image from "next/image";
 import { Formatter } from "@/components/Formatter/Formatter";
 import { Typography } from "@/components/Typography/Typography";
@@ -36,6 +36,8 @@ export interface TournamentChipPoolWindowProps {
   readonly tournament: TournamentInfoResponse;
   /** Ссылка на страницу только для эфира (/tournament/…/display). На самой этой странице — false. */
   readonly showTvBroadcastLink?: boolean;
+  /** Для страницы display: flex-цепочка на весь вьюпорт. */
+  readonly style?: CSSProperties;
 }
 
 function buildRulesSubtitle(tournament: TournamentInfoResponse): string {
@@ -55,11 +57,19 @@ function buildRulesSubtitle(tournament: TournamentInfoResponse): string {
   return parts.join("  |  ");
 }
 
-function LeftStat({ label, children }: { label: string; children: ReactNode }) {
+function LeftStat({
+  label,
+  children,
+  layout,
+}: {
+  label: string;
+  children: ReactNode;
+  layout: ChipPoolWindowLayout;
+}) {
   return (
     <div>
-      <div className={chipPoolStatLabelCls}>{label}</div>
-      <div className={chipPoolStatValueCls}>{children}</div>
+      <div className={chipPoolStatLabelCls({ layout })}>{label}</div>
+      <div className={chipPoolStatValueCls({ layout })}>{children}</div>
     </div>
   );
 }
@@ -67,6 +77,7 @@ function LeftStat({ label, children }: { label: string; children: ReactNode }) {
 export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
   tournament,
   showTvBroadcastLink = true,
+  style: rootStyle,
 }) => {
   const chipPoolLayout: ChipPoolWindowLayout = showTvBroadcastLink
     ? "admin"
@@ -132,13 +143,15 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
           alt="NUTS FAMILY"
           width={200}
           height={240}
-          className={chipPoolHeaderLogoImgCls}
+          className={chipPoolHeaderLogoImgCls({ layout: chipPoolLayout })}
           priority
           sizes="(max-width: 768px) 112px, 156px"
         />
       </div>
       <h1 className={chipPoolTitleRowCls}>
-        <span className={chipPoolTitleNameCls}>{tournament.name}</span>
+        <span className={chipPoolTitleNameCls({ layout: chipPoolLayout })}>
+          {tournament.name}
+        </span>
       </h1>
       <div className={chipPoolHeaderSideCls} aria-hidden />
     </header>
@@ -156,28 +169,30 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
   const leftStats =
     data != null ? (
       <div className={chipPoolLeftColumnCls({ layout: chipPoolLayout })}>
-        <div className={chipPoolStatStackCls}>
-          <LeftStat label="Игроки">
+        <div className={chipPoolStatStackCls({ layout: chipPoolLayout })}>
+          <LeftStat label="Игроки" layout={chipPoolLayout}>
             <>
               <Formatter.number value={data.playersActive} type="withoutDecimals" />
               {" / "}
               <Formatter.number value={data.playersArrived} type="withoutDecimals" />
             </>
           </LeftStat>
-          <LeftStat label="Re-entry">
+          <LeftStat label="Re-entry" layout={chipPoolLayout}>
             <Formatter.number value={data.rebuyCount} type="withoutDecimals" />
           </LeftStat>
-          <LeftStat label="Фишки в игре">
+          <LeftStat label="Фишки в игре" layout={chipPoolLayout}>
             <Formatter.number value={data.totalChips} type="withoutDecimals" />
           </LeftStat>
-          <LeftStat label="Средний стек">
+          <LeftStat label="Средний стек" layout={chipPoolLayout}>
             {data.averageStack == null ? (
               "—"
             ) : (
               <Formatter.number value={data.averageStack} type="withoutDecimals" />
             )}
           </LeftStat>
-          <LeftStat label="До перерыва">{breakText}</LeftStat>
+          <LeftStat label="До перерыва" layout={chipPoolLayout}>
+            {breakText}
+          </LeftStat>
         </div>
       </div>
     ) : (
@@ -261,7 +276,10 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
   };
 
   return (
-    <div className={chipPoolShellCls({ layout: chipPoolLayout })}>
+    <div
+      className={chipPoolShellCls({ layout: chipPoolLayout })}
+      style={rootStyle}
+    >
       {header}
       {subHeader}
       <div className={chipPoolMainGridCls({ layout: chipPoolLayout })}>

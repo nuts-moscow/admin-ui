@@ -19,7 +19,8 @@ export type ChipPoolWindowLayout = "admin" | "broadcast";
 
 /**
  * Тёплый песочно-кремовый mesh (персик, карамель, тауп) + зерно.
- * Для эфира на ТВ (`broadcast`) — меньше верхнего поля; без flex-grow оболочка не тянет контент на всю высоту экрана.
+ * Для эфира (`broadcast`) — меньше верхнего поля; оболочка flex:1 заполняет display-shell,
+ * чтобы градиент тянулся на весь экран и не просвечивал белый фон body.
  */
 export const chipPoolShellCls = recipe({
   base: {
@@ -62,9 +63,9 @@ export const chipPoolShellCls = recipe({
         paddingTop: "clamp(40px, 7vh, 88px)",
       },
       broadcast: {
-        paddingTop: "clamp(12px, 2vh, 36px)",
-        flex: "none",
-        minHeight: "auto",
+        paddingTop: `calc(env(safe-area-inset-top, 0px) + var(--browser-chrome-top-gap, 0px) + clamp(12px, 2vh, 36px))`,
+        flex: 1,
+        minHeight: 0,
       },
     },
   },
@@ -99,12 +100,26 @@ export const chipPoolHeaderLogoWrapCls = style({
   paddingLeft: chipPoolLeftContentInset,
 });
 
-export const chipPoolHeaderLogoImgCls = style({
-  height: "clamp(60px, 11vw, 104px)",
-  width: "auto",
-  objectFit: "contain",
-  /** Белый фон растра «вычитается»: тёмные элементы лого остаются на песочном градиенте. */
-  mixBlendMode: "multiply",
+export const chipPoolHeaderLogoImgCls = recipe({
+  base: {
+    width: "auto",
+    objectFit: "contain",
+    /** Белый фон растра «вычитается»: тёмные элементы лого остаются на песочном градиенте. */
+    mixBlendMode: "multiply",
+  },
+  variants: {
+    layout: {
+      admin: {
+        height: "clamp(60px, 11vw, 104px)",
+      },
+      broadcast: {
+        height: "var(--chip-broadcast-logo-height)",
+      },
+    },
+  },
+  defaultVariants: {
+    layout: "admin",
+  },
 });
 
 /** Строка заголовка: название турнира по центру. */
@@ -122,14 +137,28 @@ export const chipPoolTitleRowCls = style({
   color: CHIP_POOL_INK,
 });
 
-export const chipPoolTitleNameCls = style({
-  fontFamily: "var(--display-font-family)",
-  fontSize: "clamp(1.25rem, 3.2vw, 2.35rem)",
-  fontWeight: 800,
-  letterSpacing: "0.06em",
-  textTransform: "uppercase",
-  lineHeight: 1.15,
-  overflowWrap: "anywhere",
+export const chipPoolTitleNameCls = recipe({
+  base: {
+    fontFamily: "var(--display-font-family)",
+    fontWeight: 800,
+    letterSpacing: "0.06em",
+    textTransform: "uppercase",
+    lineHeight: 1.15,
+    overflowWrap: "anywhere",
+  },
+  variants: {
+    layout: {
+      admin: {
+        fontSize: "clamp(1.25rem, 3.2vw, 2.35rem)",
+      },
+      broadcast: {
+        fontSize: "var(--chip-broadcast-title-size)",
+      },
+    },
+  },
+  defaultVariants: {
+    layout: "admin",
+  },
 });
 
 /** Полоса правил — по вертикали между шапкой (лого/название) и блоком уровня/часов. */
@@ -158,6 +187,8 @@ export const chipPoolSubHeaderCls = recipe({
       broadcast: {
         marginTop: getGutter(2),
         marginBottom: getGutter(1),
+        fontSize: "var(--chip-broadcast-subheader-font)",
+        padding: `${getGutter(3)} ${getGutter(3)}`,
       },
     },
   },
@@ -174,6 +205,11 @@ export const chipPoolMainGridCls = recipe({
      * боковые поля одинаковой ширины; статы слева в своей половине.
      */
     gridTemplateColumns: "minmax(0, 1fr) auto minmax(0, 1fr)",
+    /**
+     * Иначе единственная строка auto — по высоте контента, а область грида flex:1
+     * остаётся пустой снизу (типичный баг на /display).
+     */
+    gridTemplateRows: "minmax(0, 1fr)",
     gap: getGutter(4),
     width: "100%",
     minHeight: 0,
@@ -189,13 +225,13 @@ export const chipPoolMainGridCls = recipe({
         flex: 1,
       },
       /**
-       * На ТВ не растягиваем сетку на весь viewport — иначе между подзаголовком и контентом «висит» пустота.
+       * Эфир: сетка flex:1; выравнивание колонок задаётся CSS-переменными (ноутбук start / ТВ stretch).
        */
       broadcast: {
-        alignItems: "start",
-        alignContent: "start",
-        flex: "none",
-        flexShrink: 0,
+        alignItems: "var(--chip-broadcast-grid-align-items)",
+        alignContent: "var(--chip-broadcast-grid-align-content)",
+        flex: 1,
+        minHeight: 0,
       },
     },
   },
@@ -221,7 +257,8 @@ export const chipPoolLeftColumnCls = recipe({
         justifyContent: "center",
       },
       broadcast: {
-        justifyContent: "flex-start",
+        justifyContent: "var(--chip-broadcast-column-justify)",
+        alignSelf: "stretch",
       },
     },
   },
@@ -230,27 +267,69 @@ export const chipPoolLeftColumnCls = recipe({
   },
 });
 
-export const chipPoolStatStackCls = style({
-  display: "flex",
-  flexDirection: "column",
-  gap: getGutter(5),
+export const chipPoolStatStackCls = recipe({
+  base: {
+    display: "flex",
+    flexDirection: "column",
+  },
+  variants: {
+    layout: {
+      admin: {
+        gap: getGutter(5),
+      },
+      broadcast: {
+        gap: "var(--chip-broadcast-stat-gap)",
+      },
+    },
+  },
+  defaultVariants: {
+    layout: "admin",
+  },
 });
 
-export const chipPoolStatLabelCls = style({
-  fontSize: "clamp(0.85rem, 1.45vw, 1.05rem)",
-  fontWeight: 600,
-  letterSpacing: "0.05em",
-  textTransform: "uppercase",
-  color: CHIP_POOL_INK_SOFT,
-  marginBottom: 6,
+export const chipPoolStatLabelCls = recipe({
+  base: {
+    fontWeight: 600,
+    letterSpacing: "0.05em",
+    textTransform: "uppercase",
+    color: CHIP_POOL_INK_SOFT,
+    marginBottom: 6,
+  },
+  variants: {
+    layout: {
+      admin: {
+        fontSize: "clamp(0.85rem, 1.45vw, 1.05rem)",
+      },
+      broadcast: {
+        fontSize: "var(--chip-broadcast-stat-label-size)",
+      },
+    },
+  },
+  defaultVariants: {
+    layout: "admin",
+  },
 });
 
-export const chipPoolStatValueCls = style({
-  fontSize: "clamp(1.85rem, 3.4vw, 3.1rem)",
-  fontWeight: 700,
-  fontVariantNumeric: "tabular-nums",
-  color: CHIP_POOL_INK,
-  lineHeight: 1.2,
+export const chipPoolStatValueCls = recipe({
+  base: {
+    fontWeight: 700,
+    fontVariantNumeric: "tabular-nums",
+    color: CHIP_POOL_INK,
+    lineHeight: 1.2,
+  },
+  variants: {
+    layout: {
+      admin: {
+        fontSize: "clamp(1.85rem, 3.4vw, 3.1rem)",
+      },
+      broadcast: {
+        fontSize: "var(--chip-broadcast-stat-value-size)",
+      },
+    },
+  },
+  defaultVariants: {
+    layout: "admin",
+  },
 });
 
 export const chipPoolCenterColumnCls = recipe({
@@ -270,7 +349,10 @@ export const chipPoolCenterColumnCls = recipe({
         justifyContent: "center",
       },
       broadcast: {
-        justifyContent: "flex-start",
+        justifyContent: "var(--chip-broadcast-column-justify)",
+        alignSelf: "stretch",
+        width: "100%",
+        minHeight: 0,
       },
     },
   },
