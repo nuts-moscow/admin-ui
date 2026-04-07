@@ -90,7 +90,7 @@ export const chipPoolHeaderLogoImgCls = style({
   mixBlendMode: "multiply",
 });
 
-/** Строка заголовка: название + дата, как в TournamentClockPanel для блайндов — цифры на primary. */
+/** Строка заголовка: название турнира по центру. */
 export const chipPoolTitleRowCls = style({
   margin: 0,
   minWidth: 0,
@@ -113,17 +113,6 @@ export const chipPoolTitleNameCls = style({
   textTransform: "uppercase",
   lineHeight: 1.15,
   overflowWrap: "anywhere",
-});
-
-/** Те же параметры шрифта цифр, что у строки блайндов в эфире (primary + tabular-nums). */
-export const chipPoolTitleDateCls = style({
-  fontFamily: "var(--primary-font-family)",
-  fontVariantNumeric: "tabular-nums",
-  fontSize: "clamp(1.05rem, 2.65vw, 1.95rem)",
-  fontWeight: 800,
-  letterSpacing: "0.04em",
-  lineHeight: 1.15,
-  textTransform: "none",
 });
 
 /** Полоса правил — по вертикали между шапкой (лого/название) и блоком уровня/часов. */

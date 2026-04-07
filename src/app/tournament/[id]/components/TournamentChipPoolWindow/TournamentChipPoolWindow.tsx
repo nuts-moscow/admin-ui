@@ -26,7 +26,6 @@ import {
   chipPoolStatStackCls,
   chipPoolStatValueCls,
   chipPoolSubHeaderCls,
-  chipPoolTitleDateCls,
   chipPoolTitleNameCls,
   chipPoolTitleRowCls,
 } from "./TournamentChipPoolWindow.css";
@@ -136,9 +135,6 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
       </div>
       <h1 className={chipPoolTitleRowCls}>
         <span className={chipPoolTitleNameCls}>{tournament.name}</span>
-        <span className={chipPoolTitleDateCls}>
-          <Formatter.dateTime value={tournament.date} type="date" />
-        </span>
       </h1>
       <div className={chipPoolHeaderSideCls} aria-hidden />
     </header>
