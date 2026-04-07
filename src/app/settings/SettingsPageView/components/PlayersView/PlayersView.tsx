@@ -31,14 +31,20 @@ export const PlayersView = ({
     if (players.length === 0) {
       return [];
     }
-    if (searchQuery === "") {
+    const q = searchQuery.trim().toLowerCase();
+    if (q === "") {
       return players;
     }
-    return players.filter(
-      (p) =>
-        p.nickname.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.name?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    return players.filter((p) => {
+      if (p.nickname.toLowerCase().includes(q) || p.name?.toLowerCase().includes(q)) {
+        return true;
+      }
+      if (!p.tg) {
+        return false;
+      }
+      const tg = p.tg.toLowerCase();
+      return tg.includes(q) || tg.replace(/^@/, "").includes(q.replace(/^@/, ""));
+    });
   }, [searchQuery, players]);
 
   const openPlayerModal = (player: Player) => {
