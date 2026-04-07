@@ -13,6 +13,7 @@ import { TournamentClockPanel } from "../TournamentState/TournamentClockPanel";
 import { useTournamentClock } from "@/core/states/tournaments/hooks/useTournamentClock";
 import { formatClockDuration } from "@/core/states/tournaments/common/TournamentClockTick";
 import {
+  ChipPoolWindowLayout,
   chipPoolCenterColumnCls,
   chipPoolHeaderGridCls,
   chipPoolHeaderLogoImgCls,
@@ -67,6 +68,9 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
   tournament,
   showTvBroadcastLink = true,
 }) => {
+  const chipPoolLayout: ChipPoolWindowLayout = showTvBroadcastLink
+    ? "admin"
+    : "broadcast";
   const tid = String(tournament.id);
   const { data, loading, error } = useTournamentChipPoolSummary(tid);
   const inProgress = tournament.status === "InProgress";
@@ -141,14 +145,17 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
   );
 
   const subHeader = (
-    <div className={chipPoolSubHeaderCls} role="doc-subtitle">
+    <div
+      className={chipPoolSubHeaderCls({ layout: chipPoolLayout })}
+      role="doc-subtitle"
+    >
       {rulesLine}
     </div>
   );
 
   const leftStats =
     data != null ? (
-      <div className={chipPoolLeftColumnCls}>
+      <div className={chipPoolLeftColumnCls({ layout: chipPoolLayout })}>
         <div className={chipPoolStatStackCls}>
           <LeftStat label="Игроки">
             <>
@@ -174,7 +181,7 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
         </div>
       </div>
     ) : (
-      <div className={chipPoolLeftColumnCls} aria-hidden />
+      <div className={chipPoolLeftColumnCls({ layout: chipPoolLayout })} aria-hidden />
     );
 
   const mainGridContent = () => {
@@ -182,7 +189,7 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
       return (
         <>
           {leftStats}
-          <div className={chipPoolCenterColumnCls}>
+          <div className={chipPoolCenterColumnCls({ layout: chipPoolLayout })}>
             {clockCenter}
             <Typography.Text
               size="small"
@@ -200,7 +207,7 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
       return (
         <>
           {leftStats}
-          <div className={chipPoolCenterColumnCls}>
+          <div className={chipPoolCenterColumnCls({ layout: chipPoolLayout })}>
             {clockCenter}
             <Typography.Text
               type="error"
@@ -218,8 +225,11 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
     if (!data) {
       return (
         <>
-          <div className={chipPoolLeftColumnCls} aria-hidden />
-          <div className={chipPoolCenterColumnCls}>
+          <div
+            className={chipPoolLeftColumnCls({ layout: chipPoolLayout })}
+            aria-hidden
+          />
+          <div className={chipPoolCenterColumnCls({ layout: chipPoolLayout })}>
             {clockCenter}
             <Typography.Text
               size="small"
@@ -242,17 +252,21 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
     return (
       <>
         {leftStats}
-        <div className={chipPoolCenterColumnCls}>{clockCenter}</div>
+        <div className={chipPoolCenterColumnCls({ layout: chipPoolLayout })}>
+          {clockCenter}
+        </div>
         <div className={chipPoolRightSpacerCls} aria-hidden />
       </>
     );
   };
 
   return (
-    <div className={chipPoolShellCls}>
+    <div className={chipPoolShellCls({ layout: chipPoolLayout })}>
       {header}
       {subHeader}
-      <div className={chipPoolMainGridCls}>{mainGridContent()}</div>
+      <div className={chipPoolMainGridCls({ layout: chipPoolLayout })}>
+        {mainGridContent()}
+      </div>
       {showTvBroadcastLink ? (
         <div
           style={{
