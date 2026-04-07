@@ -254,12 +254,13 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
                   )}
                 </Typography.Text>
                 <Typography.Text
-                  type="secondary"
-                  size="small"
+                  size="large"
                   style={{
                     ...dimStyle,
+                    fontWeight: 600,
+                    letterSpacing: "0.04em",
                     ...(currentStepItem.ante
-                      ? { textTransform: "uppercase", letterSpacing: "0.06em" }
+                      ? { textTransform: "uppercase" }
                       : {}),
                   }}
                 >
@@ -327,7 +328,7 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
 
             {nextSbBb ? (
               <Typography.Text
-                size="small"
+                size="large"
                 style={{
                   ...dimStyle,
                   marginTop: 8,

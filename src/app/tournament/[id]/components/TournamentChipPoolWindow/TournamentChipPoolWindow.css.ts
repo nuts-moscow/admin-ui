@@ -102,7 +102,7 @@ export const chipPoolSubHeaderCls = style({
   letterSpacing: "0.1em",
   textTransform: "uppercase",
   color: CHIP_POOL_INK_MUTED,
-  padding: `${getGutter(2)} ${getGutter(3)}`,
+  padding: `${getGutter(4)} ${getGutter(3)}`,
   marginBottom: getGutter(4),
   borderTop: "1px solid rgba(120, 100, 85, 0.14)",
   borderBottom: "1px solid rgba(120, 100, 85, 0.12)",

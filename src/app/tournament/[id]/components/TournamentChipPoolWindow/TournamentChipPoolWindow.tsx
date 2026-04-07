@@ -42,9 +42,7 @@ function buildRulesSubtitle(tournament: TournamentInfoResponse): string {
   }
   if (s.freezeOutEnabled) {
     parts.push("Re-entry: выкл. (freeze-out)");
-  } else if (s.maxReentries != null) {
-    parts.push(`До ${s.maxReentries} реентри на игрока`);
-  } else {
+  } else if (s.maxReentries == null) {
     parts.push("Re-entry: по правилам турнира");
   }
   return parts.join("  |  ");
