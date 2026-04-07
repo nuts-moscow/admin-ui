@@ -25,7 +25,7 @@ export const chipPoolShellCls = style({
   display: "flex",
   flexDirection: "column",
   fontFamily: "var(--primary-font-family)",
-  padding: getGutter([3, 4, 4, 4]),
+  padding: getGutter([5, 4, 4, 4]),
   position: "relative",
   isolation: "isolate",
   backgroundColor: "#e8dfd4",
@@ -103,7 +103,7 @@ export const chipPoolSubHeaderCls = style({
   color: CHIP_POOL_INK_MUTED,
   padding: `${getGutter(4)} ${getGutter(3)}`,
   marginBottom: getGutter(4),
-  borderRadius: 0,
+  borderRadius: "clamp(12px, 1.5vw, 18px)",
   border: "1px solid rgba(120, 100, 85, 0.14)",
   backgroundColor: "rgba(218, 208, 195, 0.5)",
 });
