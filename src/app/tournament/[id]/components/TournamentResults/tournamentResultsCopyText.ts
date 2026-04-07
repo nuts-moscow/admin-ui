@@ -1,3 +1,4 @@
+import { DateTime } from "luxon";
 import { InGamePlayerState } from "@/core/states/tournaments/common/InGamePlayerState";
 import { TournamentStatus } from "@/core/states/tournaments/common/TournamentStatus";
 import { formatBountyCount } from "@/core/states/tournaments/common/formatBountyCount";
@@ -50,21 +51,58 @@ export function displayPlaceNumber(
   return totalPlayers - placement + 1;
 }
 
-/** Текст для буфера: места и баунти, как кнопка «Скопировать» на вкладке результатов. */
+function formatTournamentDateLine(epochSeconds: number): string {
+  return DateTime.fromSeconds(epochSeconds).toLocal().toFormat("dd.MM.yyyy");
+}
+
+function bountyCopySuffix(bountyCount: number): string {
+  if (!Number.isFinite(bountyCount) || bountyCount <= 0) {
+    return "";
+  }
+  return ` (${formatBountyCount(bountyCount)} 🥥)`;
+}
+
+function formatResultsCopyLine(
+  rank: number | null,
+  playerName: string,
+  bountyCount: number,
+): string {
+  const suffix = bountyCopySuffix(bountyCount);
+  if (rank === 1) {
+    return `🥇${playerName}${suffix}`;
+  }
+  if (rank === 2) {
+    return `🥈${playerName}${suffix}`;
+  }
+  if (rank === 3) {
+    return `🥉 ${playerName}${suffix}`;
+  }
+  if (rank == null) {
+    return `${playerName}${suffix}`;
+  }
+  return `${rank}. ${playerName}${suffix}`;
+}
+
+/**
+ * Текст для буфера: заголовок с датой, места с медалями и баунти в формате «(N 🥥)».
+ */
 export function buildTournamentResultsCopyText(
   players: readonly InGamePlayerState[],
   tournamentStatus: TournamentStatus,
+  tournamentDateEpochSeconds: number,
 ): string {
   const rows = sortTournamentResultsRows(players, tournamentStatus);
   const totalPlayers = rows.length;
-  return rows
-    .map((row) => {
-      const rank = displayPlaceNumber(
-        row.placement,
-        totalPlayers,
-        tournamentStatus,
-      );
-      return `${rank ?? "-"}. ${row.playerName} — Баунти: ${formatBountyCount(row.bountyCount)}`;
-    })
-    .join("\n");
+  const header = `РЕЗУЛЬТАТЫ ИГРЫ, ${formatTournamentDateLine(
+    tournamentDateEpochSeconds,
+  )}`;
+  const body = rows.map((row) => {
+    const rank = displayPlaceNumber(
+      row.placement,
+      totalPlayers,
+      tournamentStatus,
+    );
+    return formatResultsCopyLine(rank, row.playerName, row.bountyCount);
+  });
+  return [header, "", ...body].join("\n");
 }

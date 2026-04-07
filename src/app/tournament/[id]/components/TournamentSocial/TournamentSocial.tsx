@@ -22,6 +22,7 @@ export const TournamentSocial: FC<TournamentSocialProps> = ({
   const tournamentId = String(tournament.id);
   const { data: liveTournament } = useTournament(tournamentId);
   const tournamentStatus = liveTournament?.status ?? tournament.status;
+  const tournamentDate = liveTournament?.date ?? tournament.date;
   const { data: allPlayers = [] } = useTournamentPlayerState(tournamentId);
 
   const copyTgParticipantsList = async () => {
@@ -48,7 +49,11 @@ export const TournamentSocial: FC<TournamentSocialProps> = ({
   };
 
   const copyResults = async () => {
-    const text = buildTournamentResultsCopyText(allPlayers, tournamentStatus);
+    const text = buildTournamentResultsCopyText(
+      allPlayers,
+      tournamentStatus,
+      tournamentDate,
+    );
     if (!text) {
       return;
     }

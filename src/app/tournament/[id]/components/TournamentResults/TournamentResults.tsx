@@ -354,6 +354,7 @@ export const TournamentResults: FC<TournamentResultsProps> = ({
   const tournamentId = String(tournament.id);
   const { data: liveTournament } = useTournament(tournamentId);
   const tournamentStatus = liveTournament?.status ?? tournament.status;
+  const tournamentDate = liveTournament?.date ?? tournament.date;
   const { data: players = [], loading } = useTournamentPlayerState(tournamentId);
   const [BountyModal, openBountyModal] = useModal(BountyListModal);
   const [EliminatedByModalConnect, openEliminatedByModal] =
@@ -369,7 +370,11 @@ export const TournamentResults: FC<TournamentResultsProps> = ({
     displayPlaceNumber(placement, totalPlayers, tournamentStatus);
 
   const copyResults = async () => {
-    const text = buildTournamentResultsCopyText(players, tournamentStatus);
+    const text = buildTournamentResultsCopyText(
+      players,
+      tournamentStatus,
+      tournamentDate,
+    );
     if (!text) {
       return;
     }
