@@ -1,9 +1,12 @@
 "use client";
 
-import { FC, ReactNode } from "react";
+import { FC, ReactNode, useCallback } from "react";
 import Image from "next/image";
 import { Formatter } from "@/components/Formatter/Formatter";
 import { Typography } from "@/components/Typography/Typography";
+import { Button } from "@/components/Button/Button";
+import { toast } from "@/components/Toast/Toast";
+import { Link2 } from "lucide-react";
 import { useTournamentChipPoolSummary } from "@/core/states/tournaments/hooks/useTournamentChipPoolSummary";
 import { TournamentInfoResponse } from "@/core/states/tournaments/requests/getTournament";
 import { TournamentClockPanel } from "../TournamentState/TournamentClockPanel";
@@ -29,6 +32,8 @@ import { CHIP_POOL_INK_MUTED } from "./chipPoolTokens";
 
 export interface TournamentChipPoolWindowProps {
   readonly tournament: TournamentInfoResponse;
+  /** Ссылка на страницу только для эфира (/tournament/…/display). На самой этой странице — false. */
+  readonly showTvBroadcastLink?: boolean;
 }
 
 function buildRulesSubtitle(tournament: TournamentInfoResponse): string {
@@ -59,6 +64,7 @@ function LeftStat({ label, children }: { label: string; children: ReactNode }) {
 
 export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
   tournament,
+  showTvBroadcastLink = true,
 }) => {
   const tid = String(tournament.id);
   const { data, loading, error } = useTournamentChipPoolSummary(tid);
@@ -91,6 +97,27 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
     clockBinding.tick?.secondsUntilNextBreak != null
       ? formatClockDuration(clockBinding.tick.secondsUntilNextBreak)
       : "—";
+
+  const displayPath = `/tournament/${tournament.id}/display`;
+
+  const copyDisplayUrl = useCallback(async () => {
+    const url =
+      typeof window !== "undefined"
+        ? `${window.location.origin}${displayPath}`
+        : displayPath;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({
+        type: "success",
+        message: "Ссылка для ТВ скопирована",
+      });
+    } catch {
+      toast({
+        type: "error",
+        message: "Не удалось скопировать — скопируйте из адресной строки",
+      });
+    }
+  }, [displayPath]);
 
   const header = (
     <header className={chipPoolHeaderGridCls}>
@@ -223,6 +250,48 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
       {header}
       {subHeader}
       <div className={chipPoolMainGridCls}>{mainGridContent()}</div>
+      {showTvBroadcastLink ? (
+        <div
+          style={{
+            marginTop: 16,
+            paddingTop: 12,
+            borderTop: "1px solid rgba(120, 100, 85, 0.12)",
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: 10,
+            justifyContent: "center",
+          }}
+        >
+          <Typography.Text size="small" type="secondary" style={{ textAlign: "center" }}>
+            Эфир на ТВ / проектор: отдельная страница без вкладок админки — откройте в отдельном окне
+            или в режиме киоска браузера.
+          </Typography.Text>
+          <Button
+            type="secondary"
+            size="small"
+            iconLeft={<Link2 size={16} />}
+            htmlType="button"
+            onClick={copyDisplayUrl}
+          >
+            Скопировать ссылку
+          </Button>
+          <Button
+            type="accent"
+            size="small"
+            htmlType="button"
+            onClick={() => {
+              const url =
+                typeof window !== "undefined"
+                  ? `${window.location.origin}${displayPath}`
+                  : displayPath;
+              window.open(url, "_blank", "noopener,noreferrer");
+            }}
+          >
+            Открыть в новой вкладке
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 };
