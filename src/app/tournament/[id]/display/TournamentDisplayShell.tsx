@@ -21,7 +21,7 @@ export const TournamentDisplayShell: FC<TournamentDisplayShellProps> = ({
         boxSizing: "border-box",
         position: "relative",
         /** Совпадает с фоном турнирного окна — нет «белых» углов за скруглением. */
-        backgroundColor: "#e5d6c4",
+        backgroundColor: "#d9c4ae",
       }}
     >
       <TournamentChipPoolWindow

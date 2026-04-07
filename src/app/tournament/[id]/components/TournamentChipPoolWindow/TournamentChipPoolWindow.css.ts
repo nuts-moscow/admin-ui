@@ -11,11 +11,11 @@ const chipPoolLeftContentInset = "clamp(24px, 6vw, 88px)";
 
 /** SVG grain (feTurbulence) — лёгкая «бумажная» фактура поверх градиента. */
 const grainSvg = encodeURIComponent(
-  `<svg xmlns='http://www.w3.org/2000/svg' width='256' height='256' viewBox='0 0 256 256'><filter id='g' x='0' y='0'><feTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(#g)' opacity='0.33'/></svg>`,
+  `<svg xmlns='http://www.w3.org/2000/svg' width='256' height='256' viewBox='0 0 256 256'><filter id='g' x='0' y='0'><feTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(#g)' opacity='0.4'/></svg>`,
 );
 
 /**
- * Песочно-кремовый mesh (персик, карамель, тёплый тауп) + зерно.
+ * Тёплый песочно-кремовый mesh (персик, карамель, тауп) + зерно.
  */
 export const chipPoolShellCls = style({
   width: "100%",
@@ -25,21 +25,28 @@ export const chipPoolShellCls = style({
   display: "flex",
   flexDirection: "column",
   fontFamily: "var(--primary-font-family)",
-  padding: getGutter([5, 4, 4, 4]),
+  /**
+   * Сверху — зазор над лого и названием (как на макете эфира);
+   * снизу компактнее.
+   */
+  paddingTop: "clamp(40px, 7vh, 88px)",
+  paddingRight: getGutter(4),
+  paddingBottom: getGutter(2),
+  paddingLeft: getGutter(4),
   position: "relative",
   isolation: "isolate",
-  backgroundColor: "#e5d6c4",
+  backgroundColor: "#d9c4ae",
   backgroundImage: `
     url("data:image/svg+xml,${grainSvg}"),
-    radial-gradient(ellipse 95% 85% at 88% 12%, rgba(248, 200, 168, 0.78) 0%, transparent 48%),
-    radial-gradient(ellipse 80% 70% at 10% 48%, rgba(236, 205, 178, 0.72) 0%, transparent 45%),
-    radial-gradient(ellipse 110% 60% at 50% 102%, rgba(175, 148, 125, 0.52) 0%, transparent 42%),
-    radial-gradient(circle at 72% 58%, rgba(215, 185, 160, 0.48) 0%, transparent 36%),
-    radial-gradient(ellipse 70% 45% at 22% 18%, rgba(238, 222, 205, 0.82) 0%, transparent 40%),
-    radial-gradient(ellipse 72% 58% at 8% 82%, rgba(188, 158, 128, 0.45) 0%, transparent 52%),
-    radial-gradient(ellipse 68% 52% at 94% 32%, rgba(210, 175, 145, 0.42) 0%, transparent 48%),
-    radial-gradient(ellipse 88% 65% at 52% 48%, rgba(220, 198, 172, 0.28) 0%, transparent 58%),
-    linear-gradient(168deg, #faf4eb 0%, #ebe0d4 30%, #d9c9b4 62%, #c4b29a 100%)
+    radial-gradient(ellipse 95% 85% at 88% 12%, rgba(252, 195, 158, 0.9) 0%, transparent 44%),
+    radial-gradient(ellipse 80% 70% at 10% 48%, rgba(238, 200, 168, 0.85) 0%, transparent 41%),
+    radial-gradient(ellipse 110% 60% at 50% 102%, rgba(165, 130, 105, 0.62) 0%, transparent 38%),
+    radial-gradient(circle at 72% 58%, rgba(200, 168, 140, 0.58) 0%, transparent 32%),
+    radial-gradient(ellipse 70% 45% at 22% 18%, rgba(242, 220, 198, 0.92) 0%, transparent 36%),
+    radial-gradient(ellipse 72% 58% at 8% 82%, rgba(175, 140, 108, 0.58) 0%, transparent 48%),
+    radial-gradient(ellipse 68% 52% at 94% 32%, rgba(198, 162, 128, 0.56) 0%, transparent 44%),
+    radial-gradient(ellipse 88% 65% at 52% 48%, rgba(210, 180, 150, 0.4) 0%, transparent 54%),
+    linear-gradient(168deg, #f8efe4 0%, #e2d0bc 28%, #c9b092 58%, #ae9578 100%)
   `,
   backgroundSize:
     "180px 180px, auto, auto, auto, auto, auto, auto, auto, auto, auto",
@@ -57,7 +64,8 @@ export const chipPoolHeaderGridCls = style({
   gap: getGutter(2),
   width: "100%",
   minHeight: 56,
-  marginBottom: getGutter(2),
+  /** Отступ до полосы правил задаётся у subheader (симметрия с блоком уровня). */
+  marginBottom: 0,
 });
 
 export const chipPoolHeaderSideCls = style({
@@ -118,7 +126,7 @@ export const chipPoolTitleDateCls = style({
   textTransform: "none",
 });
 
-/** Полоса правил по ширине бежевого блока (как заголовок и сетка), без выхода за края. */
+/** Полоса правил — по вертикали между шапкой (лого/название) и блоком уровня/часов. */
 export const chipPoolSubHeaderCls = style({
   width: "100%",
   boxSizing: "border-box",
@@ -130,6 +138,7 @@ export const chipPoolSubHeaderCls = style({
   textTransform: "uppercase",
   color: CHIP_POOL_INK_MUTED,
   padding: `${getGutter(4)} ${getGutter(3)}`,
+  marginTop: getGutter(6),
   marginBottom: getGutter(4),
   borderRadius: "clamp(12px, 1.5vw, 18px)",
   border: "1px solid rgba(120, 100, 85, 0.14)",
@@ -189,6 +198,9 @@ export const chipPoolCenterColumnCls = style({
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
+  /**
+   * По вертикали по центру растянутой ячейки — выше, чем при flex-end, лишняя высота делится сверху и снизу.
+   */
   justifyContent: "center",
   justifySelf: "center",
   width: "fit-content",
