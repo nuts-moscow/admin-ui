@@ -15,7 +15,7 @@ const grainSvg = encodeURIComponent(
 );
 
 /**
- * Светлый песочно-персиковый mesh + зерно (как референс): без резких линий, тёплые пятна.
+ * Песочно-кремовый mesh (персик, карамель, тёплый тауп) + зерно.
  */
 export const chipPoolShellCls = style({
   width: "100%",
@@ -28,21 +28,24 @@ export const chipPoolShellCls = style({
   padding: getGutter([5, 4, 4, 4]),
   position: "relative",
   isolation: "isolate",
-  backgroundColor: "#e8dfd4",
+  backgroundColor: "#e5d6c4",
   backgroundImage: `
     url("data:image/svg+xml,${grainSvg}"),
-    radial-gradient(ellipse 95% 85% at 88% 12%, rgba(245, 205, 175, 0.58) 0%, transparent 55%),
-    radial-gradient(ellipse 80% 70% at 10% 48%, rgba(237, 210, 185, 0.5) 0%, transparent 52%),
-    radial-gradient(ellipse 110% 60% at 50% 102%, rgba(198, 172, 145, 0.35) 0%, transparent 48%),
-    radial-gradient(circle at 72% 58%, rgba(220, 195, 168, 0.28) 0%, transparent 42%),
-    radial-gradient(ellipse 70% 45% at 22% 18%, rgba(232, 218, 200, 0.6) 0%, transparent 45%),
-    linear-gradient(168deg, #f0e8df 0%, #e8dfd4 38%, #ddd2c6 72%, #d4c4b4 100%)
+    radial-gradient(ellipse 95% 85% at 88% 12%, rgba(248, 200, 168, 0.78) 0%, transparent 48%),
+    radial-gradient(ellipse 80% 70% at 10% 48%, rgba(236, 205, 178, 0.72) 0%, transparent 45%),
+    radial-gradient(ellipse 110% 60% at 50% 102%, rgba(175, 148, 125, 0.52) 0%, transparent 42%),
+    radial-gradient(circle at 72% 58%, rgba(215, 185, 160, 0.48) 0%, transparent 36%),
+    radial-gradient(ellipse 70% 45% at 22% 18%, rgba(238, 222, 205, 0.82) 0%, transparent 40%),
+    radial-gradient(ellipse 72% 58% at 8% 82%, rgba(188, 158, 128, 0.45) 0%, transparent 52%),
+    radial-gradient(ellipse 68% 52% at 94% 32%, rgba(210, 175, 145, 0.42) 0%, transparent 48%),
+    radial-gradient(ellipse 88% 65% at 52% 48%, rgba(220, 198, 172, 0.28) 0%, transparent 58%),
+    linear-gradient(168deg, #faf4eb 0%, #ebe0d4 30%, #d9c9b4 62%, #c4b29a 100%)
   `,
   backgroundSize:
-    "180px 180px, auto, auto, auto, auto, auto, auto",
-  backgroundRepeat: "repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat",
+    "180px 180px, auto, auto, auto, auto, auto, auto, auto, auto, auto",
+  backgroundRepeat: "repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat",
   backgroundBlendMode:
-    "soft-light, normal, normal, normal, normal, normal, normal",
+    "soft-light, normal, normal, normal, normal, normal, normal, normal, normal, normal",
   color: CHIP_POOL_INK,
 });
 
