@@ -25,7 +25,7 @@ export const TournamentPlayers: FC<TournamentPlayersProps> = ({
         type="text"
         value={searchQuery}
         onChange={(event) => setSearchQuery(event.target.value)}
-        placeholder="Поиск игрока: id, имя, Telegram"
+        placeholder="Поиск игрока: id, имя"
         style={{
           width: "100%",
           borderRadius: 12,

@@ -58,8 +58,6 @@ export interface InGamePlayerState {
   readonly tournamentPlayerId: string;
   // Kept for current UI rendering compatibility in current screens.
   readonly playerName: string;
-  /** Telegram (@username или как отдаёт API), если есть в ответе турнира. */
-  readonly tg?: string | null;
   readonly status: PlayerStatus;
   readonly tableId?: string;
   readonly entryPaymentMethod?: PaymentMethod;

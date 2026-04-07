@@ -1184,7 +1184,6 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
       const label = getPlayerLabel(player).toLowerCase();
       return (
         label.includes(normalizedQuery) ||
-        (player.tg ?? "").toLowerCase().includes(normalizedQuery) ||
         player.playerId.toLowerCase().includes(normalizedQuery) ||
         String(player.tournamentPlayerId)
           .toLowerCase()
@@ -1266,7 +1265,7 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
         type="text"
         value={searchQuery}
         onChange={(event) => setSearchQuery(event.target.value)}
-        placeholder="Поиск игрока: id, никнейм, Telegram"
+        placeholder="Поиск игрока: id, никнейм"
         style={{
           width: "100%",
           borderRadius: 12,

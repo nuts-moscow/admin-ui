@@ -47,7 +47,7 @@ export const SettingsPageView: FC<SettingsPageViewProps> = ({
                 placeholder={
                   activeTab === "structures"
                     ? "Поиск по названию структуры"
-                    : "Поиск: ник, имя, Telegram"
+                    : "Поиск игрока: id, имя"
                 }
                 style={{
                   width: "100%",

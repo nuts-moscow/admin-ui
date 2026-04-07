@@ -47,7 +47,7 @@ const AddPlayerModalContent: FC<AddPlayerModalContentProps> = ({
     () =>
       availablePlayers.map((player) => ({
         value: String(player.id),
-        label: `${player.nickname}${player.name ? ` (${player.name})` : ""}${player.tg ? ` · ${player.tg}` : ""}`,
+        label: `${player.nickname}${player.name ? ` (${player.name})` : ""}`,
       })),
     [availablePlayers]
   );

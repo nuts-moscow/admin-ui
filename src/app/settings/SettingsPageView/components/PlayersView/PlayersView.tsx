@@ -34,12 +34,10 @@ export const PlayersView = ({
     if (searchQuery === "") {
       return players;
     }
-    const q = searchQuery.toLowerCase();
     return players.filter(
       (p) =>
-        p.nickname.toLowerCase().includes(q) ||
-        p.name?.toLowerCase().includes(q) ||
-        (p.tg ?? "").toLowerCase().includes(q)
+        p.nickname.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.name?.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [searchQuery, players]);
 
