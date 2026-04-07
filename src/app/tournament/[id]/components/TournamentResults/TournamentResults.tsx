@@ -38,6 +38,8 @@ interface BountyListModalProps {
   tournamentId: string;
   allPlayers: InGamePlayerState[];
   onRemoved: () => void;
+  /** Завершённый турнир: только просмотр, без отката выбиваний. */
+  readOnly?: boolean;
 }
 
 const BountyListModal: FC<BountyListModalProps> = ({
@@ -46,6 +48,7 @@ const BountyListModal: FC<BountyListModalProps> = ({
   tournamentId,
   allPlayers,
   onRemoved,
+  readOnly = false,
 }) => {
   const environment = useEnvironment();
   const [removingId, setRemovingId] = useState<string | null>(null);
@@ -136,15 +139,17 @@ const BountyListModal: FC<BountyListModalProps> = ({
                       </Typography.Text>
                     ) : null}
                   </Box>
-                  <Button
-                    type="ghost"
-                    size="xxSmall"
-                    style={{ padding: 4 }}
-                    iconRight={<X size={16} color="var(--text-error)" />}
-                    onClick={() => handleUndo(ev.eventId, rowKey)}
-                    disabled={removingId !== null}
-                    loading={removingId === rowKey}
-                  />
+                  {!readOnly ? (
+                    <Button
+                      type="ghost"
+                      size="xxSmall"
+                      style={{ padding: 4 }}
+                      iconRight={<X size={16} color="var(--text-error)" />}
+                      onClick={() => handleUndo(ev.eventId, rowKey)}
+                      disabled={removingId !== null}
+                      loading={removingId === rowKey}
+                    />
+                  ) : null}
                 </Box>
               );
             })
@@ -173,7 +178,7 @@ const BountyListModal: FC<BountyListModalProps> = ({
                   <Typography.Text size="small">
                     {name}
                   </Typography.Text>
-                  {eventId ? (
+                  {!readOnly && eventId ? (
                     <Button
                       type="ghost"
                       size="xxSmall"
@@ -183,11 +188,11 @@ const BountyListModal: FC<BountyListModalProps> = ({
                       disabled={removingId !== null}
                       loading={removingId === rowKey}
                     />
-                  ) : (
+                  ) : !readOnly ? (
                     <Typography.Text type="secondary" size="small">
                       Нет eventId
                     </Typography.Text>
-                  )}
+                  ) : null}
                 </Box>
               );
             })
@@ -204,6 +209,7 @@ interface EliminatedByModalProps {
   tournamentId: string;
   allPlayers: InGamePlayerState[];
   onRemoved: () => void;
+  readOnly?: boolean;
 }
 
 const EliminatedByModal: FC<EliminatedByModalProps> = ({
@@ -212,6 +218,7 @@ const EliminatedByModal: FC<EliminatedByModalProps> = ({
   tournamentId,
   allPlayers,
   onRemoved,
+  readOnly = false,
 }) => {
   const environment = useEnvironment();
   const [removingId, setRemovingId] = useState<string | null>(null);
@@ -283,15 +290,17 @@ const EliminatedByModal: FC<EliminatedByModalProps> = ({
                 <Typography.Text size="small">
                   {killerNames(ev.killerPlayerIds)}
                 </Typography.Text>
-                <Button
-                  type="ghost"
-                  size="xxSmall"
-                  style={{ padding: 4 }}
-                  iconRight={<X size={16} color="var(--text-error)" />}
-                  onClick={() => handleUndoEvent(ev.eventId)}
-                  disabled={removingId !== null}
-                  loading={removingId === ev.eventId}
-                />
+                {!readOnly ? (
+                  <Button
+                    type="ghost"
+                    size="xxSmall"
+                    style={{ padding: 4 }}
+                    iconRight={<X size={16} color="var(--text-error)" />}
+                    onClick={() => handleUndoEvent(ev.eventId)}
+                    disabled={removingId !== null}
+                    loading={removingId === ev.eventId}
+                  />
+                ) : null}
               </Box>
             ))
           ) : hasLegacyEventRows ? (
@@ -308,15 +317,17 @@ const EliminatedByModal: FC<EliminatedByModalProps> = ({
                 <Typography.Text size="small">
                   {killerNames(ev.killerPlayerIds)}
                 </Typography.Text>
-                <Button
-                  type="ghost"
-                  size="xxSmall"
-                  style={{ padding: 4 }}
-                  iconRight={<X size={16} color="var(--text-error)" />}
-                  onClick={() => handleUndoEvent(ev.eventId)}
-                  disabled={removingId !== null}
-                  loading={removingId === ev.eventId}
-                />
+                {!readOnly ? (
+                  <Button
+                    type="ghost"
+                    size="xxSmall"
+                    style={{ padding: 4 }}
+                    iconRight={<X size={16} color="var(--text-error)" />}
+                    onClick={() => handleUndoEvent(ev.eventId)}
+                    disabled={removingId !== null}
+                    loading={removingId === ev.eventId}
+                  />
+                ) : null}
               </Box>
             ))
           ) : (
@@ -369,6 +380,7 @@ export const TournamentResults: FC<TournamentResultsProps> = ({
   const totalPlayers = rows.length;
   const placeNumber = (placement: number | null | undefined) =>
     displayPlaceNumber(placement, totalPlayers, tournamentStatus);
+  const resultsBountyReadOnly = tournamentStatus === "Completed";
 
   const copyResults = async () => {
     const text = buildTournamentResultsCopyText(
@@ -408,11 +420,13 @@ export const TournamentResults: FC<TournamentResultsProps> = ({
         tournamentId={tournamentId}
         allPlayers={rows}
         onRemoved={refetchTournamentPlayerState}
+        readOnly={resultsBountyReadOnly}
       />
       <EliminatedByModalConnect
         tournamentId={tournamentId}
         allPlayers={rows}
         onRemoved={refetchTournamentPlayerState}
+        readOnly={resultsBountyReadOnly}
       />
       <Box flex={{ justify: "center", width: "100%" }}>
         <Button

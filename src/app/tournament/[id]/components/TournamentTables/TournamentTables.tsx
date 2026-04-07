@@ -6,6 +6,7 @@ import { Button } from "@/components/Button/Button";
 import { Typography } from "@/components/Typography/Typography";
 import { Modal, WithModalProps, useModal } from "@/components/Modal/Modal";
 import { TournamentInfoResponse } from "@/core/states/tournaments/requests/getTournament";
+import { useTournament } from "@/core/states/tournaments/hooks/useTournament";
 import { TableList } from "../TournamentPlayers/TableList/TableList";
 import { useNonRegisteredTournamentPlayerState } from "@/core/states/tournaments/hooks/useNonRegisteredTournamentPlayerState";
 import { InGamePlayerState, PaymentMethod } from "@/core/states/tournaments/common/InGamePlayerState";
@@ -42,6 +43,8 @@ interface SetOutPlayerModalProps extends WithModalProps {
   readonly tournamentId: string;
   readonly bustedPlayer?: InGamePlayerState;
   readonly players: InGamePlayerState[];
+  /** Завершённый турнир — без записи выбиваний. */
+  readonly eliminationLocked?: boolean;
 }
 
 const statusLabels: Record<string, string> = {
@@ -201,6 +204,7 @@ const SetOutPlayerModal: FC<SetOutPlayerModalProps> = ({
   tournamentId,
   bustedPlayer,
   players,
+  eliminationLocked = false,
 }) => {
   const environment = useEnvironment();
   const [isLoading, setIsLoading] = useState(false);
@@ -243,7 +247,7 @@ const SetOutPlayerModal: FC<SetOutPlayerModalProps> = ({
     (burnedStack ? true : selectedKillerIds.length > 0 && candidates.length > 0);
 
   const handleSave = async () => {
-    if (!bustedPlayer || !canSave || isLoading) {
+    if (eliminationLocked || !bustedPlayer || !canSave || isLoading) {
       return;
     }
     if (burnedStack) {
@@ -314,7 +318,7 @@ const SetOutPlayerModal: FC<SetOutPlayerModalProps> = ({
               type="checkbox"
               checked={burnedStack}
               onChange={(e) => setBurnedStack(e.target.checked)}
-              disabled={isLoading}
+              disabled={isLoading || eliminationLocked}
             />
             <Typography.Text size="small">Сжёг стек</Typography.Text>
           </label>
@@ -327,7 +331,7 @@ const SetOutPlayerModal: FC<SetOutPlayerModalProps> = ({
               placeholder="Сожжённых фишек"
               value={burnedChipsInput}
               onChange={(e) => setBurnedChipsInput(e.target.value)}
-              disabled={isLoading}
+              disabled={isLoading || eliminationLocked}
               style={{
                 width: "100%",
                 borderRadius: 12,
@@ -384,7 +388,7 @@ const SetOutPlayerModal: FC<SetOutPlayerModalProps> = ({
                           return [...next];
                         });
                       }}
-                      disabled={isLoading}
+                      disabled={isLoading || eliminationLocked}
                     />
                     <Typography.Text size="small">
                       {player.playerName} (ID: {player.playerId})
@@ -433,6 +437,7 @@ const SetOutPlayerModal: FC<SetOutPlayerModalProps> = ({
               flexItem={{ flex: 1 }}
               loading={isLoading}
               disabled={
+                eliminationLocked ||
                 !bustedPlayer ||
                 isLoading ||
                 (burnedStack
@@ -452,6 +457,9 @@ const SetOutPlayerModal: FC<SetOutPlayerModalProps> = ({
 
 export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
   const environment = useEnvironment();
+  const { data: liveTournament } = useTournament(String(tournament.id));
+  const tournamentStatus = liveTournament?.status ?? tournament.status;
+  const eliminationLocked = tournamentStatus === "Completed";
   const [selectedTableId, setSelectedTableId] = useState<number | undefined>(
     undefined
   );
@@ -518,6 +526,7 @@ export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
         tournamentId={String(tournament.id)}
         bustedPlayer={playerToSetOut}
         players={setOutModalPlayers}
+        eliminationLocked={eliminationLocked}
       />
       <TableList
         tournamentId={String(tournament.id)}
@@ -608,7 +617,9 @@ export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
                   Убрать со стола
                 </Button>
               )}
-              {tournament.status !== "RegistrationOpen" && player.status !== "Out" && (
+              {tournamentStatus !== "RegistrationOpen" &&
+                !eliminationLocked &&
+                player.status !== "Out" && (
                 <Button
                   type="error"
                   size="xxSmall"

@@ -7,6 +7,7 @@ import { Modal, WithModalProps, useModal } from "@/components/Modal/Modal";
 import { Typography } from "@/components/Typography/Typography";
 import { toast } from "@/components/Toast/Toast";
 import { TournamentInfoResponse } from "@/core/states/tournaments/requests/getTournament";
+import { useTournament } from "@/core/states/tournaments/hooks/useTournament";
 import { useNonRegisteredTournamentPlayerState } from "@/core/states/tournaments/hooks/useNonRegisteredTournamentPlayerState";
 import {
   BountyKillEntry,
@@ -64,6 +65,8 @@ interface AddReentryModalProps extends WithModalProps {
   readonly player?: InGamePlayerState;
   readonly players: InGamePlayerState[];
   readonly reentryStructure?: TournamentsStructureResponse | null;
+  /** false, если турнир завершён — без записи выбиваний через ребай. */
+  readonly allowBountyEdits?: boolean;
 }
 
 interface PayReentriesModalProps extends WithModalProps {
@@ -78,6 +81,7 @@ interface BountyListModalProps {
   tournamentId: string;
   players: InGamePlayerState[];
   onRemoved: () => void;
+  readOnly?: boolean;
 }
 
 const BountyListModal: FC<BountyListModalProps> = ({
@@ -86,6 +90,7 @@ const BountyListModal: FC<BountyListModalProps> = ({
   tournamentId,
   players,
   onRemoved,
+  readOnly = false,
 }) => {
   const environment = useEnvironment();
   const [removingId, setRemovingId] = useState<string | null>(null);
@@ -178,15 +183,17 @@ const BountyListModal: FC<BountyListModalProps> = ({
                       </Typography.Text>
                     ) : null}
                   </Box>
-                  <Button
-                    type="ghost"
-                    size="xxSmall"
-                    style={{ padding: 4 }}
-                    iconRight={<X size={16} color="var(--text-error)" />}
-                    onClick={() => handleUndo(ev.eventId, rowKey)}
-                    disabled={removingId !== null}
-                    loading={removingId === rowKey}
-                  />
+                  {!readOnly ? (
+                    <Button
+                      type="ghost"
+                      size="xxSmall"
+                      style={{ padding: 4 }}
+                      iconRight={<X size={16} color="var(--text-error)" />}
+                      onClick={() => handleUndo(ev.eventId, rowKey)}
+                      disabled={removingId !== null}
+                      loading={removingId === rowKey}
+                    />
+                  ) : null}
                 </Box>
               );
             })
@@ -215,7 +222,7 @@ const BountyListModal: FC<BountyListModalProps> = ({
                   <Typography.Text size="small">
                     {name}
                   </Typography.Text>
-                  {eventId ? (
+                  {!readOnly && eventId ? (
                     <Button
                       type="ghost"
                       size="xxSmall"
@@ -225,11 +232,11 @@ const BountyListModal: FC<BountyListModalProps> = ({
                       disabled={removingId !== null}
                       loading={removingId === rowKey}
                     />
-                  ) : (
+                  ) : !readOnly ? (
                     <Typography.Text type="secondary" size="small">
                       Нет eventId
                     </Typography.Text>
-                  )}
+                  ) : null}
                 </Box>
               );
             })
@@ -246,17 +253,20 @@ interface EliminatedByModalProps {
   tournamentId: string;
   players: InGamePlayerState[];
   onRemoved: () => void;
+  readOnly?: boolean;
 }
 
 interface BurnedRebuyUndoModalProps extends WithModalProps {
   readonly tournamentId: string;
   readonly playerId?: string;
+  readonly readOnly?: boolean;
 }
 
 const BurnedRebuyUndoModal: FC<BurnedRebuyUndoModalProps> = ({
   close,
   tournamentId,
   playerId,
+  readOnly = false,
 }) => {
   const environment = useEnvironment();
   const {
@@ -348,15 +358,17 @@ const BurnedRebuyUndoModal: FC<BurnedRebuyUndoModalProps> = ({
                     <Formatter.number value={ev.chips} type="withoutDecimals" />{" "}
                     фишек
                   </Typography.Text>
-                  <Button
-                    type="secondary"
-                    size="xxSmall"
-                    onClick={() => handleUndo(ev.chips, index)}
-                    disabled={undoingKey !== null}
-                    loading={undoingKey === `undo-${index}-${ev.chips}`}
-                  >
-                    Откат
-                  </Button>
+                  {!readOnly ? (
+                    <Button
+                      type="secondary"
+                      size="xxSmall"
+                      onClick={() => handleUndo(ev.chips, index)}
+                      disabled={undoingKey !== null}
+                      loading={undoingKey === `undo-${index}-${ev.chips}`}
+                    >
+                      Откат
+                    </Button>
+                  ) : null}
                 </Box>
               ))}
             </Box>
@@ -376,6 +388,7 @@ const EliminatedByModal: FC<EliminatedByModalProps> = ({
   tournamentId,
   players,
   onRemoved,
+  readOnly = false,
 }) => {
   const environment = useEnvironment();
   const [removingId, setRemovingId] = useState<string | null>(null);
@@ -447,15 +460,17 @@ const EliminatedByModal: FC<EliminatedByModalProps> = ({
                 <Typography.Text size="small">
                   {killerNames(ev.killerPlayerIds)}
                 </Typography.Text>
-                <Button
-                  type="ghost"
-                  size="xxSmall"
-                  style={{ padding: 4 }}
-                  iconRight={<X size={16} color="var(--text-error)" />}
-                  onClick={() => handleUndoEvent(ev.eventId)}
-                  disabled={removingId !== null}
-                  loading={removingId === ev.eventId}
-                />
+                {!readOnly ? (
+                  <Button
+                    type="ghost"
+                    size="xxSmall"
+                    style={{ padding: 4 }}
+                    iconRight={<X size={16} color="var(--text-error)" />}
+                    onClick={() => handleUndoEvent(ev.eventId)}
+                    disabled={removingId !== null}
+                    loading={removingId === ev.eventId}
+                  />
+                ) : null}
               </Box>
             ))
           ) : hasLegacyEventRows ? (
@@ -472,15 +487,17 @@ const EliminatedByModal: FC<EliminatedByModalProps> = ({
                 <Typography.Text size="small">
                   {killerNames(ev.killerPlayerIds)}
                 </Typography.Text>
-                <Button
-                  type="ghost"
-                  size="xxSmall"
-                  style={{ padding: 4 }}
-                  iconRight={<X size={16} color="var(--text-error)" />}
-                  onClick={() => handleUndoEvent(ev.eventId)}
-                  disabled={removingId !== null}
-                  loading={removingId === ev.eventId}
-                />
+                {!readOnly ? (
+                  <Button
+                    type="ghost"
+                    size="xxSmall"
+                    style={{ padding: 4 }}
+                    iconRight={<X size={16} color="var(--text-error)" />}
+                    onClick={() => handleUndoEvent(ev.eventId)}
+                    disabled={removingId !== null}
+                    loading={removingId === ev.eventId}
+                  />
+                ) : null}
               </Box>
             ))
           ) : (
@@ -533,6 +550,7 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
   player,
   players,
   reentryStructure,
+  allowBountyEdits = true,
 }) => {
   const environment = useEnvironment();
   const [count, setCount] = useState<number>(1);
@@ -590,6 +608,9 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
   }, [player?.playerId, killerCandidateIdsKey]);
 
   const handleSave = async () => {
+    if (!allowBountyEdits) {
+      return;
+    }
     if (
       !player ||
       count <= 0 ||
@@ -644,6 +665,11 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
       <Modal.Title showCloseButton>Добавить ребай</Modal.Title>
       <Modal.Content minWidth={420}>
         <Box flex={{ col: true, gap: 4 }}>
+          {!allowBountyEdits ? (
+            <Typography.Text type="secondary" size="small">
+              Турнир завершён — добавление ребаев и выбиваний недоступно.
+            </Typography.Text>
+          ) : null}
           <Typography.Text type="secondary" size="small">
             {player
               ? `Игрок: ${getPlayerLabel(player)}`
@@ -671,7 +697,7 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
               type="checkbox"
               checked={burnedStack}
               onChange={(e) => setBurnedStack(e.target.checked)}
-              disabled={isSaving}
+              disabled={isSaving || !allowBountyEdits}
             />
             <Typography.Text size="small">Сжёг стек</Typography.Text>
           </label>
@@ -684,7 +710,7 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
               placeholder="Сожжённых фишек (на один ребай)"
               value={burnedChipsInput}
               onChange={(e) => setBurnedChipsInput(e.target.value)}
-              disabled={isSaving}
+              disabled={isSaving || !allowBountyEdits}
               style={{
                 width: "100%",
                 borderRadius: 12,
@@ -747,7 +773,7 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
                           return [...next];
                         });
                       }}
-                      disabled={isSaving}
+                      disabled={isSaving || !allowBountyEdits}
                     />
                     <Typography.Text size="small">
                       {c.playerName} ({c.playerId})
@@ -790,6 +816,7 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
                   : Number.POSITIVE_INFINITY;
               setCount(Math.min(Math.max(1, raw), cap));
             }}
+            disabled={isSaving || !allowBountyEdits}
             style={{
               width: "100%",
               borderRadius: 12,
@@ -817,6 +844,7 @@ const AddReentryModal: FC<AddReentryModalProps> = ({
               flexItem={{ flex: 1 }}
               loading={isSaving}
               disabled={
+                !allowBountyEdits ||
                 !player ||
                 count <= 0 ||
                 isSaving ||
@@ -1147,6 +1175,10 @@ const PayReentriesModal: FC<PayReentriesModalProps> = ({
 export const TournamentReentries: FC<TournamentReentriesProps> = ({
   tournament,
 }) => {
+  const { data: liveTournament } = useTournament(String(tournament.id));
+  const tournamentStatus = liveTournament?.status ?? tournament.status;
+  const bountyEditingLocked = tournamentStatus === "Completed";
+
   const ACTIONS_COLUMN_WIDTH = 420;
   const [searchQuery, setSearchQuery] = useState("");
   const [playerToAddReentry, setPlayerToAddReentry] = useState<
@@ -1223,6 +1255,7 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
         player={playerToAddReentry}
         players={playersForModals}
         reentryStructure={tournament.structure}
+        allowBountyEdits={!bountyEditingLocked}
       />
       <PayReentriesModalConnect
         tournamentId={String(tournament.id)}
@@ -1233,15 +1266,18 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
         tournamentId={String(tournament.id)}
         players={playersForModals}
         onRemoved={refetchTournamentPlayerState}
+        readOnly={bountyEditingLocked}
       />
       <EliminatedByModalConnect
         tournamentId={String(tournament.id)}
         players={playersForModals}
         onRemoved={refetchTournamentPlayerState}
+        readOnly={bountyEditingLocked}
       />
       <BurnedRebuyUndoModalConnect
         tournamentId={String(tournament.id)}
         playerId={burnedRebuyUndoPlayerId}
+        readOnly={bountyEditingLocked}
       />
       <Box
         flex={{ width: "100%", align: "center", justify: "space-between" }}
@@ -1386,11 +1422,13 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
                   <Button
                     type="secondary"
                     size="xxSmall"
-                    disabled={reentryRemaining <= 0}
+                    disabled={reentryRemaining <= 0 || bountyEditingLocked}
                     title={
-                      reentryRemaining <= 0
-                        ? "Лимит реентри исчерпан или турнир freeze-out"
-                        : undefined
+                      bountyEditingLocked
+                        ? "Турнир завершён — ребаи и выбивания недоступны"
+                        : reentryRemaining <= 0
+                          ? "Лимит реентри исчерпан или турнир freeze-out"
+                          : undefined
                     }
                     onClick={() => {
                       setPlayerToAddReentry(player);
@@ -1399,9 +1437,10 @@ export const TournamentReentries: FC<TournamentReentriesProps> = ({
                   >
                     Добавить ребай
                   </Button>
-                  {(player.burnedStackEvents ?? []).some(
-                    (e) => e.source === "Rebuy",
-                  ) && (
+                  {!bountyEditingLocked &&
+                    (player.burnedStackEvents ?? []).some(
+                      (e) => e.source === "Rebuy",
+                    ) && (
                     <Button
                       type="secondary"
                       size="xxSmall"
