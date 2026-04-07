@@ -549,6 +549,7 @@ export const InGamePlayers: FC<InGamePlayersProps> = ({
     return (nonRegisteredPlayers ?? []).filter((player) => {
       return (
         (player.playerName ?? "").toLowerCase().includes(normalizedQuery) ||
+        (player.tg ?? "").toLowerCase().includes(normalizedQuery) ||
         player.playerId.toLowerCase().includes(normalizedQuery) ||
         String(player.tournamentPlayerId).toLowerCase().includes(normalizedQuery)
       );

@@ -17,6 +17,7 @@ import {
   chipPoolHeaderSideCls,
   chipPoolLeftColumnCls,
   chipPoolMainGridCls,
+  chipPoolPatternOverlayCls,
   chipPoolRightSpacerCls,
   chipPoolShellCls,
   chipPoolStatLabelCls,
@@ -222,6 +223,7 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
 
   return (
     <div className={chipPoolShellCls}>
+      <div className={chipPoolPatternOverlayCls} aria-hidden />
       {header}
       {subHeader}
       <div className={chipPoolMainGridCls}>{mainGridContent()}</div>
