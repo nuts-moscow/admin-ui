@@ -1,10 +1,8 @@
 "use client";
 
-import { FC, useCallback } from "react";
+import { FC } from "react";
 import { TournamentChipPoolWindow } from "../components/TournamentChipPoolWindow/TournamentChipPoolWindow";
 import { TournamentInfoResponse } from "@/core/states/tournaments/requests/getTournament";
-import { Button } from "@/components/Button/Button";
-import { Maximize2 } from "lucide-react";
 
 export interface TournamentDisplayShellProps {
   readonly tournament: TournamentInfoResponse;
@@ -13,15 +11,6 @@ export interface TournamentDisplayShellProps {
 export const TournamentDisplayShell: FC<TournamentDisplayShellProps> = ({
   tournament,
 }) => {
-  const enterFullscreen = useCallback(() => {
-    const el = document.documentElement;
-    if (!document.fullscreenElement && el.requestFullscreen) {
-      void el.requestFullscreen().catch(() => {
-        /* пользователь или политика браузера */
-      });
-    }
-  }, []);
-
   return (
     <div
       style={{
@@ -35,26 +24,6 @@ export const TournamentDisplayShell: FC<TournamentDisplayShellProps> = ({
         backgroundColor: "#e8dfd4",
       }}
     >
-      <div
-        style={{
-          position: "fixed",
-          top: 12,
-          right: 12,
-          zIndex: 50,
-          opacity: 0.45,
-        }}
-      >
-        <Button
-          type="secondary"
-          size="small"
-          iconLeft={<Maximize2 size={18} />}
-          htmlType="button"
-          onClick={enterFullscreen}
-          style={{ pointerEvents: "auto" }}
-        >
-          Полный экран
-        </Button>
-      </div>
       <TournamentChipPoolWindow
         tournament={tournament}
         showTvBroadcastLink={false}
