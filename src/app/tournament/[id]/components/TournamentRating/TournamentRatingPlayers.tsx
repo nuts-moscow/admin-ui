@@ -18,6 +18,8 @@ import {
   sortTournamentResultsRows,
   displayPlaceNumber,
 } from "../TournamentResults/tournamentResultsCopyText";
+import { buildTournamentRatingTableCopyText } from "./tournamentRatingCopyText";
+import { Copy } from "lucide-react";
 
 const GRID =
   "52px minmax(140px, 1fr) 80px 80px 120px 100px";
@@ -124,6 +126,30 @@ export const TournamentRatingPlayers: FC<TournamentRatingPlayersProps> = ({
     </Typography.Text>
   );
 
+  const copyRatingTable = async () => {
+    if (rows.length === 0) {
+      return;
+    }
+    const text = buildTournamentRatingTableCopyText(
+      rows,
+      tournament,
+      totalPlayers,
+    );
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({
+        type: "success",
+        message: "Таблица скопирована",
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        type: "error",
+        message: "Не удалось скопировать",
+      });
+    }
+  };
+
   return (
     <Box
       flex={{ col: true, gap: 0 }}
@@ -145,6 +171,25 @@ export const TournamentRatingPlayers: FC<TournamentRatingPlayersProps> = ({
             ? "Итоговые баллы игроков"
             : "Баллы вылетевших игроков"}
         </Typography.Text>
+      </Box>
+
+      <Box
+        flex={{ justify: "center" }}
+        style={{
+          padding: "12px 16px",
+          borderBottom: "1px solid rgba(0,0,0,0.06)",
+        }}
+      >
+        <Button
+          type="secondary"
+          size="medium"
+          iconLeft={<Copy size={18} />}
+          onClick={copyRatingTable}
+          disabled={rows.length === 0 || loading}
+          style={{ minWidth: 220 }}
+        >
+          Скопировать таблицу
+        </Button>
       </Box>
 
       <Box style={{ overflowX: "auto" }}>
