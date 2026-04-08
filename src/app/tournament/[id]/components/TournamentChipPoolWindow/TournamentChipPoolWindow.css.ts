@@ -91,13 +91,27 @@ export const chipPoolHeaderSideCls = style({
   minWidth: 0,
 });
 
-export const chipPoolHeaderLogoWrapCls = style({
-  display: "flex",
-  justifyContent: "flex-start",
-  alignItems: "center",
-  minHeight: 40,
-  minWidth: 0,
-  paddingLeft: chipPoolLeftContentInset,
+export const chipPoolHeaderLogoWrapCls = recipe({
+  base: {
+    display: "flex",
+    justifyContent: "flex-start",
+    alignItems: "center",
+    minHeight: 40,
+    minWidth: 0,
+  },
+  variants: {
+    layout: {
+      admin: {
+        paddingLeft: chipPoolLeftContentInset,
+      },
+      broadcast: {
+        paddingLeft: "clamp(12px, 2.5vw, 40px)",
+      },
+    },
+  },
+  defaultVariants: {
+    layout: "admin",
+  },
 });
 
 export const chipPoolHeaderLogoImgCls = recipe({
@@ -259,6 +273,7 @@ export const chipPoolLeftColumnCls = recipe({
       broadcast: {
         justifyContent: "var(--chip-broadcast-column-justify)",
         alignSelf: "stretch",
+        paddingLeft: "clamp(12px, 2.5vw, 40px)",
       },
     },
   },

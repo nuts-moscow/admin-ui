@@ -310,8 +310,6 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
               flex={{ justify: "center", align: "center" }}
               width="100%"
               style={{
-                marginTop: 12,
-                marginBottom: 12,
                 marginLeft: "auto",
                 marginRight: "auto",
                 padding: "var(--bc-timer-pad-y) var(--bc-timer-pad-x)",
@@ -351,7 +349,6 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
               <Typography.Text
                 style={{
                   ...dimStyle,
-                  marginTop: 8,
                   letterSpacing: "0.04em",
                   textTransform: "uppercase",
                   fontWeight: 600,

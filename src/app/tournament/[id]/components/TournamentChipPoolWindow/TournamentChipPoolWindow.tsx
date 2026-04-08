@@ -137,7 +137,7 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
 
   const header = (
     <header className={chipPoolHeaderGridCls}>
-      <div className={chipPoolHeaderLogoWrapCls}>
+      <div className={chipPoolHeaderLogoWrapCls({ layout: chipPoolLayout })}>
         <Image
           src="/nuts-family-logo.png"
           alt="NUTS FAMILY"
