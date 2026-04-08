@@ -14,7 +14,7 @@ export interface TournamentDisplayShellProps {
  * (hover: none) / (pointer: coarse) — ТВ-браузеры часто врут.
  */
 const tvOverrides: CSSProperties & Record<string, string> = {
-  "--chip-broadcast-title-size": "clamp(1.4rem, min(4.5vw, 7vh), 4.5rem)",
+  "--chip-broadcast-title-size": "clamp(1.1rem, min(2.5vw, 4vh), 2.5rem)",
   "--chip-broadcast-stat-label-size":
     "clamp(0.88rem, min(1.65vw, 2.6vh), 1.4rem)",
   "--chip-broadcast-stat-value-size": "clamp(2rem, min(4.5vw, 8.5vh), 6rem)",

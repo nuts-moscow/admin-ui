@@ -213,13 +213,71 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
           </Typography.Text>
         )}
 
-        {tick && clockInactive && !completedOrFinished && (
+        {tick && clockInactive && !tick.paused && !completedOrFinished && (
           <Typography.Text type="secondary" size="small" style={dimStyle}>
             Часы неактивны.
           </Typography.Text>
         )}
 
-        {tick && !completedOrFinished && tick.clockActive && (
+        {tick && tick.paused && !completedOrFinished && (
+          <>
+            <Typography.Text
+              bold
+              textAlign="center"
+              style={{
+                ...primaryStyle,
+                display: "block",
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                fontSize: "var(--bc-font-blinds)",
+                lineHeight: 1.1,
+                width: "100%",
+              }}
+            >
+              Пауза
+            </Typography.Text>
+            <Box
+              flex={{ justify: "center", align: "center" }}
+              width="100%"
+              style={{
+                marginLeft: "auto",
+                marginRight: "auto",
+                padding: "var(--bc-timer-pad-y) var(--bc-timer-pad-x)",
+                minWidth: "var(--bc-timer-max-width)",
+                maxWidth: "var(--bc-timer-max-width)",
+                border: onDarkBackground
+                  ? `1px solid ${dark.timerBorder}`
+                  : "1px solid rgba(74, 63, 53, 0.14)",
+                borderRadius: onDarkBackground ? 14 : 20,
+                backgroundColor: onDarkBackground
+                  ? dark.timerBg
+                  : "rgba(255, 250, 242, 0.62)",
+                boxSizing: "border-box",
+                backdropFilter: "blur(14px)",
+                WebkitBackdropFilter: "blur(14px)",
+              }}
+            >
+              <Typography.Text
+                bold
+                style={{
+                  ...primaryStyle,
+                  fontFamily: "var(--primary-font-family)",
+                  fontVariantNumeric: "tabular-nums",
+                  fontSize: "var(--bc-font-timer)",
+                  lineHeight: 1,
+                  letterSpacing: "0.04em",
+                  textAlign: "center",
+                  display: "block",
+                  width: "100%",
+                }}
+              >
+                {timerText}
+              </Typography.Text>
+            </Box>
+          </>
+        )}
+
+        {tick && !completedOrFinished && tick.clockActive && !tick.paused && (
           <>
             {currentStepItem && isBlind(currentStepItem) ? (
               <Box
@@ -285,14 +343,21 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
                 </Typography.Text>
               </Box>
             ) : currentStepItem && isBreak(currentStepItem) ? (
-              <>
-                <Typography.Text size="medium" style={primaryStyle}>
-                  Перерыв
-                </Typography.Text>
-                <Typography.Text type="secondary" size="small" style={dimStyle}>
-                  {currentStepItem.duration} мин
-                </Typography.Text>
-              </>
+              <Typography.Text
+                bold
+                textAlign="center"
+                style={{
+                  ...primaryStyle,
+                  display: "block",
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  fontSize: "var(--bc-font-blinds)",
+                  lineHeight: 1.1,
+                  width: "100%",
+                }}
+              >
+                Перерыв
+              </Typography.Text>
             ) : (
               <>
                 <Typography.Text size="medium" style={primaryStyle}>
