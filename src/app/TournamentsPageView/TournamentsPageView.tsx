@@ -43,10 +43,15 @@ export const TournamentsPageView: FC<TournamentsPageViewProps> = ({
 
   const tournamentsToShow = useMemo(() => {
     if (!tournaments) return [];
-    if (!searchQuery) return tournaments;
-    return tournaments.filter((tournament) =>
-      tournament.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filtered = searchQuery
+      ? tournaments.filter((tournament) =>
+          tournament.name.toLowerCase().includes(searchQuery.toLowerCase()),
+        )
+      : [...tournaments];
+    if (activeTab === "Completed") {
+      filtered.sort((a, b) => b.date - a.date);
+    }
+    return filtered;
   }, [tournaments, searchQuery, activeTab]);
 
   const handleTabChange = (tabKey: string) => {
