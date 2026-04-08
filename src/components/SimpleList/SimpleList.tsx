@@ -10,6 +10,8 @@ export interface SimpleListCardProps extends WithChildren {
   readonly selected?: boolean;
   readonly onClick?: () => void;
   readonly className?: string;
+  /** Ряд с несколькими колонками переносится на следующую строку, если не влезает по ширине. */
+  readonly rowWrap?: boolean;
 }
 
 const SimpleListCard: FC<SimpleListCardProps> = ({
@@ -17,11 +19,17 @@ const SimpleListCard: FC<SimpleListCardProps> = ({
   onClick,
   selected,
   className,
+  rowWrap,
 }) => {
   return (
     <Box
       onClick={onClick}
-      flex={{ gap: 16, align: "center", width: "100%" }}
+      flex={{
+        gap: 16,
+        align: rowWrap ? "flex-start" : "center",
+        width: "100%",
+        ...(rowWrap ? { flexWrap: "wrap" } : {}),
+      }}
       padding={4}
       borderRadius="m"
       border

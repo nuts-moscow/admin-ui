@@ -6,7 +6,14 @@ import {
   BlindType,
 } from "@/core/states/tournamentStructures/common/BlindType";
 import { FC, useEffect, useMemo, useState } from "react";
-import { blindListCls, blindListInputCls } from "./BlindList.css";
+import {
+  blindLevelFieldRowAnteCls,
+  blindLevelFieldRowMiddleCls,
+  blindLevelFieldRowSideCls,
+  blindLevelGridCls,
+  blindListCls,
+  blindListInputCls,
+} from "./BlindList.css";
 import { SimpleList } from "@/components/SimpleList/SimpleList";
 import { Typography } from "@/components/Typography/Typography";
 import { Button } from "@/components/Button/Button";
@@ -255,92 +262,83 @@ export const BlindList: FC<
               selected={selectedItemId === item.id}
             >
               {isPartialBlind(item) ? (
-                <>
-                  <SimpleList.Column minWidth={40}>
-                    <Box flex={{ gap: 2, align: "center" }}>
-                      <Typography.Text size="xSmall">Lvl</Typography.Text>
-                      <input
-                        readOnly
-                        className={blindListInputCls}
-                        type="number"
-                        value={item.level}
-                      />
-                    </Box>
-                  </SimpleList.Column>
-                  <SimpleList.Column minWidth={40}>
-                    <Box flex={{ gap: 2, align: "center" }}>
-                      <Typography.Text size="xSmall">Мин</Typography.Text>
-                      <input
-                        readOnly={readOnly}
-                        key={`${item.id}-blind-duration`}
-                        className={blindListInputCls}
-                        type="number"
-                        value={item.duration || undefined}
-                        onChange={(e) =>
-                          changeBlindItem(
-                            index,
-                            "duration",
-                            e.target.value ? Number(e.target.value) : undefined
-                          )
-                        }
-                      />
-                    </Box>
-                  </SimpleList.Column>
-                  <SimpleList.Column minWidth={40}>
-                    <Box flex={{ gap: 2 }}>
-                      <Typography.Text size="xSmall">SB</Typography.Text>
-                      <input
-                        readOnly={readOnly}
-                        key={`${item.id}-blind-smallBlind`}
-                        className={blindListInputCls}
-                        type="number"
-                        value={item.smallBlind || undefined}
-                        onChange={(e) =>
-                          changeBlindItem(
-                            index,
-                            "smallBlind",
-                            e.target.value ? Number(e.target.value) : undefined
-                          )
-                        }
-                      />
-                    </Box>
-                  </SimpleList.Column>
-                  <SimpleList.Column minWidth={40}>
-                    <Box flex={{ gap: 2, align: "center" }}>
-                      <Typography.Text size="xSmall">BB</Typography.Text>
-                      <input
-                        readOnly={readOnly}
-                        key={`${item.id}-blind-bigBlind`}
-                        className={blindListInputCls}
-                        type="number"
-                        value={item.bigBlind || undefined}
-                        onChange={(e) =>
-                          changeBlindItem(
-                            index,
-                            "bigBlind",
-                            e.target.value ? Number(e.target.value) : undefined
-                          )
-                        }
-                      />
-                    </Box>
-                  </SimpleList.Column>
-                  <SimpleList.Column minWidth={40}>
-                    <Box flex={{ gap: 2, align: "center" }}>
-                      <Typography.Text size="xSmall">Ante</Typography.Text>
-                      <Checkbox
-                        disabled={readOnly}
-                        size="small"
-                        checked={item.ante}
-                        onCheckedChange={() =>
-                          changeBlindItem(index, "ante", !item.ante)
-                        }
-                      />
-                    </Box>
-                  </SimpleList.Column>
-                </>
+                <Box className={blindLevelGridCls}>
+                  <Box className={blindLevelFieldRowSideCls}>
+                    <Typography.Text size="xSmall">Lvl</Typography.Text>
+                    <input
+                      readOnly
+                      className={blindListInputCls}
+                      type="number"
+                      value={item.level}
+                    />
+                  </Box>
+                  <Box className={blindLevelFieldRowMiddleCls}>
+                    <Typography.Text size="xSmall">Мин</Typography.Text>
+                    <input
+                      readOnly={readOnly}
+                      key={`${item.id}-blind-duration`}
+                      className={blindListInputCls}
+                      type="number"
+                      value={item.duration || undefined}
+                      onChange={(e) =>
+                        changeBlindItem(
+                          index,
+                          "duration",
+                          e.target.value ? Number(e.target.value) : undefined
+                        )
+                      }
+                    />
+                  </Box>
+                  <Box aria-hidden />
+                  <Box className={blindLevelFieldRowSideCls}>
+                    <Typography.Text size="xSmall">SB</Typography.Text>
+                    <input
+                      readOnly={readOnly}
+                      key={`${item.id}-blind-smallBlind`}
+                      className={blindListInputCls}
+                      type="number"
+                      value={item.smallBlind || undefined}
+                      onChange={(e) =>
+                        changeBlindItem(
+                          index,
+                          "smallBlind",
+                          e.target.value ? Number(e.target.value) : undefined
+                        )
+                      }
+                    />
+                  </Box>
+                  <Box className={blindLevelFieldRowMiddleCls}>
+                    <Typography.Text size="xSmall">BB</Typography.Text>
+                    <input
+                      readOnly={readOnly}
+                      key={`${item.id}-blind-bigBlind`}
+                      className={blindListInputCls}
+                      type="number"
+                      value={item.bigBlind || undefined}
+                      onChange={(e) =>
+                        changeBlindItem(
+                          index,
+                          "bigBlind",
+                          e.target.value ? Number(e.target.value) : undefined
+                        )
+                      }
+                    />
+                  </Box>
+                  <Box className={blindLevelFieldRowAnteCls}>
+                    <Typography.Text size="xSmall">Ante</Typography.Text>
+                    <Checkbox
+                      disabled={readOnly}
+                      size="small"
+                      checked={item.ante}
+                      onCheckedChange={() =>
+                        changeBlindItem(index, "ante", !item.ante)
+                      }
+                    />
+                  </Box>
+                </Box>
               ) : (
                 <>
-                  <SimpleList.Column minWidth={40}>
+                  <SimpleList.Column minWidth={120}>
                     <Box flex={{ gap: 2, align: "center" }}>
                       <Typography.Text size="xSmall">Пер. мин</Typography.Text>
                       <input
