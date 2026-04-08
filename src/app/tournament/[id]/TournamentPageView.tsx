@@ -15,6 +15,7 @@ import { TournamentCash } from "./components/TournamentCash/TournamentCash";
 import { TournamentChipPoolWindow } from "./components/TournamentChipPoolWindow/TournamentChipPoolWindow";
 import { TournamentResults } from "./components/TournamentResults/TournamentResults";
 import { TournamentSocial } from "./components/TournamentSocial/TournamentSocial";
+import { TournamentRating } from "./components/TournamentRating/TournamentRating";
 import { TournamentInfoResponse } from "@/core/states/tournaments/requests/getTournament";
 import { Formatter } from "@/components/Formatter/Formatter";
 import { tournamentStatusLabels } from "@/core/states/tournaments/common/TournamentStatus";
@@ -55,6 +56,11 @@ export const TournamentPageView: FC<TournamentPageViewProps> = ({
           title: "Результаты",
           key: "results",
           content: <TournamentResults tournament={currentTournament} />,
+        },
+        {
+          title: "Рейтинг",
+          key: "rating",
+          content: <TournamentRating tournament={currentTournament} />,
         },
       ];
     }
@@ -103,6 +109,11 @@ export const TournamentPageView: FC<TournamentPageViewProps> = ({
         title: "Результаты",
         key: "results",
         content: <TournamentResults tournament={currentTournament} />,
+      },
+      {
+        title: "Рейтинг",
+        key: "rating",
+        content: <TournamentRating tournament={currentTournament} />,
       },
     ];
   }, [currentTournament]);

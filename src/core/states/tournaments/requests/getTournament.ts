@@ -12,6 +12,12 @@ export interface TournamentInfoResponse {
   readonly status: TournamentStatus;
   readonly date: number;
   readonly structure?: TournamentsStructureResponse;
+  /** Если true — места 1–10 получают +10 к базе до умножения на коэффициент. */
+  readonly ratingGuaranteeEnabled?: boolean;
+  /** Множитель для баллов за место. По умолчанию 1. */
+  readonly ratingPointsCoefficient?: number;
+  /** Множитель для баунти-баллов. По умолчанию 1. */
+  readonly ratingBountyCoefficient?: number;
 }
 
 function pickFiniteNumber(...vals: unknown[]): number | undefined {
@@ -59,6 +65,9 @@ interface TournamentWithStructureResponse {
   readonly status: string;
   readonly date: number;
   readonly structure: TournamentsStructureResponse | null;
+  readonly ratingGuaranteeEnabled?: boolean;
+  readonly ratingPointsCoefficient?: number;
+  readonly ratingBountyCoefficient?: number;
 }
 
 /**
@@ -86,6 +95,9 @@ export const getTournament = async (
           status: normalizeTournamentStatus(j.status),
           date: j.date,
           structure: normalizeStructure(j.structure),
+          ratingGuaranteeEnabled: j.ratingGuaranteeEnabled,
+          ratingPointsCoefficient: j.ratingPointsCoefficient,
+          ratingBountyCoefficient: j.ratingBountyCoefficient,
         };
       },
       404: () => null,

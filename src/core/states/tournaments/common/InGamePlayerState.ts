@@ -1,3 +1,5 @@
+import { TournamentRatingBreakdown } from "./TournamentRatingBreakdown";
+
 export type PlayerStatus =
   | "Registered"
   | "InGamePaid"
@@ -102,6 +104,12 @@ export interface InGamePlayerState {
   readonly signAgreement?: boolean;
   /** Сгорания стека по событиям; откат ребая — только source=Rebuy. */
   readonly burnedStackEvents?: readonly BurnedStackEvent[];
+  /**
+   * Рейтинговый снимок игрока.
+   * InProgress: заполнен только у вылетевших (Out).
+   * Completed: заполнен у всех (итог + manualAdjustment).
+   */
+  readonly rating?: TournamentRatingBreakdown;
 }
 
 /** Есть ли у игрока бесплатный вход (глобально или в турнире) для способа оплаты Free. */
