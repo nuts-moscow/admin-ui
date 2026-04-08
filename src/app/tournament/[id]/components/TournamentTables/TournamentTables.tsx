@@ -24,7 +24,9 @@ import { toast } from "@/components/Toast/Toast";
 import { formatApiErrorForUser } from "@/core/utils/misc/formatApiErrorForUser";
 import { parseEntryPaidAmountForApi } from "@/core/states/tournaments/common/tournamentPaymentAmounts";
 import { useFirstEntryPaymentMethodState } from "@/core/states/tournaments/common/useFirstEntryPaymentMethodState";
+import { getReentryRemaining } from "@/core/states/tournaments/common/reentryLimits";
 import { EntryPaidAmountInput } from "../EntryPaidAmountInput";
+import { AddReentryModal } from "../AddReentryModal/AddReentryModal";
 
 const EMPTY_TABLE_PLAYERS: InGamePlayerState[] = [];
 
@@ -472,9 +474,13 @@ export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
   const [playerToSetOut, setPlayerToSetOut] = useState<InGamePlayerState | undefined>(
     undefined
   );
+  const [playerToAddReentry, setPlayerToAddReentry] = useState<
+    InGamePlayerState | undefined
+  >(undefined);
   const { data: nonRegisteredPlayers } = useNonRegisteredTournamentPlayerState(
     String(tournament.id)
   );
+  const playersForModals = nonRegisteredPlayers ?? EMPTY_TABLE_PLAYERS;
   const setOutModalPlayers = useMemo(() => {
     if (!playerToSetOut?.tableId) {
       return EMPTY_TABLE_PLAYERS;
@@ -487,6 +493,8 @@ export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
   const [PayPlayerModalConnect, openPayPlayerModal] = useModal(PayPlayerModal);
   const [SetOutPlayerModalConnect, openSetOutPlayerModal] =
     useModal(SetOutPlayerModal);
+  const [AddReentryModalConnect, openAddReentryModal] =
+    useModal(AddReentryModal);
   const excludedFromTableStatuses = ["Out", "OutNotPaid"] as const;
   const tablePlayers = (nonRegisteredPlayers ?? []).filter(
     (player) =>
@@ -528,6 +536,13 @@ export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
         players={setOutModalPlayers}
         eliminationLocked={eliminationLocked}
       />
+      <AddReentryModalConnect
+        tournamentId={String(tournament.id)}
+        player={playerToAddReentry}
+        players={playersForModals}
+        reentryStructure={tournament.structure}
+        allowBountyEdits={!eliminationLocked}
+      />
       <TableList
         tournamentId={String(tournament.id)}
         selectable
@@ -553,7 +568,12 @@ export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
           </Typography.Text>
         </Box>
 
-        {tablePlayers.map((player) => (
+        {tablePlayers.map((player) => {
+          const reentryRemaining = getReentryRemaining(
+            player,
+            tournament.structure,
+          );
+          return (
           <Box
             key={player.playerId}
             flex={{ width: "100%", align: "center", gap: 2 }}
@@ -631,9 +651,30 @@ export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
                   Вылетел
                 </Button>
               )}
+              {tournamentStatus !== "RegistrationOpen" && (
+                <Button
+                  type="secondary"
+                  size="xxSmall"
+                  disabled={reentryRemaining <= 0 || eliminationLocked}
+                  title={
+                    eliminationLocked
+                      ? "Турнир завершён — ребаи недоступны"
+                      : reentryRemaining <= 0
+                        ? "Лимит реентри исчерпан или турнир freeze-out"
+                        : undefined
+                  }
+                  onClick={() => {
+                    setPlayerToAddReentry(player);
+                    openAddReentryModal();
+                  }}
+                >
+                  Добавить ребай
+                </Button>
+              )}
             </Box>
           </Box>
-        ))}
+          );
+        })}
 
         {!selectedTableId && (
           <Typography.Text type="secondary" size="small">
