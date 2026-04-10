@@ -29,13 +29,13 @@ const tvOverrides: CSSProperties & Record<string, string> = {
   "--chip-broadcast-clock-gap": "0px",
   "--chip-broadcast-inner-blinds-gap": "clamp(4px, 2vh, 40px)",
   "--bc-font-level": "clamp(1.2rem, min(3.2vw, 5.5vh), 3rem)",
-  "--bc-font-blinds": "clamp(3.25rem, min(13vw, 20vh), 10rem)",
+  "--bc-font-blinds": "clamp(3.25rem, min(9vw, 15vh), 7.5rem)",
   "--bc-font-ante": "clamp(1.25rem, min(3.2vw, 5vh), 2.85rem)",
-  "--bc-font-timer": "clamp(3.5rem, min(14vw, 22vh), 14rem)",
+  "--bc-font-timer": "clamp(3.5rem, min(9.5vw, 16vh), 8rem)",
   "--bc-font-next": "clamp(1.2rem, min(3.4vw, 5vh), 3rem)",
   "--bc-timer-pad-y": "clamp(16px, min(4vw, 5vh), 56px)",
-  "--bc-timer-pad-x": "clamp(24px, min(8vw, 6vh), 160px)",
-  "--bc-timer-max-width": "min(100%, 96vw)",
+  "--bc-timer-pad-x": "clamp(24px, min(5vw, 4vh), 80px)",
+  "--bc-timer-max-width": "min(100%, 44vw)",
 };
 
 export const TournamentDisplayShell: FC<TournamentDisplayShellProps> = ({
