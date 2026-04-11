@@ -36,6 +36,7 @@ export const getTournamentChipPoolSummary = async (
     body: undefined,
     mapping: {
       success: (res) => res.toJson(),
+      401: () => null,
       404: () => null,
       500: () => null,
       unknownError: async (res) => {

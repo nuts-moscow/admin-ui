@@ -8,9 +8,10 @@ import { Button } from "@/components/Button/Button";
 import { toast } from "@/components/Toast/Toast";
 import { Link2 } from "lucide-react";
 import { useTournamentChipPoolSummary } from "@/core/states/tournaments/hooks/useTournamentChipPoolSummary";
+import { TournamentChipPoolSummary } from "@/core/states/tournaments/requests/getTournamentChipPoolSummary";
 import { TournamentInfoResponse } from "@/core/states/tournaments/requests/getTournament";
 import { TournamentClockPanel } from "../TournamentState/TournamentClockPanel";
-import { useTournamentClock } from "@/core/states/tournaments/hooks/useTournamentClock";
+import { useTournamentClock, UseTournamentClockOptions } from "@/core/states/tournaments/hooks/useTournamentClock";
 import { formatClockDuration } from "@/core/states/tournaments/common/TournamentClockTick";
 import {
   ChipPoolWindowLayout,
@@ -38,6 +39,10 @@ export interface TournamentChipPoolWindowProps {
   readonly showTvBroadcastLink?: boolean;
   /** Для страницы display: flex-цепочка на весь вьюпорт. */
   readonly style?: CSSProperties;
+  /** Переопределить хук chip pool summary (напр. публичный эндпоинт). */
+  readonly chipPoolSummaryHook?: (tournamentId: string) => { data: TournamentChipPoolSummary | null; loading: boolean; error: Error | null };
+  /** Опции для useTournamentClock (напр. публичные функции запроса). */
+  readonly clockOptions?: Pick<UseTournamentClockOptions, 'getClockFn' | 'wsUrlFn'>;
 }
 
 function buildRulesSubtitle(tournament: TournamentInfoResponse): string {
@@ -78,15 +83,20 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
   tournament,
   showTvBroadcastLink = true,
   style: rootStyle,
+  chipPoolSummaryHook,
+  clockOptions,
 }) => {
   const chipPoolLayout: ChipPoolWindowLayout = showTvBroadcastLink
     ? "admin"
     : "broadcast";
   const tid = String(tournament.id);
-  const { data, loading, error } = useTournamentChipPoolSummary(tid);
+  const defaultSummary = useTournamentChipPoolSummary(tid);
+  const publicSummary = chipPoolSummaryHook?.(tid);
+  const { data, loading, error } = publicSummary ?? defaultSummary;
   const inProgress = tournament.status === "InProgress";
   const clockBinding = useTournamentClock(tournament.id, {
     enabled: inProgress,
+    ...clockOptions,
   });
 
   const rulesLine = buildRulesSubtitle(tournament);

@@ -29,7 +29,7 @@ function pickFiniteNumber(...vals: unknown[]): number | undefined {
   return undefined;
 }
 
-function normalizeStructure(
+export function normalizeStructure(
   raw: TournamentsStructureResponse | null,
 ): TournamentsStructureResponse | undefined {
   if (!raw) {

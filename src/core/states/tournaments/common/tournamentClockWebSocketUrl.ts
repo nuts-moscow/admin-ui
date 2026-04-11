@@ -20,3 +20,23 @@ export function getTournamentClockWebSocketUrl(
   if (!id) return "";
   return `${protocol}//${host}/v2/ws/tournaments/${id}/clock`;
 }
+
+/**
+ * Публичный WebSocket часов — не требует авторизации.
+ */
+export function getPublicTournamentClockWebSocketUrl(
+  environment: Environment,
+  tournamentId: number | string,
+): string {
+  let base: URL;
+  try {
+    base = new URL(environment.apiUrl);
+  } catch {
+    return "";
+  }
+  const protocol = base.protocol === "https:" ? "wss:" : "ws:";
+  const host = base.host;
+  const id = encodeURIComponent(String(tournamentId).trim());
+  if (!id) return "";
+  return `${protocol}//${host}/v2/ws/public/tournaments/${id}/clock`;
+}

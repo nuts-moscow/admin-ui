@@ -8,6 +8,7 @@ import {
   type TournamentClockTick,
 } from "../common/TournamentClockTick";
 import { getTournamentClock } from "../requests/getTournamentClock";
+import { Environment } from "../../environment/Environment";
 
 export type TournamentClockConnectionStatus =
   | "idle"
@@ -27,6 +28,13 @@ function nextBackoffMs(attempt: number): number {
 export interface UseTournamentClockOptions {
   /** Если false — сокет не открываем (например турнир не в игре). */
   readonly enabled?: boolean;
+  /** Переопределить функцию получения REST-снимка часов (напр. публичный эндпоинт). */
+  readonly getClockFn?: (
+    environment: Environment,
+    id: string,
+  ) => Promise<TournamentClockTick | null>;
+  /** Переопределить функцию построения WebSocket URL (напр. публичный эндпоинт). */
+  readonly wsUrlFn?: (environment: Environment, id: number | string) => string;
 }
 
 export interface TournamentClockBinding {
@@ -48,7 +56,11 @@ export function useTournamentClock(
   tournamentId: number | string | undefined,
   options: UseTournamentClockOptions = {}
 ): UseTournamentClockResult {
-  const { enabled = true } = options;
+  const {
+    enabled = true,
+    getClockFn = getTournamentClock,
+    wsUrlFn = getTournamentClockWebSocketUrl,
+  } = options;
   const environment = useEnvironment();
   const [tick, setTick] = useState<TournamentClockTick | null>(null);
   const [connectionStatus, setConnectionStatus] =
@@ -75,7 +87,7 @@ export function useTournamentClock(
     let cancelled = false;
     void (async () => {
       try {
-        const snap = await getTournamentClock(environment, id);
+        const snap = await getClockFn(environment, id);
         if (!cancelled && snap) {
           setTick(snap);
           setServerSkewMs(snap.serverTimeMs - Date.now());
@@ -87,7 +99,7 @@ export function useTournamentClock(
     return () => {
       cancelled = true;
     };
-  }, [environment, tournamentId, enabled]);
+  }, [environment, tournamentId, enabled, getClockFn]);
 
   useEffect(() => {
     closedByUnmountRef.current = false;
@@ -106,7 +118,7 @@ export function useTournamentClock(
       return;
     }
 
-    const url = getTournamentClockWebSocketUrl(environment, id);
+    const url = wsUrlFn(environment, id);
     if (!url) {
       setConnectionStatus("error");
       return;
@@ -194,7 +206,7 @@ export function useTournamentClock(
       setTick(null);
       setServerSkewMs(null);
     };
-  }, [environment, tournamentId, enabled, clearReconnect]);
+  }, [environment, tournamentId, enabled, clearReconnect, wsUrlFn]);
 
   return {
     tick,

@@ -67,7 +67,7 @@ export const PublicTournamentsView: FC = () => {
             tournaments.map((tournament) => (
               <Link
                 key={tournament.id}
-                href={`/tournament/${tournament.id}/display`}
+                href={`/tournament-clock-list/${tournament.id}`}
                 className={nextLinkCls({ justify: true })}
               >
                 <SimpleList.Card>
