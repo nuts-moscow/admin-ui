@@ -52,7 +52,7 @@ export const createTournamentStructure = async (
     method: "POST",
     host: environment.apiUrl,
     path: "/v2/api/tournament-structures",
-    withCredentials: false,
+    withCredentials: true,
     body: toCreateBody(request),
     mapping: {
       success: async (res) => (await res.toJson()) as TournamentStructure,

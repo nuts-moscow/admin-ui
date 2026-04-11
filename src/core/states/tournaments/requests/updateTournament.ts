@@ -15,7 +15,7 @@ export const updateTournament = async (
     method: "PUT",
     host: environment.apiUrl,
     path: "/v1/tournaments/update",
-    withCredentials: false,
+    withCredentials: true,
     body: {
       ...request,
 
@@ -45,7 +45,7 @@ export const updateTournamentStatus = async (
     method: "PATCH",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${tournamentId}/status`,
-    withCredentials: false,
+    withCredentials: true,
     body: { status },
     mapping: {
       success: () => undefined,
@@ -99,7 +99,7 @@ async function updateTournamentStructureCache(
     method: "PATCH",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${tournamentId}/structure`,
-    withCredentials: false,
+    withCredentials: true,
     body,
     mapping: {
       success: () => undefined,

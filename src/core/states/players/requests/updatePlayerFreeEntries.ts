@@ -19,7 +19,7 @@ export const updatePlayerFreeEntries = async (
     method: "PATCH",
     host: environment.apiUrl,
     path: `/v2/api/players/${encodeURIComponent(String(playerId))}/free-entries`,
-    withCredentials: false,
+    withCredentials: true,
     body: { delta },
     mapping: {
       success: async (res) => res.toJson(),

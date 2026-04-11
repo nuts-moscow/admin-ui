@@ -16,25 +16,22 @@ import { TournamentChipPoolWindow } from "./components/TournamentChipPoolWindow/
 import { TournamentResults } from "./components/TournamentResults/TournamentResults";
 import { TournamentSocial } from "./components/TournamentSocial/TournamentSocial";
 import { TournamentRating } from "./components/TournamentRating/TournamentRating";
-import { TournamentInfoResponse } from "@/core/states/tournaments/requests/getTournament";
 import { Formatter } from "@/components/Formatter/Formatter";
 import { tournamentStatusLabels } from "@/core/states/tournaments/common/TournamentStatus";
 import { useTournament } from "@/core/states/tournaments/hooks/useTournament";
 
 export interface TournamentPageViewProps {
-  readonly tournament: TournamentInfoResponse;
+  readonly tournamentId: string;
 }
 
 export const TournamentPageView: FC<TournamentPageViewProps> = ({
-  tournament,
+  tournamentId,
 }) => {
   const [activeTab, setActiveTab] = useState<string>("players");
-  const { data: clientTournament } = useTournament(String(tournament.id));
-  const currentTournament = useMemo(
-    () => clientTournament || tournament,
-    [clientTournament, tournament]
-  );
+  const { data: currentTournament } = useTournament(tournamentId);
+
   const tabs = useMemo(() => {
+    if (!currentTournament) return [];
     if (currentTournament.status === "Completed") {
       return [
         {
@@ -117,6 +114,10 @@ export const TournamentPageView: FC<TournamentPageViewProps> = ({
       },
     ];
   }, [currentTournament]);
+
+  if (!currentTournament) {
+    return null;
+  }
 
   return (
     <>

@@ -10,7 +10,7 @@ export const addPlayerToTournament = async (
     method: "POST",
     host: environment.apiUrl,
     path: `/v1/tournaments/add-player-to-tournament?tournamentId=${tournamentId}&playerId=${playerId}`,
-    withCredentials: false,
+    withCredentials: true,
     body: undefined,
     mapping: {
       success: (res) => res.toJson(),
@@ -30,7 +30,7 @@ export const removePlayerFromTournament = async (
     method: "GET",
     host: environment.apiUrl,
     path: `/v1/tournaments/remove-player-from-tournament?tournamentId=${tournamentId}&playerId=${playerId}`,
-    withCredentials: false,
+    withCredentials: true,
     body: undefined,
     mapping: {
       success: (res) => res.toJson(),

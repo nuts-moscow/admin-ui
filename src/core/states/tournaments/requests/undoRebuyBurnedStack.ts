@@ -19,7 +19,7 @@ export const undoRebuyBurnedStack = async (
     method: "POST",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${tid}/bounty/rebuy-burned-stack/undo`,
-    withCredentials: false,
+    withCredentials: true,
     body,
     mapping: {
       success: async (res) => {

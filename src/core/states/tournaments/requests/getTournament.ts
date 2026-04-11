@@ -84,7 +84,7 @@ export const getTournament = async (
     method: "GET",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${encodeURIComponent(tournamentId)}`,
-    withCredentials: false,
+    withCredentials: true,
     body: undefined,
     mapping: {
       success: async (res) => {

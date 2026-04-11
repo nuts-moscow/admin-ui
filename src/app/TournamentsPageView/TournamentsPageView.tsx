@@ -8,12 +8,13 @@ import { TournamentCard } from "@/app/TournamentsPageView/TournamentCard/Tournam
 import { ToggleGroup } from "@/components/ToggleGroup/ToggleGroup";
 import { useModal } from "@/components/Modal/Modal";
 import { CreateTournamentModalContent } from "@/app/TournamentsPageView/CreateTournamentModal/CreateTournamentModal";
-import { Settings } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
 import { TournamentStatus } from "@/core/states/tournaments/common/TournamentStatus";
 import { useTournaments } from "@/core/states/tournaments/hooks/useTournaments";
 import { SimpleList } from "@/components/SimpleList/SimpleList";
 import { ShortTournament } from "@/core/states/tournaments/requests/getTournaments";
 import Link from "next/link";
+import { useAuth } from "@/core/states/auth/useAuth";
 
 export interface TournamentsPageViewProps {
   readonly initialTournaments: ShortTournament[];
@@ -22,6 +23,7 @@ export interface TournamentsPageViewProps {
 export const TournamentsPageView: FC<TournamentsPageViewProps> = ({
   initialTournaments,
 }) => {
+  const { logout } = useAuth();
   const [activeTab, setActiveTab] =
     useState<TournamentStatus>("RegistrationOpen");
 
@@ -71,13 +73,22 @@ export const TournamentsPageView: FC<TournamentsPageViewProps> = ({
         <PageHeader
           title="Турниры"
           extra={
-            <Link href="/settings">
+            <Box flex={{ gap: 2, align: "center" }}>
+              <Link href="/settings">
+                <Button
+                  type="accent"
+                  size="small"
+                  iconRight={<Settings size={32} />}
+                />
+              </Link>
               <Button
-                type="accent"
+                type="ghost"
                 size="small"
-                iconRight={<Settings size={32} />}
+                iconRight={<LogOut size={20} />}
+                onClick={logout}
+                title="Выйти"
               />
-            </Link>
+            </Box>
           }
         />
 

@@ -39,7 +39,7 @@ export const getPlayers = (environment: Environment) => {
     method: "GET",
     host: environment.apiUrl,
     path: "/v2/api/players",
-    withCredentials: false,
+    withCredentials: true,
     body: undefined,
     mapping: {
       success: async (res) => toPlayerList(await res.toJson()),

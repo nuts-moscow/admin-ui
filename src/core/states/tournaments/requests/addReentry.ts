@@ -20,7 +20,7 @@ export const addReentry = async (
     method: "POST",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${request.tournamentId}/players/${request.playerId}/reentry`,
-    withCredentials: false,
+    withCredentials: true,
     body: {
       count: request.count,
     },

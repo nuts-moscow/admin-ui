@@ -2,10 +2,10 @@
 
 import { CSSProperties, FC } from "react";
 import { TournamentChipPoolWindow } from "../components/TournamentChipPoolWindow/TournamentChipPoolWindow";
-import { TournamentInfoResponse } from "@/core/states/tournaments/requests/getTournament";
+import { useTournament } from "@/core/states/tournaments/hooks/useTournament";
 
 export interface TournamentDisplayShellProps {
-  readonly tournament: TournamentInfoResponse;
+  readonly tournamentId: string;
 }
 
 /**
@@ -39,8 +39,14 @@ const tvOverrides: CSSProperties & Record<string, string> = {
 };
 
 export const TournamentDisplayShell: FC<TournamentDisplayShellProps> = ({
-  tournament,
+  tournamentId,
 }) => {
+  const { data: tournament } = useTournament(tournamentId);
+
+  if (!tournament) {
+    return null;
+  }
+
   return (
     <div
       style={{

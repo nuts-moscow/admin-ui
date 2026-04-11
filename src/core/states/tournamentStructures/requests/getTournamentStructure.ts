@@ -10,7 +10,7 @@ export const getTournamentStructure = (
     method: "GET",
     host: environment.apiUrl,
     path: `/v1/tournaments-structure/get?id=${id}`,
-    withCredentials: false,
+    withCredentials: true,
     body: undefined,
     mapping: {
       success: (res) => res.toJson(),

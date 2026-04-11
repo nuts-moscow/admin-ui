@@ -19,7 +19,7 @@ export const patchPlayerRatingManualAdjustment = async (
     method: "PATCH",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${tournamentId}/players/${encodeURIComponent(playerId)}/rating-manual-adjustment`,
-    withCredentials: false,
+    withCredentials: true,
     body: { manualAdjustment },
     mapping: {
       success: () => undefined,

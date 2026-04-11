@@ -10,7 +10,7 @@ export const removePlayerFromTournament = (
     method: "DELETE",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${tournamentId}/players/${playerId}`,
-    withCredentials: false,
+    withCredentials: true,
     body: undefined,
     mapping: {
       success: (res) => null as any,

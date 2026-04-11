@@ -51,7 +51,7 @@ export const updateTournamentStructure = async (
     method: "PATCH",
     host: environment.apiUrl,
     path: `/v2/api/tournament-structures/${id}`,
-    withCredentials: false,
+    withCredentials: true,
     body: toUpdateBody(request),
     mapping: {
       success: async (res) => (await res.toJson()) as TournamentStructure,

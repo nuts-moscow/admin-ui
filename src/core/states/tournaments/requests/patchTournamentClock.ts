@@ -16,7 +16,7 @@ export const patchTournamentClock = async (
     method: "PATCH",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${tournamentId}/clock`,
-    withCredentials: false,
+    withCredentials: true,
     body,
     mapping: {
       success: () => undefined,

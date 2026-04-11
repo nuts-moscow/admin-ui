@@ -13,7 +13,7 @@ export const getPlayerState = async (
     method: "GET",
     host: environment.apiUrl,
     path: `/v1/tournaments/get-tournament-player-state?tournamentId=${tournamentId}`,
-    withCredentials: false,
+    withCredentials: true,
     body: undefined,
     mapping: {
       success: (res) => res.toJson(),
@@ -33,7 +33,7 @@ export const updatePlayerState = async (
     method: "POST",
     host: environment.apiUrl,
     path: "/v1/tournaments/update-player-state",
-    withCredentials: false,
+    withCredentials: true,
     body: request,
     mapping: {
       success: (res) => res.toJson(),

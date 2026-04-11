@@ -61,7 +61,7 @@ export const getTournaments = async (
     method: "GET",
     host: environment.apiUrl,
     path,
-    withCredentials: false,
+    withCredentials: true,
     body: undefined,
     mapping: {
       success: async (res) => toTournamentList(await res.toJson()),

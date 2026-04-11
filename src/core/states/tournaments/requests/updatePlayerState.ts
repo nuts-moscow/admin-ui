@@ -15,7 +15,7 @@ export const updatePlayerState = async (
     method: "PUT",
     host: environment.apiUrl,
     path: "/v1/tournaments/update-player-state",
-    withCredentials: false,
+    withCredentials: true,
     body: request,
     mapping: {
       success: (res) => res.toJson(),
@@ -54,7 +54,7 @@ const updateTournamentPlayerStatus = async (
     method: "POST",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${tournamentId}/players/${playerId}/status`,
-    withCredentials: false,
+    withCredentials: true,
     body: request,
     mapping: {
       success: (res) => res.toJson(),
@@ -75,7 +75,7 @@ const updateTournamentPlayerEntryPayment = async (
     method: "POST",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${tournamentId}/players/${playerId}/entry-payment`,
-    withCredentials: false,
+    withCredentials: true,
     body: request,
     mapping: {
       success: (res) => res.toJson(),
@@ -118,7 +118,7 @@ export const inGamePayment = async (
     method: "POST",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${tournamentId}/players/${playerId}/in-game-payment`,
-    withCredentials: false,
+    withCredentials: true,
     body,
     mapping: {
       success: (res) => res.toJson(),
@@ -151,7 +151,7 @@ export const rollbackGameStart = async (
     method: "POST",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${tournamentId}/players/${playerId}/rollback-game-start`,
-    withCredentials: false,
+    withCredentials: true,
     body: undefined,
     mapping: {
       success: (res) => res.toJson(),
@@ -171,7 +171,7 @@ export const returnPlayerToGame = async (
     method: "POST",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${tournamentId}/players/${playerId}/return-to-game`,
-    withCredentials: false,
+    withCredentials: true,
     body: undefined,
     mapping: {
       success: (res) => res.toJson(),
@@ -195,7 +195,7 @@ const updateTournamentPlayerTable = async (
     method: "POST",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${tournamentId}/players/${playerId}/table`,
-    withCredentials: false,
+    withCredentials: true,
     body: request,
     mapping: {
       success: (res) => res.toJson(),
@@ -216,7 +216,7 @@ export const addTournamentPlayerBounty = async (
     method: "POST",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${tournamentId}/players/${playerId}/bounty/update`,
-    withCredentials: false,
+    withCredentials: true,
     body: { bountyCountToAdd: count },
     mapping: {
       success: (res) => res.toJson(),
@@ -236,7 +236,7 @@ const removeTournamentPlayerTable = async (
     method: "DELETE",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${tournamentId}/players/${playerId}/table`,
-    withCredentials: false,
+    withCredentials: true,
     body: undefined,
     mapping: {
       success: (res) => res.toJson(),
@@ -281,7 +281,7 @@ export const playerGameStart = async (
     method: "POST",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${tournamentId}/players/${playerId}/game-start`,
-    withCredentials: false,
+    withCredentials: true,
     body: requestBody,
     mapping: {
       success: (res) => res.toJson(),

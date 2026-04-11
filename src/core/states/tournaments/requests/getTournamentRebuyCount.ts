@@ -13,7 +13,7 @@ export const getTournamentRebuyCount = async (
     method: "GET",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${tournamentId}/rebuy-count`,
-    withCredentials: false,
+    withCredentials: true,
     body: undefined,
     mapping: {
       success: (res) => res.toJson(),

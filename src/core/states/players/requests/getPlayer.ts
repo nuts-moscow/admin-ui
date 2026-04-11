@@ -7,7 +7,7 @@ export const getPlayer = (environment: Environment, playerId: number) => {
     method: "GET",
     host: environment.apiUrl,
     path: `/v1/players/get?id=${playerId}`,
-    withCredentials: false,
+    withCredentials: true,
     body: undefined,
     mapping: {
       success: (res) => res.toJson(),

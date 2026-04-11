@@ -40,7 +40,7 @@ export const createPlayer = async (
     method: "POST",
     host: environment.apiUrl,
     path: "/v2/api/players/create",
-    withCredentials: false,
+    withCredentials: true,
     body: toCreatePlayerBody(request),
     mapping: {
       success: (res) => res.toJson(),

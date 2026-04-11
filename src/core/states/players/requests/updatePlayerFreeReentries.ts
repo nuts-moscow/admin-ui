@@ -19,7 +19,7 @@ export const updatePlayerFreeReentries = async (
     method: "PATCH",
     host: environment.apiUrl,
     path: `/v2/api/players/${encodeURIComponent(String(playerId))}/free-reentries`,
-    withCredentials: false,
+    withCredentials: true,
     body: { delta },
     mapping: {
       success: async (res) => res.toJson(),

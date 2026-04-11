@@ -29,7 +29,7 @@ export const getTournamentStructures = (
     method: "GET",
     host: environment.apiUrl,
     path,
-    withCredentials: false,
+    withCredentials: true,
     body: undefined,
     mapping: {
       success: async (res) => toStructureList(await res.toJson()),

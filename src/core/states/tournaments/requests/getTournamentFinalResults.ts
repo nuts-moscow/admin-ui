@@ -29,7 +29,7 @@ export const getTournamentFinalResults = async (
     method: "GET",
     host: environment.apiUrl,
     path: `/v1/tournaments/final-results?tournamentId=${tournamentId}`,
-    withCredentials: false,
+    withCredentials: true,
     body: undefined,
     mapping: {
       success: (res) => res.toJson(),

@@ -6,7 +6,7 @@ export const removePlayer = (environment: Environment, playerId: number) => {
     method: "DELETE",
     host: environment.apiUrl,
     path: `/v1/players/remove?id=${playerId}`,
-    withCredentials: false,
+    withCredentials: true,
     body: undefined,
     mapping: {
       success: (res) => res.toJson(),

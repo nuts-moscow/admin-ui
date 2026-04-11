@@ -16,7 +16,7 @@ export const addPlayerToTournament = (
     method: "POST",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${tournamentId}/players/${playerId}`,
-    withCredentials: false,
+    withCredentials: true,
     body,
     mapping: {
       success: (res) => res.toJson(),

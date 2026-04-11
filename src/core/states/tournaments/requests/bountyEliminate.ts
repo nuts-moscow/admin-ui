@@ -38,7 +38,7 @@ export const bountyEliminate = async (
     method: "POST",
     host: environment.apiUrl,
     path: tournamentBountyPath(tid, "eliminate"),
-    withCredentials: false,
+    withCredentials: true,
     body,
     mapping: {
       success: (res) => res.toJson(),
@@ -62,7 +62,7 @@ export const bountyEliminateUndo = async (
     method: "POST",
     host: environment.apiUrl,
     path: tournamentBountyPath(tid, "eliminate/undo"),
-    withCredentials: false,
+    withCredentials: true,
     body,
     mapping: {
       success: async (res) => {

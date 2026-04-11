@@ -27,7 +27,7 @@ export const addReentryPayment = async (
     method: "POST",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${tournamentId}/players/${playerId}/reentry-payment`,
-    withCredentials: false,
+    withCredentials: true,
     body,
     mapping: {
       success: (res) => res.toJson(),

@@ -46,7 +46,7 @@ export const updatePlayer = async (
     method: "PATCH",
     host: environment.apiUrl,
     path: `/v2/api/players/${id}`,
-    withCredentials: false,
+    withCredentials: true,
     body,
     mapping: {
       success: (res) => res.toJson(),

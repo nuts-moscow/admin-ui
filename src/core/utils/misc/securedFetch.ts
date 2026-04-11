@@ -167,6 +167,16 @@ export interface SecuredFetchConfig<B, JR, R = JR> {
   };
 }
 
+import { handleUnauthorized } from "./authInterceptor";
+
+/** Thrown when a securedFetch call receives 401 with no custom handler. */
+export class AuthRequiredError extends Error {
+  constructor() {
+    super("session expired");
+    this.name = "AuthRequiredError";
+  }
+}
+
 /**
  * Make authenticated HTTP requests with automatic session stickiness and error handling
  *
@@ -290,7 +300,8 @@ export const securedFetch = async <B, JR, R = JR>({
   if (response.status === 401) {
     const error401Factory = mapping["401"];
     if (!error401Factory) {
-      throw new Error("session expired");
+      handleUnauthorized();
+      throw new AuthRequiredError();
     }
     const error401FactoryResult = await Promise.resolve(
       error401Factory(SecuredErrorResponse.create(response)),

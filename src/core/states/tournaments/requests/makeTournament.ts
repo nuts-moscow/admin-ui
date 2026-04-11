@@ -71,7 +71,7 @@ export const makeTournament = async (
     method: "POST",
     host: environment.apiUrl,
     path: "/v2/api/tournaments",
-    withCredentials: false,
+    withCredentials: true,
     body,
     mapping: {
       success: (res) => res.toJson(),

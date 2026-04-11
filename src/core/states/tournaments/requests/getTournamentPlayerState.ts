@@ -29,7 +29,7 @@ export const getTournamentPlayerState = async (
     method: "GET",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${tournamentId}/players`,
-    withCredentials: false,
+    withCredentials: true,
     body: undefined,
     mapping: {
       success: async (res) => normalizePlayersPayload(await res.toJson()),

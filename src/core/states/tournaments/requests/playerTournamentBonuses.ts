@@ -22,7 +22,7 @@ export const addPlayerTournamentBonus = async (
     method: "POST",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${encodeURIComponent(String(tournamentId))}/players/${encodeURIComponent(playerId)}/bonuses`,
-    withCredentials: false,
+    withCredentials: true,
     body,
     mapping: {
       success: async (res) => (await res.toJson()) as InGamePlayerState,
@@ -48,7 +48,7 @@ export const removePlayerTournamentBonus = async (
     method: "POST",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${encodeURIComponent(String(tournamentId))}/players/${encodeURIComponent(playerId)}/bonuses/remove`,
-    withCredentials: false,
+    withCredentials: true,
     body,
     mapping: {
       success: async (res) => (await res.toJson()) as InGamePlayerState,
@@ -77,7 +77,7 @@ export const addPlayerCustomBonusChips = async (
     method: "POST",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${encodeURIComponent(String(tournamentId))}/players/${encodeURIComponent(playerId)}/bonuses/custom`,
-    withCredentials: false,
+    withCredentials: true,
     body,
     mapping: {
       success: async (res) => (await res.toJson()) as InGamePlayerState,
@@ -102,7 +102,7 @@ export const removePlayerCustomBonusChipsOne = async (
     method: "POST",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${encodeURIComponent(String(tournamentId))}/players/${encodeURIComponent(playerId)}/bonuses/custom/remove`,
-    withCredentials: false,
+    withCredentials: true,
     body,
     mapping: {
       success: async (res) => (await res.toJson()) as InGamePlayerState,

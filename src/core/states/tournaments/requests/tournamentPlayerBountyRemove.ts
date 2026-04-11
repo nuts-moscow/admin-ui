@@ -35,7 +35,7 @@ export const tournamentPlayerBountyRemove = async (
     method: "POST",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${tournamentId}/players/${encodeURIComponent(playerId)}/bounty/remove`,
-    withCredentials: false,
+    withCredentials: true,
     body: payload,
     mapping: {
       success: (res) => res.toJson(),

@@ -40,7 +40,7 @@ export const patchTournamentRatingSettings = async (
     method: "PATCH",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${tournament.id}`,
-    withCredentials: false,
+    withCredentials: true,
     body,
     mapping: {
       success: () => undefined,

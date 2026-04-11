@@ -32,7 +32,7 @@ export const getTournamentChipPoolSummary = async (
     method: "GET",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${encodeURIComponent(id)}/chip-pool-summary`,
-    withCredentials: false,
+    withCredentials: true,
     body: undefined,
     mapping: {
       success: (res) => res.toJson(),
