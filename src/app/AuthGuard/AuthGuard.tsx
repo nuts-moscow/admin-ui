@@ -19,44 +19,7 @@ const isPublicPathname = (pathname: string): boolean => {
   return false;
 };
 
+// AUTH DISABLED TEMPORARILY
 export const AuthGuard: FC<WithChildren> = ({ children }) => {
-  const { status } = useAuth();
-  const router = useRouter();
-  const pathname = usePathname();
-
-  const isPublicPath = isPublicPathname(pathname);
-
-  useEffect(() => {
-    if (status === "unauthenticated" && !isPublicPath) {
-      router.push("/login");
-    }
-  }, [status, isPublicPath, router]);
-
-  if (isPublicPath) {
-    return <>{children}</>;
-  }
-
-  if (status === "loading") {
-    return (
-      <Box
-        flex={{ align: "center", justify: "center" }}
-        style={{ minHeight: "100vh" }}
-      >
-        <Loader2
-          size={32}
-          style={{
-            animation: "spin 1s linear infinite",
-            color: "var(--text-primary)",
-          }}
-        />
-        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
-      </Box>
-    );
-  }
-
-  if (status === "unauthenticated") {
-    return null;
-  }
-
   return <>{children}</>;
 };
