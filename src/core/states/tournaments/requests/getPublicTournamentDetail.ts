@@ -33,7 +33,7 @@ export const getPublicTournamentDetail = async (
   return securedFetch<undefined, TournamentInfoResponse | null>({
     method: 'GET',
     host: environment.apiUrl,
-    path: `/v2/public/tournaments/${encodeURIComponent(tournamentId)}`,
+    path: `/v2/api/tournaments/${encodeURIComponent(tournamentId)}`,
     withCredentials: false,
     body: undefined,
     mapping: {

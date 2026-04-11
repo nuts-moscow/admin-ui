@@ -12,7 +12,7 @@ export const getPublicTournamentChipPoolSummary = async (
   return securedFetch<undefined, TournamentChipPoolSummary | null>({
     method: 'GET',
     host: environment.apiUrl,
-    path: `/v2/public/tournaments/${encodeURIComponent(id)}/chip-pool-summary`,
+    path: `/v2/api/tournaments/${encodeURIComponent(id)}/chip-pool-summary`,
     withCredentials: false,
     body: undefined,
     mapping: {
