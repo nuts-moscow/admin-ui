@@ -31,19 +31,3 @@ export const getEnvironment = async (): Promise<Environment> => {
     });
 };
 
-export const setEnvironment = async (
-  environmentKey: string,
-): Promise<Environment> => {
-  return cookies().then((cs) => {
-    const normalizedKey = applicationConfig.environments[environmentKey]
-      ? environmentKey
-      : 'production';
-
-    cs.set(ENVIRONMENT_KEY, normalizedKey, {
-      expires: Date.now() + 5 * 360 * 24 * 60 * 60 * 1000,
-    });
-
-    return applicationConfig.environments[normalizedKey];
-  });
-};
-
