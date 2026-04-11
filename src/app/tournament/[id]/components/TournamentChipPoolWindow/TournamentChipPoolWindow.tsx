@@ -40,7 +40,7 @@ export interface TournamentChipPoolWindowProps {
   /** Для страницы display: flex-цепочка на весь вьюпорт. */
   readonly style?: CSSProperties;
   /** Переопределить хук chip pool summary (напр. публичный эндпоинт). */
-  readonly chipPoolSummaryHook?: (tournamentId: string) => { data: TournamentChipPoolSummary | null; loading: boolean; error: Error | null };
+  readonly chipPoolSummaryHook?: (tournamentId: string) => { data: TournamentChipPoolSummary | null; loading: boolean; error?: Error };
   /** Опции для useTournamentClock (напр. публичные функции запроса). */
   readonly clockOptions?: Pick<UseTournamentClockOptions, 'getClockFn' | 'wsUrlFn'>;
 }
