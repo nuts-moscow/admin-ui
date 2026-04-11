@@ -90,9 +90,8 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
     ? "admin"
     : "broadcast";
   const tid = String(tournament.id);
-  const defaultSummary = useTournamentChipPoolSummary(tid);
-  const publicSummary = chipPoolSummaryHook?.(tid);
-  const { data, loading, error } = publicSummary ?? defaultSummary;
+  const useSummaryHook = chipPoolSummaryHook ?? useTournamentChipPoolSummary;
+  const { data, loading, error } = useSummaryHook(tid);
   const inProgress = tournament.status === "InProgress";
   const clockBinding = useTournamentClock(tournament.id, {
     enabled: inProgress,
