@@ -1,6 +1,8 @@
 "use client";
 
 import { FC, useMemo } from "react";
+import { usePathname } from "next/navigation";
+import { useLevelLastMinuteSound } from "@/core/states/tournaments/hooks/useLevelLastMinuteSound";
 import { Box } from "@/components/Box/Box";
 import { Typography } from "@/components/Typography/Typography";
 import {
@@ -129,6 +131,12 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
   const tick = clockBinding?.tick ?? hookResult.tick;
   const connectionStatus: TournamentClockConnectionStatus =
     clockBinding?.connectionStatus ?? hookResult.connectionStatus;
+
+  const pathname = usePathname();
+  const lastMinuteSoundOnPublicClockPage = pathname.startsWith(
+    "/tournament-clock-list",
+  );
+  useLevelLastMinuteSound(tick, lastMinuteSoundOnPublicClockPage);
 
   const label = useMemo(
     () => (tick ? levelLabel(blindsStructure, tick) : ""),
