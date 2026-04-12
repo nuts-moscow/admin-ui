@@ -167,7 +167,17 @@ export interface SecuredFetchConfig<B, JR, R = JR> {
   };
 }
 
+import { getAuthToken } from "@/core/states/auth/authTokenStorage";
 import { handleUnauthorized } from "./authInterceptor";
+
+function bearerHeadersForRequest(
+  withCredentials: boolean,
+): Record<string, string> | undefined {
+  if (!withCredentials) return undefined;
+  const token = getAuthToken();
+  if (!token) return undefined;
+  return { Authorization: `Bearer ${token}` };
+}
 
 /** Thrown when a securedFetch call receives 401 with no custom handler. */
 export class AuthRequiredError extends Error {
@@ -256,13 +266,20 @@ export const securedFetch = async <B, JR, R = JR>({
     body instanceof FormData
       ? undefined
       : { "content-type": "application/json" };
+  const authHeaders = bearerHeadersForRequest(withCredentials);
+  const mergeHeaders = (
+    base: Record<string, string> | undefined,
+  ): HeadersInit | undefined => {
+    const merged = { ...base, ...authHeaders };
+    return Object.keys(merged).length ? merged : undefined;
+  };
   let response: Response;
   try {
     if (method === "GET" || method === "DELETE") {
       response = await fetch(`${host}${path}`, {
         method,
-        credentials: withCredentials ? "include" : undefined,
-        headers: undefined,
+        credentials: "omit",
+        headers: mergeHeaders(undefined),
       });
     } else {
       response = await fetch(`${host}${path}`, {
@@ -272,9 +289,9 @@ export const securedFetch = async <B, JR, R = JR>({
             : body
             ? JSON.stringify(body)
             : undefined,
-        credentials: withCredentials ? "include" : undefined,
+        credentials: "omit",
         method,
-        headers: contentHeaders,
+        headers: mergeHeaders(contentHeaders),
       });
     }
   } catch (error) {

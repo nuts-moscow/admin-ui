@@ -19,7 +19,49 @@ const isPublicPathname = (pathname: string): boolean => {
   return false;
 };
 
-// AUTH DISABLED TEMPORARILY
 export const AuthGuard: FC<WithChildren> = ({ children }) => {
+  const { status } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (status === "loading") return;
+    if (status === "authenticated") return;
+    if (isPublicPathname(pathname)) return;
+    router.replace("/login");
+  }, [status, pathname, router]);
+
+  if (status === "loading") {
+    return (
+      <Box
+        style={{
+          alignItems: "center",
+          display: "flex",
+          flex: 1,
+          justifyContent: "center",
+          minHeight: "40vh",
+        }}
+      >
+        <Loader2 className="animate-spin" size={32} />
+      </Box>
+    );
+  }
+
+  if (status === "unauthenticated" && !isPublicPathname(pathname)) {
+    return (
+      <Box
+        style={{
+          alignItems: "center",
+          display: "flex",
+          flex: 1,
+          justifyContent: "center",
+          minHeight: "40vh",
+        }}
+      >
+        <Loader2 className="animate-spin" size={32} />
+      </Box>
+    );
+  }
+
   return <>{children}</>;
 };

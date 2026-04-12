@@ -13,6 +13,7 @@ import { useEnvironment } from "@/core/states/environment/useEnvironment";
 import { AuthState, AuthUser } from "./authTypes";
 import { getMe } from "./requests/getMe";
 import { logout as logoutRequest } from "./requests/logout";
+import { clearAuthToken } from "./authTokenStorage";
 import { registerUnauthorizedHandler } from "@/core/utils/misc/authInterceptor";
 
 interface AuthContextValue extends AuthState {
@@ -36,6 +37,7 @@ export const AuthProvider: FC<WithChildren> = ({ children }) => {
   });
 
   const handleUnauthorized = useCallback(() => {
+    clearAuthToken();
     setState({ user: null, status: "unauthenticated" });
     router.push("/login");
   }, [router]);
