@@ -520,25 +520,3 @@ export const chipPoolRatingEllipsisCellCls = style({
   borderTop: "1px solid rgba(120, 100, 85, 0.12)",
   fontSize: "clamp(0.85rem, min(1.5vw, 2.2vh), 1.15rem)",
 });
-
-export const chipPoolRatingMetaCls = recipe({
-  base: {
-    marginTop: getGutter(2),
-    fontWeight: 600,
-    color: CHIP_POOL_INK_SOFT,
-    maxWidth: "min(100%, 22rem)",
-  },
-  variants: {
-    layout: {
-      admin: {
-        fontSize: "clamp(0.68rem, 1vw, 0.8rem)",
-      },
-      broadcast: {
-        fontSize: "clamp(0.62rem, min(1vw, 1.6vh), 0.82rem)",
-      },
-    },
-  },
-  defaultVariants: {
-    layout: "admin",
-  },
-});

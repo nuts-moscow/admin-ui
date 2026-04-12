@@ -7,7 +7,6 @@ import { usePublicTournamentRatingPointsDistribution } from "@/core/states/tourn
 import type { ChipPoolWindowLayout } from "./TournamentChipPoolWindow.css";
 import {
   chipPoolRatingEllipsisCellCls,
-  chipPoolRatingMetaCls,
   chipPoolRatingTableCls,
   chipPoolRatingTdCls,
   chipPoolRatingThCls,
@@ -146,15 +145,6 @@ export const PublicRatingPointsColumn: FC<PublicRatingPointsColumnProps> = ({
           })}
         </tbody>
       </table>
-      <div
-        className={chipPoolRatingMetaCls({ layout })}
-        style={{ textAlign: "right" }}
-      >
-        Игроков в поле: {data.playersInTournament}
-        {typeof data.prizePlacesDepth === "number"
-          ? ` · призовая зона: до ${data.prizePlacesDepth}-го места`
-          : null}
-      </div>
     </div>
   );
 };
