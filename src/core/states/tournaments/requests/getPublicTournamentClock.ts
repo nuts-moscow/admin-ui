@@ -18,7 +18,7 @@ export const getPublicTournamentClock = async (
   return securedFetch<undefined, unknown, TournamentClockTick | null>({
     method: 'GET',
     host: environment.apiUrl,
-    path: `/v2/api/tournaments/${tid}/clock`,
+    path: `/v2/public/tournaments/${tid}/clock`,
     withCredentials: false,
     body: undefined,
     mapping: {

@@ -19,9 +19,7 @@ interface TournamentWithStructureResponse {
 }
 
 /**
- * Public variant of getTournament — uses credentials: "omit" and handles
- * 401 gracefully (returns null) so the global handleUnauthorized redirect
- * to /login is never triggered.
+ * GET /v2/public/tournaments/{id} — без JWT; при ошибке не триггерит глобальный 401.
  */
 export const getPublicTournamentDetail = async (
   environment: Environment,
@@ -33,7 +31,7 @@ export const getPublicTournamentDetail = async (
   return securedFetch<undefined, TournamentInfoResponse | null>({
     method: 'GET',
     host: environment.apiUrl,
-    path: `/v2/api/tournaments/${encodeURIComponent(tournamentId)}`,
+    path: `/v2/public/tournaments/${encodeURIComponent(tournamentId)}`,
     withCredentials: false,
     body: undefined,
     mapping: {

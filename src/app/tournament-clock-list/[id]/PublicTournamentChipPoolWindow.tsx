@@ -5,6 +5,7 @@ import { TournamentChipPoolWindow } from '@/app/tournament/[id]/components/Tourn
 import { TournamentInfoResponse } from '@/core/states/tournaments/requests/getTournament';
 import { usePublicTournamentChipPoolSummary } from '@/core/states/tournaments/hooks/usePublicTournamentChipPoolSummary';
 import { getPublicTournamentClock } from '@/core/states/tournaments/requests/getPublicTournamentClock';
+import { getPublicTournamentClockWebSocketUrl } from '@/core/states/tournaments/common/tournamentClockWebSocketUrl';
 
 export interface PublicTournamentChipPoolWindowProps {
   readonly tournament: TournamentInfoResponse;
@@ -23,6 +24,7 @@ export const PublicTournamentChipPoolWindow: FC<PublicTournamentChipPoolWindowPr
       chipPoolSummaryHook={usePublicTournamentChipPoolSummary}
       clockOptions={{
         getClockFn: getPublicTournamentClock,
+        wsUrlFn: getPublicTournamentClockWebSocketUrl,
       }}
     />
   );
