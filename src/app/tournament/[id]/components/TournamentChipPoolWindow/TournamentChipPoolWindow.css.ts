@@ -451,7 +451,7 @@ export const chipPoolRatingTableCls = recipe({
         marginTop: 0,
       },
       broadcast: {
-        /** Отступ сверху от заголовка «Рейтинг (баллы)», не margin-bottom у заголовка. */
+        /** Отступ сверху от заголовка «Рейтинговая зона», не margin-bottom у заголовка. */
         marginTop: "clamp(14px, 2.6vh, 28px)",
       },
     },

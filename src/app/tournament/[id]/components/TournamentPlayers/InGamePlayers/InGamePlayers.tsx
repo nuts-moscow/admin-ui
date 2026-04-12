@@ -42,6 +42,7 @@ import { parseEntryPaidAmountForApi } from "@/core/states/tournaments/common/tou
 import { useFirstEntryPaymentMethodState } from "@/core/states/tournaments/common/useFirstEntryPaymentMethodState";
 import { EntryPaidAmountInput } from "../../EntryPaidAmountInput";
 import { Formatter } from "@/components/Formatter/Formatter";
+import { TournamentPlayerFreeCountersModal } from "../TournamentPlayerFreeCounters/TournamentPlayerFreeCountersModal";
 import { X } from "lucide-react";
 import { getReentryRemaining } from "@/core/states/tournaments/common/reentryLimits";
 import { TournamentsStructureResponse } from "@/core/states/tournaments/common/TournamentsStructureResponse";
@@ -367,6 +368,10 @@ const getPlayerPaymentMethod = (
   return player?.entryPaymentMethod ?? player?.entyPaymentMethod;
 };
 
+/** Уже в игре (не вылетел, не только в записи) — для турнирных бесплатных счётчиков. */
+const isActivelyInGame = (p: InGamePlayerState): boolean =>
+  p.status === "InGamePaid" || p.status === "InGameNotPaid";
+
 const PayPlayerModal: FC<PayPlayerModalProps> = ({
   close,
   tournamentId,
@@ -531,6 +536,9 @@ export const InGamePlayers: FC<InGamePlayersProps> = ({
   const [playerBonusesPlayerId, setPlayerBonusesPlayerId] = useState<
     string | undefined
   >(undefined);
+  const [playerFreeCountersPlayerId, setPlayerFreeCountersPlayerId] = useState<
+    string | undefined
+  >(undefined);
   const [playerCorrection, setPlayerCorrection] = useState<
     InGamePlayerState | undefined
   >(undefined);
@@ -538,6 +546,9 @@ export const InGamePlayers: FC<InGamePlayersProps> = ({
     string | undefined
   >(undefined);
   const [BonusesModal, openBonusesModal] = useModal(PlayerBonusesModal);
+  const [FreeCountersModal, openFreeCountersModal] = useModal(
+    TournamentPlayerFreeCountersModal,
+  );
   const [CorrectionModal, openCorrectionModal] = useModal(PlayerCorrectionModal);
   const { data: nonRegisteredPlayers } =
     useNonRegisteredTournamentPlayerState(tournamentId);
@@ -584,6 +595,10 @@ export const InGamePlayers: FC<InGamePlayersProps> = ({
         tournamentId={tournamentId}
         playerId={playerBonusesPlayerId}
       />
+      <FreeCountersModal
+        tournamentId={tournamentId}
+        playerId={playerFreeCountersPlayerId}
+      />
       <CorrectionModal
         tournamentId={tournamentId}
         player={playerCorrection}
@@ -614,6 +629,18 @@ export const InGamePlayers: FC<InGamePlayersProps> = ({
           const returnDisabledByReentry = reentryRemaining <= 0;
           return (
             <>
+              {isActivelyInGame(row) ? (
+                <Button
+                  type="secondary"
+                  size="xxSmall"
+                  onClick={() => {
+                    setPlayerFreeCountersPlayerId(row.playerId);
+                    openFreeCountersModal();
+                  }}
+                >
+                  Бесплатные (ре)ентри
+                </Button>
+              ) : null}
               <Button
                 type="secondary"
                 size="xxSmall"

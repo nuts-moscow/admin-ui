@@ -32,7 +32,7 @@ export const PublicRatingPointsColumn: FC<PublicRatingPointsColumnProps> = ({
     return (
       <div className={chipPoolRightColumnCls({ layout })}>
         <div className={chipPoolRatingTitleCls({ layout })}>
-          Рейтинг (баллы)
+          Рейтинговая зона
         </div>
         <Typography.Text
           size="small"
@@ -48,7 +48,7 @@ export const PublicRatingPointsColumn: FC<PublicRatingPointsColumnProps> = ({
     return (
       <div className={chipPoolRightColumnCls({ layout })}>
         <div className={chipPoolRatingTitleCls({ layout })}>
-          Рейтинг (баллы)
+          Рейтинговая зона
         </div>
         <Typography.Text
           type="error"
@@ -69,7 +69,7 @@ export const PublicRatingPointsColumn: FC<PublicRatingPointsColumnProps> = ({
     return (
       <div className={chipPoolRightColumnCls({ layout })}>
         <div className={chipPoolRatingTitleCls({ layout })}>
-          Рейтинг (баллы)
+          Рейтинговая зона
         </div>
         <Typography.Text
           size="small"
@@ -88,7 +88,7 @@ export const PublicRatingPointsColumn: FC<PublicRatingPointsColumnProps> = ({
 
   return (
     <div className={chipPoolRightColumnCls({ layout })}>
-      <div className={chipPoolRatingTitleCls({ layout })}>Рейтинг (баллы)</div>
+      <div className={chipPoolRatingTitleCls({ layout })}>Рейтинговая зона</div>
       <table className={chipPoolRatingTableCls({ layout })}>
         <thead>
           <tr>

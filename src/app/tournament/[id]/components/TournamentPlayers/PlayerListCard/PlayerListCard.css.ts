@@ -35,7 +35,7 @@ export const playerListCardBodyCls = style({
 
 export const playerListRowCls = style({
   display: "flex",
-  alignItems: "center",
+  alignItems: "flex-start",
   flexWrap: "wrap",
   gap: getGutter(2),
   padding: getGutter([2.5, 4]),
@@ -83,5 +83,8 @@ export const playerListRowActionsCls = style({
   alignItems: "center",
   flexWrap: "wrap",
   gap: getGutter(2),
-  flexShrink: 0,
+  flex: "0 1 auto",
+  minWidth: 0,
+  maxWidth: "100%",
+  justifyContent: "flex-end",
 });
