@@ -1,7 +1,8 @@
-import { queryState } from '@/core/stateManager/factories/queryState';
-import { useEnvironment } from '@/core/states/environment/useEnvironment';
-import { getPublicTournamentDetail } from '../requests/getPublicTournamentDetail';
-import { TournamentInfoResponse } from '../requests/getTournament';
+import { queryState } from "@/core/stateManager/factories/queryState";
+import { useEnvironment } from "@/core/states/environment/useEnvironment";
+import { getPublicTournamentDetail } from "../requests/getPublicTournamentDetail";
+import { TournamentInfoResponse } from "../requests/getTournament";
+import { tournamentRefetchDependency } from "./useTournament";
 
 export const usePublicTournament = queryState({
   request: async (
@@ -15,5 +16,7 @@ export const usePublicTournament = queryState({
   cache: true,
   deps: {
     environment: useEnvironment,
+    /** Как у `useTournament`: после старта турнира админка вызывает `refetchTournament()`. */
+    refetch: tournamentRefetchDependency,
   },
 });

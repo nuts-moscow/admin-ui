@@ -11,6 +11,9 @@ const useRefetchTournament = inMemoryState({
   defaultValue: 1,
 });
 
+/** Общая зависимость для query (см. `usePublicTournament`) — инкремент при `refetchTournament()`. */
+export const tournamentRefetchDependency = useRefetchTournament;
+
 export const refetchTournament = () => {
   useRefetchTournament.setData(useRefetchTournament.data + 1);
 };
@@ -27,6 +30,6 @@ export const useTournament = queryState({
   cache: true,
   deps: {
     environment: useEnvironment,
-    refetch: useRefetchTournament,
+    refetch: tournamentRefetchDependency,
   },
 });

@@ -1,12 +1,13 @@
 "use client";
 
-import { CSSProperties, FC, ReactNode, useCallback } from "react";
+import { CSSProperties, FC, ReactNode, useCallback, useEffect } from "react";
 import Image from "next/image";
 import { Formatter } from "@/components/Formatter/Formatter";
 import { Typography } from "@/components/Typography/Typography";
 import { Button } from "@/components/Button/Button";
 import { toast } from "@/components/Toast/Toast";
 import { Link2 } from "lucide-react";
+import { refetchTournament } from "@/core/states/tournaments/hooks/useTournament";
 import { useTournamentChipPoolSummary } from "@/core/states/tournaments/hooks/useTournamentChipPoolSummary";
 import { TournamentChipPoolSummary } from "@/core/states/tournaments/requests/getTournamentChipPoolSummary";
 import { TournamentInfoResponse } from "@/core/states/tournaments/requests/getTournament";
@@ -96,6 +97,16 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
   const tid = String(tournament.id);
   const useSummaryHook = chipPoolSummaryHook ?? useTournamentChipPoolSummary;
   const { data, loading, error } = useSummaryHook(tid);
+
+  /** Пока регистрация открыта — раз в секунду обновляем турнир (эфир/вкладка без F5 после старта). */
+  useEffect(() => {
+    if (tournament.status !== "RegistrationOpen") return;
+    const handle = window.setInterval(() => {
+      refetchTournament();
+    }, 1000);
+    return () => window.clearInterval(handle);
+  }, [tournament.status]);
+
   const inProgress = tournament.status === "InProgress";
   const clockBinding = useTournamentClock(tournament.id, {
     enabled: inProgress,
