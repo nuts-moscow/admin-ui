@@ -22,6 +22,7 @@ export const PublicTournamentChipPoolWindow: FC<PublicTournamentChipPoolWindowPr
       showTvBroadcastLink={false}
       style={style}
       chipPoolSummaryHook={usePublicTournamentChipPoolSummary}
+      enablePublicRatingPointsPreview
       clockOptions={{
         getClockFn: getPublicTournamentClock,
         wsUrlFn: getPublicTournamentClockWebSocketUrl,

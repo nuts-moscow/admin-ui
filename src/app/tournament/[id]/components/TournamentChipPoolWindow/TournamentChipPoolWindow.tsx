@@ -32,6 +32,7 @@ import {
   chipPoolTitleRowCls,
 } from "./TournamentChipPoolWindow.css";
 import { CHIP_POOL_INK_MUTED } from "./chipPoolTokens";
+import { PublicRatingPointsColumn } from "./PublicRatingPointsColumn";
 
 export interface TournamentChipPoolWindowProps {
   readonly tournament: TournamentInfoResponse;
@@ -43,6 +44,8 @@ export interface TournamentChipPoolWindowProps {
   readonly chipPoolSummaryHook?: (tournamentId: string) => { data: TournamentChipPoolSummary | null; loading: boolean; error?: Error };
   /** Опции для useTournamentClock (напр. публичные функции запроса). */
   readonly clockOptions?: Pick<UseTournamentClockOptions, 'getClockFn' | 'wsUrlFn'>;
+  /** Публичное окно: колонка предпросмотра рейтинговых баллов справа (GET без авторизации). */
+  readonly enablePublicRatingPointsPreview?: boolean;
 }
 
 function buildRulesSubtitle(tournament: TournamentInfoResponse): string {
@@ -85,6 +88,7 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
   style: rootStyle,
   chipPoolSummaryHook,
   clockOptions,
+  enablePublicRatingPointsPreview = false,
 }) => {
   const chipPoolLayout: ChipPoolWindowLayout = showTvBroadcastLink
     ? "admin"
@@ -99,6 +103,13 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
   });
 
   const rulesLine = buildRulesSubtitle(tournament);
+
+  const rightColumnOrSpacer =
+    enablePublicRatingPointsPreview ? (
+      <PublicRatingPointsColumn tournamentId={tid} layout={chipPoolLayout} />
+    ) : (
+      <div className={chipPoolRightSpacerCls} aria-hidden />
+    );
 
   const clockCenter = inProgress ? (
     <TournamentClockPanel
@@ -222,7 +233,7 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
               Загрузка…
             </Typography.Text>
           </div>
-          <div className={chipPoolRightSpacerCls} aria-hidden />
+          {rightColumnOrSpacer}
         </>
       );
     }
@@ -241,7 +252,7 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
               {error.message}
             </Typography.Text>
           </div>
-          <div className={chipPoolRightSpacerCls} aria-hidden />
+          {rightColumnOrSpacer}
         </>
       );
     }
@@ -268,7 +279,7 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
               для live).
             </Typography.Text>
           </div>
-          <div className={chipPoolRightSpacerCls} aria-hidden />
+          {rightColumnOrSpacer}
         </>
       );
     }
@@ -279,7 +290,7 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
         <div className={chipPoolCenterColumnCls({ layout: chipPoolLayout })}>
           {clockCenter}
         </div>
-        <div className={chipPoolRightSpacerCls} aria-hidden />
+        {rightColumnOrSpacer}
       </>
     );
   };

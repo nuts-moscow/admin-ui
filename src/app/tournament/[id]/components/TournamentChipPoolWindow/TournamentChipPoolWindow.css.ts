@@ -382,3 +382,163 @@ export const chipPoolRightSpacerCls = style({
   justifySelf: "stretch",
   // симметрия с левым 1fr — контента нет
 });
+
+/** Правая колонка — предпросмотр рейтинговых баллов (публичное окно). */
+export const chipPoolRightColumnCls = recipe({
+  base: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-end",
+    minWidth: 0,
+    justifySelf: "end",
+    maxWidth: "100%",
+    textAlign: "right",
+    paddingRight: chipPoolLeftContentInset,
+  },
+  variants: {
+    layout: {
+      admin: {
+        justifyContent: "center",
+      },
+      broadcast: {
+        /** Только правая колонка к верху; левая по-прежнему через --chip-broadcast-column-justify. */
+        justifyContent: "flex-start",
+        alignSelf: "stretch",
+        paddingRight: "clamp(12px, 2.5vw, 40px)",
+      },
+    },
+  },
+  defaultVariants: {
+    layout: "admin",
+  },
+});
+
+/** Заголовок блока баллов — те же метрики, что у chipPoolStatLabelCls («Игроки» и т.д.). */
+export const chipPoolRatingTitleCls = recipe({
+  base: {
+    fontWeight: 600,
+    letterSpacing: "0.05em",
+    textTransform: "uppercase",
+    color: CHIP_POOL_INK_SOFT,
+    marginBottom: 6,
+    lineHeight: 1.2,
+  },
+  variants: {
+    layout: {
+      admin: {
+        fontSize: "clamp(0.75rem, 1.2vw, 0.9rem)",
+      },
+      broadcast: {
+        fontSize: "var(--chip-broadcast-stat-label-size)",
+      },
+    },
+  },
+  defaultVariants: {
+    layout: "admin",
+  },
+});
+
+export const chipPoolRatingTableCls = recipe({
+  base: {
+    width: "100%",
+    maxWidth: "min(100%, 22rem)",
+    borderCollapse: "collapse",
+    fontVariantNumeric: "tabular-nums",
+  },
+  variants: {
+    layout: {
+      admin: {
+        marginTop: 0,
+      },
+      broadcast: {
+        /** Отступ сверху от заголовка «Рейтинг (баллы)», не margin-bottom у заголовка. */
+        marginTop: "clamp(14px, 2.6vh, 28px)",
+      },
+    },
+  },
+  defaultVariants: {
+    layout: "admin",
+  },
+});
+
+export const chipPoolRatingThCls = recipe({
+  base: {
+    fontWeight: 600,
+    letterSpacing: "0.04em",
+    textTransform: "uppercase",
+    color: CHIP_POOL_INK_SOFT,
+    paddingBottom: 8,
+    textAlign: "inherit",
+  },
+  variants: {
+    layout: {
+      admin: {
+        fontSize: "clamp(0.7rem, 1.1vw, 0.82rem)",
+      },
+      broadcast: {
+        fontSize: "clamp(0.65rem, min(1.1vw, 1.8vh), 0.88rem)",
+      },
+    },
+  },
+  defaultVariants: {
+    layout: "admin",
+  },
+});
+
+export const chipPoolRatingTdCls = recipe({
+  base: {
+    fontWeight: 700,
+    color: CHIP_POOL_INK,
+    paddingTop: 6,
+    paddingBottom: 6,
+    borderTop: "1px solid rgba(120, 100, 85, 0.12)",
+    textAlign: "inherit",
+  },
+  variants: {
+    layout: {
+      admin: {
+        fontSize: "clamp(1rem, 1.8vw, 1.35rem)",
+      },
+      broadcast: {
+        fontSize: "clamp(0.95rem, min(1.85vw, 2.8vh), 1.5rem)",
+      },
+    },
+  },
+  defaultVariants: {
+    layout: "admin",
+  },
+});
+
+/** Разделитель между топ-10 и нижними местами в таблице баллов. */
+export const chipPoolRatingEllipsisCellCls = style({
+  textAlign: "center",
+  color: CHIP_POOL_INK_SOFT,
+  fontWeight: 600,
+  letterSpacing: "0.4em",
+  paddingTop: 8,
+  paddingBottom: 8,
+  borderTop: "1px solid rgba(120, 100, 85, 0.12)",
+  fontSize: "clamp(0.85rem, min(1.5vw, 2.2vh), 1.15rem)",
+});
+
+export const chipPoolRatingMetaCls = recipe({
+  base: {
+    marginTop: getGutter(2),
+    fontWeight: 600,
+    color: CHIP_POOL_INK_SOFT,
+    maxWidth: "min(100%, 22rem)",
+  },
+  variants: {
+    layout: {
+      admin: {
+        fontSize: "clamp(0.68rem, 1vw, 0.8rem)",
+      },
+      broadcast: {
+        fontSize: "clamp(0.62rem, min(1vw, 1.6vh), 0.82rem)",
+      },
+    },
+  },
+  defaultVariants: {
+    layout: "admin",
+  },
+});
