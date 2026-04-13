@@ -1,5 +1,6 @@
 import { securedFetch } from "@/core/utils/misc/securedFetch";
 import { Environment } from "../../environment/Environment";
+import { pickFiniteNumber } from "./getTournament";
 import {
   TournamentStatus,
   normalizeTournamentStatus,
@@ -10,6 +11,8 @@ export interface ShortTournament {
   readonly name: string;
   readonly status: TournamentStatus;
   readonly date: number;
+  readonly ratingGuaranteeEnabled?: boolean;
+  readonly ratingGuaranteeBonusPoints?: number;
 }
 
 /** Элемент ответа GET v2/api/tournaments (TournamentResponse). */
@@ -18,6 +21,10 @@ interface TournamentResponseItem {
   readonly name: string;
   readonly status: string;
   readonly date: number;
+  readonly ratingGuaranteeEnabled?: boolean;
+  readonly ratingGuaranteeBonusPoints?: number;
+  readonly rating_guarantee_enabled?: boolean;
+  readonly rating_guarantee_bonus_points?: number;
 }
 
 function toShortTournament(t: TournamentResponseItem): ShortTournament {
@@ -26,6 +33,24 @@ function toShortTournament(t: TournamentResponseItem): ShortTournament {
     name: t.name,
     status: normalizeTournamentStatus(t.status),
     date: t.date,
+    ...(t.ratingGuaranteeEnabled != null || t.rating_guarantee_enabled != null
+      ? {
+          ratingGuaranteeEnabled: Boolean(
+            t.ratingGuaranteeEnabled ?? t.rating_guarantee_enabled,
+          ),
+        }
+      : {}),
+    ...(pickFiniteNumber(
+      t.ratingGuaranteeBonusPoints,
+      t.rating_guarantee_bonus_points,
+    ) != null
+      ? {
+          ratingGuaranteeBonusPoints: pickFiniteNumber(
+            t.ratingGuaranteeBonusPoints,
+            t.rating_guarantee_bonus_points,
+          ),
+        }
+      : {}),
   };
 }
 

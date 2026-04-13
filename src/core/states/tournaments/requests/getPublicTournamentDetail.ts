@@ -3,7 +3,8 @@ import { Environment } from '../../environment/Environment';
 import {
   TournamentInfoResponse,
   normalizeStructure,
-} from './getTournament';
+  pickFiniteNumber,
+} from "./getTournament";
 import { normalizeTournamentStatus } from '../common/TournamentStatus';
 import { TournamentsStructureResponse } from '../common/TournamentsStructureResponse';
 
@@ -14,6 +15,7 @@ interface TournamentWithStructureResponse {
   readonly date: number;
   readonly structure: TournamentsStructureResponse | null;
   readonly ratingGuaranteeEnabled?: boolean;
+  readonly ratingGuaranteeBonusPoints?: number;
   readonly ratingPointsCoefficient?: number;
   readonly ratingBountyCoefficient?: number;
 }
@@ -44,6 +46,11 @@ export const getPublicTournamentDetail = async (
           date: j.date,
           structure: normalizeStructure(j.structure),
           ratingGuaranteeEnabled: j.ratingGuaranteeEnabled,
+          ratingGuaranteeBonusPoints: pickFiniteNumber(
+            j.ratingGuaranteeBonusPoints,
+            (j as { rating_guarantee_bonus_points?: unknown })
+              .rating_guarantee_bonus_points,
+          ),
           ratingPointsCoefficient: j.ratingPointsCoefficient,
           ratingBountyCoefficient: j.ratingBountyCoefficient,
         };

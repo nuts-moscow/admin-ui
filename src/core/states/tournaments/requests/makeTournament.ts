@@ -7,6 +7,8 @@ import { ShortTournament } from "./getTournaments";
 export interface MakeTournamentRequest {
   readonly name: string;
   readonly date: number;
+  /** Опционально; без значения бэкенд подставит 10. */
+  readonly ratingGuaranteeBonusPoints?: number;
   readonly structure: {
     readonly name: string;
     readonly playersLimit: number;
@@ -22,6 +24,7 @@ export interface MakeTournamentRequest {
 interface MakeTournamentBody {
   readonly name: string;
   readonly date: number;
+  readonly ratingGuaranteeBonusPoints?: number;
   readonly structure: {
     readonly name: string;
     readonly playersLimit: number;
@@ -45,9 +48,16 @@ function toMakeTournamentBody(request: MakeTournamentRequest): MakeTournamentBod
     throw new Error("Structure blinds are required");
   }
   const mr = request.structure.maxReentries;
+  const bonus = request.ratingGuaranteeBonusPoints;
   return {
     name: request.name,
     date: request.date,
+    ...(bonus != null &&
+    Number.isFinite(bonus) &&
+    bonus >= 0 &&
+    Number.isInteger(bonus)
+      ? { ratingGuaranteeBonusPoints: Math.floor(bonus) }
+      : {}),
     structure: {
       name: request.structure.name,
       playersLimit: request.structure.playersLimit,

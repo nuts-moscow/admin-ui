@@ -12,15 +12,17 @@ export interface TournamentInfoResponse {
   readonly status: TournamentStatus;
   readonly date: number;
   readonly structure?: TournamentsStructureResponse;
-  /** Если true — места 1–10 получают +10 к базе до умножения на коэффициент. */
+  /** Если true — места 1–10 получают бонус к базе до умножения на коэффициент. */
   readonly ratingGuaranteeEnabled?: boolean;
+  /** Баллов к базе для топ‑10 при включённой гарантии (по умолчанию на бэке 10). */
+  readonly ratingGuaranteeBonusPoints?: number;
   /** Множитель для баллов за место. По умолчанию 1. */
   readonly ratingPointsCoefficient?: number;
   /** Множитель для баунти-баллов. По умолчанию 1. */
   readonly ratingBountyCoefficient?: number;
 }
 
-function pickFiniteNumber(...vals: unknown[]): number | undefined {
+export function pickFiniteNumber(...vals: unknown[]): number | undefined {
   for (const v of vals) {
     if (typeof v === "number" && Number.isFinite(v)) {
       return v;
@@ -66,6 +68,7 @@ interface TournamentWithStructureResponse {
   readonly date: number;
   readonly structure: TournamentsStructureResponse | null;
   readonly ratingGuaranteeEnabled?: boolean;
+  readonly ratingGuaranteeBonusPoints?: number;
   readonly ratingPointsCoefficient?: number;
   readonly ratingBountyCoefficient?: number;
 }
@@ -96,6 +99,11 @@ export const getTournament = async (
           date: j.date,
           structure: normalizeStructure(j.structure),
           ratingGuaranteeEnabled: j.ratingGuaranteeEnabled,
+          ratingGuaranteeBonusPoints: pickFiniteNumber(
+            j.ratingGuaranteeBonusPoints,
+            (j as { rating_guarantee_bonus_points?: unknown })
+              .rating_guarantee_bonus_points,
+          ),
           ratingPointsCoefficient: j.ratingPointsCoefficient,
           ratingBountyCoefficient: j.ratingBountyCoefficient,
         };

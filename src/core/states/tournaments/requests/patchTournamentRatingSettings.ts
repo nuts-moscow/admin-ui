@@ -8,6 +8,7 @@ interface PatchTournamentRatingSettingsBody {
   readonly date: number;
   readonly status: string;
   readonly ratingGuaranteeEnabled?: boolean;
+  readonly ratingGuaranteeBonusPoints?: number;
   readonly ratingPointsCoefficient?: number;
   readonly ratingBountyCoefficient?: number;
 }
@@ -20,6 +21,7 @@ function statusToApi(status: TournamentStatus): string {
 
 export interface RatingSettingsPatch {
   readonly ratingGuaranteeEnabled?: boolean;
+  readonly ratingGuaranteeBonusPoints?: number;
   readonly ratingPointsCoefficient?: number;
   readonly ratingBountyCoefficient?: number;
 }

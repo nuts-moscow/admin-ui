@@ -24,6 +24,29 @@ export const InfoStep: FC = () => {
         )}
       </Form.Control>
 
+      <Form.Control name="ratingGuaranteeBonusPoints">
+        {({ value, onChange }) => (
+          <Box style={{ maxWidth: 420 }}>
+            <Input
+              label="Бонус гарантии (места 1–10)"
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              placeholder="10"
+              type="primary"
+              size="medium"
+            />
+            <Typography.Text
+              size="xSmall"
+              type="secondary"
+              style={{ display: "block", marginTop: 6 }}
+            >
+              Сколько баллов добавляется к базе при включённой гарантии для
+              топ‑10; по умолчанию 10. Оставьте пустым — подставит сервер.
+            </Typography.Text>
+          </Box>
+        )}
+      </Form.Control>
+
       <Box flex={{ col: true, gap: 4 }}>
         <Form.Listener>
           {({ value }: { value: CreateTournamentForm }) => (

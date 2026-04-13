@@ -116,6 +116,42 @@ export const TournamentInfoForm: FC<TournamentInfoFormProps> = ({ tournament }) 
           </Typography.Text>
         </Box>
 
+        <Box
+          flex={{ col: true, gap: 1 }}
+          style={{
+            marginTop: 8,
+            paddingTop: 12,
+            borderTop: "1px solid rgba(0,0,0,0.06)",
+          }}
+        >
+          <Typography.Text bold size="small">
+            Рейтинг
+          </Typography.Text>
+          <Box flex={{ align: "center", gap: 2, flexWrap: "wrap" }}>
+            <Typography.Text type="secondary" size="small">
+              Гарантия топ‑10:
+            </Typography.Text>
+            <Typography.Text size="small">
+              {tournament.ratingGuaranteeEnabled === true
+                ? "вкл."
+                : tournament.ratingGuaranteeEnabled === false
+                  ? "выкл."
+                  : "—"}
+            </Typography.Text>
+            <Typography.Text type="secondary" size="small">
+              · бонус (места 1–10):
+            </Typography.Text>
+            <Typography.Text size="small">
+              {tournament.ratingGuaranteeBonusPoints != null
+                ? tournament.ratingGuaranteeBonusPoints
+                : "10 (по ум. на сервере)"}
+            </Typography.Text>
+          </Box>
+          <Typography.Text type="secondary" size="xSmall">
+            Изменить — вкладка «Рейтинг».
+          </Typography.Text>
+        </Box>
+
         <BlindList value={blinds} onChange={setBlinds} />
       </Box>
       <Button

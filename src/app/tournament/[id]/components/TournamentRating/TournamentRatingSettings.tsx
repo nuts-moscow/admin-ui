@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { Box } from "@/components/Box/Box";
 import { Button } from "@/components/Button/Button";
 import { Typography } from "@/components/Typography/Typography";
@@ -30,11 +30,28 @@ export const TournamentRatingSettings: FC<TournamentRatingSettingsProps> = ({
   const [bountyCoef, setBountyCoef] = useState(
     String(tournament.ratingBountyCoefficient ?? 1),
   );
+  const [guaranteeBonusPoints, setGuaranteeBonusPoints] = useState(
+    String(tournament.ratingGuaranteeBonusPoints ?? 10),
+  );
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setGuaranteeEnabled(tournament.ratingGuaranteeEnabled ?? false);
+    setPointsCoef(String(tournament.ratingPointsCoefficient ?? 1));
+    setBountyCoef(String(tournament.ratingBountyCoefficient ?? 1));
+    setGuaranteeBonusPoints(String(tournament.ratingGuaranteeBonusPoints ?? 10));
+  }, [
+    tournament.id,
+    tournament.ratingGuaranteeEnabled,
+    tournament.ratingGuaranteeBonusPoints,
+    tournament.ratingPointsCoefficient,
+    tournament.ratingBountyCoefficient,
+  ]);
 
   const handleSave = async () => {
     const parsedPoints = parseFloat(pointsCoef);
     const parsedBounty = parseFloat(bountyCoef);
+    const parsedBonus = Number.parseInt(guaranteeBonusPoints.trim(), 10);
     if (!Number.isFinite(parsedPoints) || parsedPoints < 0) {
       toast({ type: "error", message: "Коэффициент баллов должен быть ≥ 0" });
       return;
@@ -43,11 +60,19 @@ export const TournamentRatingSettings: FC<TournamentRatingSettingsProps> = ({
       toast({ type: "error", message: "Коэффициент баунти должен быть ≥ 0" });
       return;
     }
+    if (!Number.isFinite(parsedBonus) || parsedBonus < 0) {
+      toast({
+        type: "error",
+        message: "Бонус гарантии должен быть целым числом ≥ 0",
+      });
+      return;
+    }
 
     setSaving(true);
     try {
       await patchTournamentRatingSettings(environment, tournament, {
         ratingGuaranteeEnabled: guaranteeEnabled,
+        ratingGuaranteeBonusPoints: parsedBonus,
         ratingPointsCoefficient: parsedPoints,
         ratingBountyCoefficient: parsedBounty,
       });
@@ -84,9 +109,33 @@ export const TournamentRatingSettings: FC<TournamentRatingSettingsProps> = ({
         />
         <label htmlFor="rating-guarantee" style={{ cursor: "pointer" }}>
           <Typography.Text size="small">
-            Гарантия топ-10 (+10 к базе для мест 1–10)
+            Гарантия рейтинга (бонус к базе для мест 1–10)
           </Typography.Text>
         </label>
+      </Box>
+
+      <Box style={{ maxWidth: 420 }}>
+        <Input
+          label="Бонус гарантии (места 1–10)"
+          value={guaranteeBonusPoints}
+          onChange={(e) => setGuaranteeBonusPoints(e.target.value)}
+          type="primary"
+          size="medium"
+          disabled={!guaranteeEnabled}
+          title={
+            !guaranteeEnabled
+              ? "Включите гарантию рейтинга — иначе значение не используется при расчёте"
+              : undefined
+          }
+        />
+        <Typography.Text
+          size="xSmall"
+          type="secondary"
+          style={{ display: "block", marginTop: 6 }}
+        >
+          Сколько баллов добавляется к базе при включённой гарантии для топ‑10;
+          по умолчанию 10
+        </Typography.Text>
       </Box>
 
       <Box flex={{ gap: 4, align: "flex-end", flexWrap: "wrap" }}>
@@ -112,8 +161,11 @@ export const TournamentRatingSettings: FC<TournamentRatingSettingsProps> = ({
 
       <Box flex={{ align: "center", gap: 3 }}>
         <Typography.Text size="small" type="secondary">
-          Итог: (база {guaranteeEnabled ? "+ 10 для топ-10" : ""}) ×{" "}
-          {pointsCoef || "1"} + баунти × {bountyCoef || "1"}
+          Итог: (база
+          {guaranteeEnabled
+            ? ` + ${guaranteeBonusPoints.trim() || "10"} для топ-10`
+            : ""}
+          ) × {pointsCoef || "1"} + баунти × {bountyCoef || "1"}
         </Typography.Text>
       </Box>
 

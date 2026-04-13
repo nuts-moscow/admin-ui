@@ -18,6 +18,16 @@ export const TournamentCard: FC<TournamentCardProps> = ({
   onClick,
 }) => {
   const { name, date } = tournament;
+  const ratingLine: string[] = [];
+  if (tournament.ratingGuaranteeEnabled === true) {
+    ratingLine.push("Гарантия вкл.");
+  } else if (tournament.ratingGuaranteeEnabled === false) {
+    ratingLine.push("Гарантия выкл.");
+  }
+  if (tournament.ratingGuaranteeBonusPoints != null) {
+    ratingLine.push(`бонус ${tournament.ratingGuaranteeBonusPoints}`);
+  }
+  const showRatingMeta = ratingLine.length > 0;
 
   return (
     <Link
@@ -49,6 +59,15 @@ export const TournamentCard: FC<TournamentCardProps> = ({
           </Typography.Text>
           <Typography.Text>{name}</Typography.Text>
         </SimpleList.Column>
+
+        {showRatingMeta ? (
+          <SimpleList.Column>
+            <Typography.Text size="small" type="secondary">
+              Рейтинг
+            </Typography.Text>
+            <Typography.Text>{ratingLine.join(" · ")}</Typography.Text>
+          </SimpleList.Column>
+        ) : null}
       </SimpleList.Card>
     </Link>
   );

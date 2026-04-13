@@ -17,6 +17,7 @@ import { TournamentStructure } from "@/core/states/tournamentStructures/common/T
 import { makeTournament } from "@/core/states/tournaments/requests/makeTournament";
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
 import { refetchTournaments } from "@/core/states/tournaments/hooks/useTournaments";
+import { toast } from "@/components/Toast/Toast";
 
 type Step = 1 | 2 | 3;
 
@@ -30,6 +31,8 @@ export interface CreateTournamentForm {
   readonly name: string;
   readonly date: string;
   readonly time: string;
+  /** Целое ≥ 0; пусто — бэкенд подставит 10. */
+  readonly ratingGuaranteeBonusPoints: string;
   readonly structure: TournamentStructure | undefined;
 }
 
@@ -43,6 +46,7 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({ close }) => {
       name: "",
       date: DateTime.now().toFormat("yyyy-MM-dd"),
       time: DateTime.now().toFormat("HH:mm"),
+      ratingGuaranteeBonusPoints: "10",
       structure: undefined,
     },
   });
@@ -64,6 +68,21 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({ close }) => {
       const [year, month, day] = form.value.date.split("-");
       const [hour, minute] = form.value.time.split(":");
 
+      const bonusRaw = form.value.ratingGuaranteeBonusPoints.trim();
+      const bonusParsed =
+        bonusRaw === "" ? undefined : Number.parseInt(bonusRaw, 10);
+      if (
+        bonusParsed !== undefined &&
+        (!Number.isInteger(bonusParsed) || bonusParsed < 0)
+      ) {
+        toast({
+          type: "error",
+          message: "Бонус гарантии: целое число ≥ 0 или оставьте пустым",
+        });
+        setIsLoading(false);
+        return;
+      }
+
       await makeTournament(environment, {
         name: form.value.name,
         date: Math.floor(
@@ -75,6 +94,7 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({ close }) => {
             minute: Number(minute),
           }).toSeconds()
         ),
+        ...(bonusParsed !== undefined ? { ratingGuaranteeBonusPoints: bonusParsed } : {}),
         structure: {
           name: form.value.structure.name,
           playersLimit: form.value.structure.playersLimit,
