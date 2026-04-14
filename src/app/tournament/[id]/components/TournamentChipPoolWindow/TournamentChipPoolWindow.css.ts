@@ -401,10 +401,14 @@ export const chipPoolRightColumnCls = recipe({
         justifyContent: "center",
       },
       broadcast: {
-        /** Только правая колонка к верху; левая по-прежнему через --chip-broadcast-column-justify. */
+        /**
+         * Сдвиг вниз, чтобы «Рейтинговая зона» совпадала по вертикали с «Игроки»
+         * при space-evenly слева (см. --chip-broadcast-rating-zone-padding-top в globals / display-shell).
+         */
         justifyContent: "flex-start",
         alignSelf: "stretch",
         paddingRight: "clamp(12px, 2.5vw, 40px)",
+        paddingTop: "var(--chip-broadcast-rating-zone-padding-top, 0px)",
       },
     },
   },
@@ -420,7 +424,7 @@ export const chipPoolRatingTitleCls = recipe({
     letterSpacing: "0.05em",
     textTransform: "uppercase",
     color: CHIP_POOL_INK_SOFT,
-    marginBottom: 6,
+    marginBottom: 4,
     lineHeight: 1.2,
   },
   variants: {
@@ -452,7 +456,7 @@ export const chipPoolRatingTableCls = recipe({
       },
       broadcast: {
         /** Отступ сверху от заголовка «Рейтинговая зона», не margin-bottom у заголовка. */
-        marginTop: "clamp(14px, 2.6vh, 28px)",
+        marginTop: "clamp(8px, 1.4vh, 18px)",
       },
     },
   },
@@ -467,7 +471,9 @@ export const chipPoolRatingThCls = recipe({
     letterSpacing: "0.04em",
     textTransform: "uppercase",
     color: CHIP_POOL_INK_SOFT,
-    paddingBottom: 8,
+    paddingBottom: 4,
+    paddingTop: 0,
+    lineHeight: 1.15,
     textAlign: "inherit",
   },
   variants: {
@@ -489,8 +495,9 @@ export const chipPoolRatingTdCls = recipe({
   base: {
     fontWeight: 700,
     color: CHIP_POOL_INK,
-    paddingTop: 6,
-    paddingBottom: 6,
+    paddingTop: 2,
+    paddingBottom: 2,
+    lineHeight: 1.12,
     borderTop: "1px solid rgba(120, 100, 85, 0.12)",
     textAlign: "inherit",
   },
@@ -500,7 +507,7 @@ export const chipPoolRatingTdCls = recipe({
         fontSize: "clamp(1rem, 1.8vw, 1.35rem)",
       },
       broadcast: {
-        fontSize: "clamp(0.95rem, min(1.85vw, 2.8vh), 1.5rem)",
+        fontSize: "clamp(0.88rem, min(1.55vw, 2.35vh), 1.35rem)",
       },
     },
   },
@@ -515,8 +522,9 @@ export const chipPoolRatingEllipsisCellCls = style({
   color: CHIP_POOL_INK_SOFT,
   fontWeight: 600,
   letterSpacing: "0.4em",
-  paddingTop: 8,
-  paddingBottom: 8,
+  paddingTop: 3,
+  paddingBottom: 3,
+  lineHeight: 1,
   borderTop: "1px solid rgba(120, 100, 85, 0.12)",
-  fontSize: "clamp(0.85rem, min(1.5vw, 2.2vh), 1.15rem)",
+  fontSize: "clamp(0.75rem, min(1.25vw, 1.6vh), 1rem)",
 });

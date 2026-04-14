@@ -34,6 +34,8 @@
   --chip-broadcast-logo-height: clamp(60px, 11vw, 104px);
   --chip-broadcast-subheader-font: clamp(0.75rem, 1.35vw, 0.95rem);
   --chip-broadcast-column-justify: flex-start;
+  /* Слева статы с верха — правую колонку не сдвигаем */
+  --chip-broadcast-rating-zone-padding-top: 0px;
   --chip-broadcast-grid-align-items: start;
   --chip-broadcast-grid-align-content: start;
   --chip-broadcast-clock-justify: flex-start;
@@ -59,6 +61,8 @@
     --chip-broadcast-logo-height: clamp(76px, min(12vw, 15vh), 180px);
     --chip-broadcast-subheader-font: clamp(0.8rem, min(1.5vw, 2.2vh), 1.15rem);
     --chip-broadcast-column-justify: space-evenly;
+    /* Выровнять «Рейтинговая зона» с «Игроки» при space-evenly слева */
+    --chip-broadcast-rating-zone-padding-top: clamp(9vh, 11vmin, 200px);
     --chip-broadcast-grid-align-items: stretch;
     --chip-broadcast-grid-align-content: stretch;
     --chip-broadcast-clock-justify: space-evenly;

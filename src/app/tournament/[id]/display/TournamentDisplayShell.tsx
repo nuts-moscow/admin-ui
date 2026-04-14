@@ -23,6 +23,7 @@ const tvOverrides: CSSProperties & Record<string, string> = {
   "--chip-broadcast-subheader-font":
     "clamp(0.8rem, min(1.5vw, 2.2vh), 1.15rem)",
   "--chip-broadcast-column-justify": "space-evenly",
+  "--chip-broadcast-rating-zone-padding-top": "clamp(9vh, 11vmin, 200px)",
   "--chip-broadcast-grid-align-items": "stretch",
   "--chip-broadcast-grid-align-content": "stretch",
   "--chip-broadcast-clock-justify": "space-evenly",
