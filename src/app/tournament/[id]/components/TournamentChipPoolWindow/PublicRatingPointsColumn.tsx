@@ -110,8 +110,9 @@ export const PublicRatingPointsColumn: FC<PublicRatingPointsColumnProps> = ({
         <tbody>
           {data.places.flatMap((row, i) => {
             const prev = i > 0 ? data.places[i - 1] : null;
+            /** «…» только если после топ‑10 есть разрыв в местах (не сразу 11). */
             const showEllipsisAfterTop10 =
-              prev !== null && prev.place === 10 && row.place > 10;
+              prev !== null && prev.place === 10 && row.place > 11;
             const rowEl = (
               <tr key={`${row.place}-${row.fromTableAfterCoefficient}`}>
                 <td
