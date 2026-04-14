@@ -45,7 +45,10 @@ export interface TournamentChipPoolWindowProps {
   readonly chipPoolSummaryHook?: (tournamentId: string) => { data: TournamentChipPoolSummary | null; loading: boolean; error?: Error };
   /** Опции для useTournamentClock (напр. публичные функции запроса). */
   readonly clockOptions?: Pick<UseTournamentClockOptions, 'getClockFn' | 'wsUrlFn'>;
-  /** Публичное окно: колонка предпросмотра рейтинговых баллов справа (GET без авторизации). */
+  /**
+   * Публичное окно: колонка предпросмотра рейтинговых баллов справа (GET без авторизации).
+   * Не показывается, если в структуре включён freeze-out.
+   */
   readonly enablePublicRatingPointsPreview?: boolean;
 }
 
@@ -115,12 +118,16 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
 
   const rulesLine = buildRulesSubtitle(tournament);
 
-  const rightColumnOrSpacer =
-    enablePublicRatingPointsPreview ? (
-      <PublicRatingPointsColumn tournamentId={tid} layout={chipPoolLayout} />
-    ) : (
-      <div className={chipPoolRightSpacerCls} aria-hidden />
-    );
+  /** На эфире/таймере рейтинговая зона не показывается при freeze-out (нет реентри). */
+  const showPublicRatingColumn =
+    enablePublicRatingPointsPreview &&
+    tournament.structure?.freezeOutEnabled !== true;
+
+  const rightColumnOrSpacer = showPublicRatingColumn ? (
+    <PublicRatingPointsColumn tournamentId={tid} layout={chipPoolLayout} />
+  ) : (
+    <div className={chipPoolRightSpacerCls} aria-hidden />
+  );
 
   const clockCenter = inProgress ? (
     <TournamentClockPanel
