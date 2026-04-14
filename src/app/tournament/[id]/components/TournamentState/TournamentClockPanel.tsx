@@ -282,6 +282,29 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
                 {timerText}
               </Typography.Text>
             </Box>
+            {nextSbBb ? (
+              <Typography.Text
+                style={{
+                  ...dimStyle,
+                  letterSpacing: "0.04em",
+                  textTransform: "uppercase",
+                  fontWeight: 600,
+                  fontSize: "var(--bc-font-next)",
+                  textAlign: "center",
+                  width: "100%",
+                  display: "block",
+                }}
+              >
+                Следующие блайнды: {nextSbBb}
+              </Typography.Text>
+            ) : (
+              blindsStructure &&
+              blindsStructure.length > 0 && (
+                <Typography.Text type="secondary" size="small" style={dimStyle}>
+                  Следующих блайндов в структуре нет
+                </Typography.Text>
+              )
+            )}
           </>
         )}
 
