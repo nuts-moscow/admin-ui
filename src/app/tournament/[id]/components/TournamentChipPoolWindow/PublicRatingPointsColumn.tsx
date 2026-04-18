@@ -127,6 +127,10 @@ export const PublicRatingPointsColumn: FC<PublicRatingPointsColumnProps> = ({
     );
   }
 
+  const placesWithPoints = data.places.filter(
+    (p) => p.fromTableAfterCoefficient !== 0,
+  );
+
   return (
     <div className={chipPoolRightColumnCls({ layout })}>
       <div className={chipPoolRatingTitleCls({ layout })}>Рейтинговая зона</div>
@@ -163,8 +167,24 @@ export const PublicRatingPointsColumn: FC<PublicRatingPointsColumnProps> = ({
           </tr>
         </thead>
         <tbody>
-          {data.places.flatMap((row, i) => {
-            const prev = i > 0 ? data.places[i - 1] : null;
+          {placesWithPoints.length === 0 ? (
+            <tr>
+              <td
+                colSpan={2}
+                className={chipPoolRatingTdCls({ layout })}
+                style={{ textAlign: "center" }}
+              >
+                <Typography.Text
+                  size="small"
+                  style={{ color: CHIP_POOL_INK_MUTED }}
+                >
+                  Нет ненулевых баллов
+                </Typography.Text>
+              </td>
+            </tr>
+          ) : (
+            placesWithPoints.flatMap((row, i) => {
+            const prev = i > 0 ? placesWithPoints[i - 1] : null;
             /** «…» только если после топ‑10 есть разрыв в местах (не сразу 11). */
             const showEllipsisAfterTop10 =
               prev !== null && prev.place === 10 && row.place > 11;
@@ -198,7 +218,8 @@ export const PublicRatingPointsColumn: FC<PublicRatingPointsColumnProps> = ({
               </tr>,
               rowEl,
             ];
-          })}
+          })
+          )}
         </tbody>
       </table>
     </div>
