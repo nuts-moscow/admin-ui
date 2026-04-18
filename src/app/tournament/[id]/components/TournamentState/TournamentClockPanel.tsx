@@ -244,6 +244,97 @@ export const TournamentClockPanel: FC<TournamentClockPanelProps> = ({
             >
               Пауза
             </Typography.Text>
+            {currentStepItem && isBlind(currentStepItem) ? (
+              <Box
+                flex={{ col: true, align: "center" }}
+                flexItem={{ alignSelf: "stretch" }}
+                width="100%"
+                style={{
+                  textAlign: "center",
+                  gap: "var(--chip-broadcast-inner-blinds-gap)",
+                }}
+              >
+                <Typography.Text
+                  bold
+                  textAlign="center"
+                  style={{
+                    ...primaryStyle,
+                    display: "block",
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    fontSize: "var(--bc-font-level)",
+                    lineHeight: 1.35,
+                    width: "100%",
+                  }}
+                >
+                  Уровень {currentStepItem.level}
+                </Typography.Text>
+                <Typography.Text
+                  bold
+                  textAlign="center"
+                  style={{
+                    ...primaryStyle,
+                    display: "block",
+                    fontFamily: "var(--primary-font-family)",
+                    fontVariantNumeric: "tabular-nums",
+                    fontSize: "var(--bc-font-blinds)",
+                    lineHeight: 1.12,
+                    width: "100%",
+                  }}
+                >
+                  {formatSbBb(
+                    currentStepItem.smallBlind,
+                    currentStepItem.bigBlind,
+                  )}
+                </Typography.Text>
+                <Typography.Text
+                  textAlign="center"
+                  style={{
+                    ...dimStyle,
+                    display: "block",
+                    fontWeight: 600,
+                    letterSpacing: "0.04em",
+                    fontSize: "var(--bc-font-ante)",
+                    lineHeight: 1.35,
+                    width: "100%",
+                    ...(currentStepItem.ante
+                      ? { textTransform: "uppercase" }
+                      : {}),
+                  }}
+                >
+                  {currentStepItem.ante
+                    ? `BB Ante ${currentStepItem.bigBlind}`
+                    : "Без анте"}
+                </Typography.Text>
+              </Box>
+            ) : currentStepItem && isBreak(currentStepItem) ? (
+              <Typography.Text
+                bold
+                textAlign="center"
+                style={{
+                  ...primaryStyle,
+                  display: "block",
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  fontSize: "var(--bc-font-blinds)",
+                  lineHeight: 1.1,
+                  width: "100%",
+                }}
+              >
+                Перерыв
+              </Typography.Text>
+            ) : (
+              <>
+                <Typography.Text size="medium" style={primaryStyle}>
+                  {tick.currentStepIndex !== null
+                    ? `Шаг ${tick.currentStepIndex + 1}`
+                    : "Шаг"}
+                </Typography.Text>
+                <Typography.Text type="secondary" size="small" style={dimStyle}>
+                  {label}
+                </Typography.Text>
+              </>
+            )}
             <Box
               flex={{ justify: "center", align: "center" }}
               width="100%"
