@@ -35,7 +35,10 @@ import {
 import { CHIP_POOL_INK_MUTED } from "./chipPoolTokens";
 import { PublicRatingPointsColumn } from "./PublicRatingPointsColumn";
 import { useRatingTables } from "@/core/states/tournaments/hooks/useRatingTables";
-import { getRatingTableDisplayName } from "@/core/states/tournaments/common/ratingTableDisplayName";
+import {
+  getRatingTableDisplayName,
+  getRatingTableDisplayNameForBroadcast,
+} from "@/core/states/tournaments/common/ratingTableDisplayName";
 
 export interface TournamentChipPoolWindowProps {
   readonly tournament: TournamentInfoResponse;
@@ -53,6 +56,10 @@ export interface TournamentChipPoolWindowProps {
    */
   readonly enablePublicRatingPointsPreview?: boolean;
 }
+
+type TournamentChipPoolWindowInnerProps = TournamentChipPoolWindowProps & {
+  readonly ratingTableName: string | undefined;
+};
 
 function buildRulesSubtitle(tournament: TournamentInfoResponse): string {
   const s = tournament.structure;
@@ -88,13 +95,14 @@ function LeftStat({
   );
 }
 
-export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
+const TournamentChipPoolWindowInner: FC<TournamentChipPoolWindowInnerProps> = ({
   tournament,
   showTvBroadcastLink = true,
   style: rootStyle,
   chipPoolSummaryHook,
   clockOptions,
   enablePublicRatingPointsPreview = false,
+  ratingTableName,
 }) => {
   const chipPoolLayout: ChipPoolWindowLayout = showTvBroadcastLink
     ? "admin"
@@ -102,13 +110,6 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
   const tid = String(tournament.id);
   const useSummaryHook = chipPoolSummaryHook ?? useTournamentChipPoolSummary;
   const { data, loading, error } = useSummaryHook(tid);
-  const { data: ratingTables = [] } = useRatingTables();
-  const ratingTableRow =
-    tournament.ratingTableId != null
-      ? ratingTables.find((t) => t.id === tournament.ratingTableId)
-      : undefined;
-  const ratingTableName =
-    ratingTableRow != null ? getRatingTableDisplayName(ratingTableRow) : undefined;
 
   /** Пока регистрация открыта — раз в секунду обновляем турнир (эфир/вкладка без F5 после старта). */
   useEffect(() => {
@@ -380,4 +381,48 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
       ) : null}
     </div>
   );
+};
+
+const TournamentChipPoolWindowAdmin: FC<TournamentChipPoolWindowProps> = (
+  props,
+) => {
+  const { data: ratingTables = [] } = useRatingTables();
+  const ratingTableRow =
+    props.tournament.ratingTableId != null
+      ? ratingTables.find((t) => t.id === props.tournament.ratingTableId)
+      : undefined;
+  const ratingTableName =
+    ratingTableRow != null
+      ? getRatingTableDisplayName(ratingTableRow)
+      : undefined;
+  return (
+    <TournamentChipPoolWindowInner
+      {...props}
+      ratingTableName={ratingTableName}
+    />
+  );
+};
+
+const TournamentChipPoolWindowBroadcast: FC<TournamentChipPoolWindowProps> = (
+  props,
+) => {
+  const ratingTableName = getRatingTableDisplayNameForBroadcast(
+    props.tournament,
+  );
+  return (
+    <TournamentChipPoolWindowInner
+      {...props}
+      ratingTableName={ratingTableName}
+    />
+  );
+};
+
+/** Турнирное окно: при `showTvBroadcastLink={false}` не запрашивает справочник таблиц рейтинга (без JWT). */
+export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = (
+  props,
+) => {
+  if (props.showTvBroadcastLink === false) {
+    return <TournamentChipPoolWindowBroadcast {...props} />;
+  }
+  return <TournamentChipPoolWindowAdmin {...props} />;
 };

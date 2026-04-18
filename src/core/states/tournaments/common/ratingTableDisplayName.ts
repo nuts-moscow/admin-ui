@@ -13,3 +13,20 @@ export function getRatingTableDisplayName(
       return table.name;
   }
 }
+
+/**
+ * Подпись таблицы рейтинга без GET /rating-tables (эфир, таймер, /display) —
+ * только id из турнира, чтобы не требовать JWT.
+ */
+export function getRatingTableDisplayNameForBroadcast(tournament: {
+  readonly ratingTableId?: number;
+}): string | undefined {
+  if (tournament.ratingTableId == null) {
+    return undefined;
+  }
+  const id = tournament.ratingTableId;
+  return getRatingTableDisplayName({
+    id,
+    name: `Таблица ${id}`,
+  });
+}
