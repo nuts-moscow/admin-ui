@@ -3,6 +3,34 @@ import { Environment } from "../../environment/Environment";
 import { InGamePlayerState } from "../common/InGamePlayerState";
 import { normalizeRatingBreakdown } from "../common/TournamentRatingBreakdown";
 
+function pickRatingNonPlacementAccrued(
+  raw: Record<string, unknown>,
+): number | undefined {
+  const v =
+    raw.ratingNonPlacementAccrued ?? raw.rating_non_placement_accrued;
+  if (typeof v === "number" && Number.isFinite(v)) {
+    return v;
+  }
+  if (typeof v === "string" && v.trim() !== "") {
+    const n = Number(v);
+    if (Number.isFinite(n)) {
+      return n;
+    }
+  }
+  return undefined;
+}
+
+/** Один объект игрока из ответа API (например PATCH). */
+export function normalizeTournamentPlayerItem(
+  item: unknown,
+): InGamePlayerState | null {
+  if (item == null || typeof item !== "object") {
+    return null;
+  }
+  const [first] = normalizePlayersPayload([item]);
+  return first ?? null;
+}
+
 function normalizePlayersPayload(raw: unknown): InGamePlayerState[] {
   if (!Array.isArray(raw)) {
     return [];
@@ -12,12 +40,20 @@ function normalizePlayersPayload(raw: unknown): InGamePlayerState[] {
       return item as InGamePlayerState;
     }
     const p = item as InGamePlayerState & { rating?: unknown };
+    const rawRec = item as Record<string, unknown>;
     const ratingNorm = normalizeRatingBreakdown(p.rating);
-    if (ratingNorm != null) {
-      return { ...p, rating: ratingNorm };
+    const accruedTop = pickRatingNonPlacementAccrued(rawRec);
+    const base =
+      ratingNorm != null
+        ? { ...p, rating: ratingNorm }
+        : (() => {
+            const { rating: _drop, ...rest } = p;
+            return rest as InGamePlayerState;
+          })();
+    if (accruedTop != null) {
+      return { ...base, ratingNonPlacementAccrued: accruedTop };
     }
-    const { rating: _drop, ...rest } = p;
-    return rest as InGamePlayerState;
+    return base;
   });
 }
 

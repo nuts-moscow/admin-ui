@@ -20,6 +20,28 @@ function bountyKillsCell(row: InGamePlayerState): string {
   return `${formatBountyCount(bc)} 🥥`;
 }
 
+function nonPlacementAccruedCell(row: InGamePlayerState): number {
+  return (
+    row.ratingNonPlacementAccrued ?? row.rating?.nonPlacementAccrued ?? 0
+  );
+}
+
+function totalPointsCell(row: InGamePlayerState): number {
+  const r = row.rating;
+  if (r != null) {
+    return r.totalPoints;
+  }
+  return nonPlacementAccruedCell(row);
+}
+
+function fromTableCell(row: InGamePlayerState): number {
+  return row.rating?.fromTable ?? 0;
+}
+
+function bountyPointsCell(row: InGamePlayerState): number {
+  return row.rating?.bounty ?? 0;
+}
+
 /**
  * Полная таблица рейтинга для буфера: заголовок, строка колонок (TSV), данные.
  * Для завершённого турнира включается колонка «Корр.».
@@ -35,7 +57,7 @@ export function buildTournamentRatingTableCopyText(
   const isCompleted = tournament.status === "Completed";
   const title = isCompleted
     ? `ИТОГОВЫЕ БАЛЛЫ — ${tournament.name}, ${dateLine}`
-    : `БАЛЛЫ ВЫЛЕТЕВШИХ — ${tournament.name}, ${dateLine}`;
+    : `БАЛЛЫ ИГРОКОВ — ${tournament.name}, ${dateLine}`;
 
   const header = isCompleted
     ? [
@@ -44,6 +66,7 @@ export function buildTournamentRatingTableCopyText(
         "За место",
         "Баунти (баллы)",
         "Баунти",
+        "Доп. баллы",
         "Корр.",
         "Итого",
       ].join(SEP)
@@ -53,14 +76,11 @@ export function buildTournamentRatingTableCopyText(
         "За место",
         "Баунти (баллы)",
         "Баунти",
+        "Доп. баллы",
         "Итого",
       ].join(SEP);
 
   const body = rows.map((row) => {
-    const rating = row.rating;
-    if (!rating) {
-      return "";
-    }
     const place = displayPlaceNumber(
       row.placement,
       totalPlayers,
@@ -70,17 +90,21 @@ export function buildTournamentRatingTableCopyText(
     const cells = [
       placeStr,
       row.playerName.replace(/\r?\n/g, " "),
-      numCell(rating.fromTable),
-      numCell(rating.bounty),
+      numCell(fromTableCell(row)),
+      numCell(bountyPointsCell(row)),
       bountyKillsCell(row),
+      numCell(nonPlacementAccruedCell(row)),
     ];
     if (isCompleted) {
-      cells.push(numCell(rating.manualAdjustment), numCell(rating.totalPoints));
+      cells.push(
+        numCell(row.rating?.manualAdjustment ?? 0),
+        numCell(totalPointsCell(row)),
+      );
     } else {
-      cells.push(numCell(rating.totalPoints));
+      cells.push(numCell(totalPointsCell(row)));
     }
     return cells.join(SEP);
   });
 
-  return [title, "", header, ...body.filter(Boolean)].join("\n");
+  return [title, "", header, ...body].join("\n");
 }

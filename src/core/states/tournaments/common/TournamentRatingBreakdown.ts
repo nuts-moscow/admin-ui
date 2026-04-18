@@ -6,7 +6,9 @@ export interface TournamentRatingBreakdown {
   readonly bounty: number;
   /** Ручная правка (только для completed; 0 по умолчанию). */
   readonly manualAdjustment: number;
-  /** fromTable + bounty + manualAdjustment. */
+  /** Накопитель «вне места» (Redis / не матрица места); входит в итог. */
+  readonly nonPlacementAccrued: number;
+  /** fromTable + bounty + manualAdjustment + nonPlacementAccrued. */
   readonly totalPoints: number;
 }
 
@@ -52,8 +54,8 @@ const RECONCILE_EPS = 1e-4;
 /**
  * Приводит ответ API к camelCase и заполняет пропуски нулями.
  * Поддерживает snake_case и альтернативные имена полей «за место».
- * Если задан total, а сумма (за место + баунти + корр.) не совпадает — «за место»
- * восстанавливается из итога (источник правды на бэке).
+ * Если задан total, а сумма (за место + баунти + корр. + вне места) не совпадает —
+ * «за место» восстанавливается из итога (источник правды на бэке).
  */
 export function normalizeRatingBreakdown(
   raw: unknown,
@@ -67,16 +69,25 @@ export function normalizeRatingBreakdown(
     pickFiniteNumber(o.bounty, o.bounty_points, o.bountyPoints) ?? 0;
   const manualAdjustment =
     pickFiniteNumber(o.manualAdjustment, o.manual_adjustment) ?? 0;
+  const nonPlacementAccrued =
+    pickFiniteNumber(
+      o.nonPlacementAccrued,
+      o.non_placement_accrued,
+      o.ratingNonPlacementAccrued,
+      o.rating_non_placement_accrued,
+    ) ?? 0;
   const totalExplicit = pickFiniteNumber(o.totalPoints, o.total_points);
   let totalPoints =
     totalExplicit != null
       ? totalExplicit
-      : fromTable + bounty + manualAdjustment;
+      : fromTable + bounty + manualAdjustment + nonPlacementAccrued;
 
   if (totalExplicit != null) {
-    const sumParts = fromTable + bounty + manualAdjustment;
+    const sumParts =
+      fromTable + bounty + manualAdjustment + nonPlacementAccrued;
     if (Math.abs(sumParts - totalExplicit) > RECONCILE_EPS) {
-      fromTable = totalExplicit - bounty - manualAdjustment;
+      fromTable =
+        totalExplicit - bounty - manualAdjustment - nonPlacementAccrued;
       totalPoints = totalExplicit;
     }
   }
@@ -85,6 +96,7 @@ export function normalizeRatingBreakdown(
     fromTable,
     bounty,
     manualAdjustment,
+    nonPlacementAccrued,
     totalPoints,
   };
 }

@@ -110,6 +110,11 @@ export interface InGamePlayerState {
    * Completed: заполнен у всех (итог + manualAdjustment).
    */
   readonly rating?: TournamentRatingBreakdown;
+  /**
+   * Накопитель баллов «вне места» (Redis); не обнуляется при return-to-game.
+   * Дублируется в rating.nonPlacementAccrued внутри снимка, если бэк отдаёт в breakdown.
+   */
+  readonly ratingNonPlacementAccrued?: number;
 }
 
 /** Есть ли у игрока бесплатный вход (глобально или в турнире) для способа оплаты Free. */
