@@ -16,5 +16,11 @@ export const simpleListCardCls = recipe({
         boxShadow: "0 2px 8px rgba(255, 196, 2, 0.08)",
       },
     },
+    /** Нет подписанного договора — как в турнирном списке игроков. */
+    noAgreement: {
+      true: {
+        backgroundColor: "rgba(255, 196, 2, 0.22)",
+      },
+    },
   },
 });

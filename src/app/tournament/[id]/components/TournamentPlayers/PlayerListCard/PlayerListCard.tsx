@@ -62,7 +62,7 @@ export const PlayerListCard: FC<PlayerListCardProps> = ({
                 playerListRowCls,
                 needsEntryHighlight && playerListRowHighlightCls,
                 row.status === "Registered" && playerListRowMutedCls,
-                row.signAgreement === false && playerListRowNoAgreementCls
+                row.signAgreement !== true && playerListRowNoAgreementCls
               )}
             >
               <Typography.Text

@@ -8,6 +8,8 @@ import { Upload } from "lucide-react";
 
 export interface SimpleListCardProps extends WithChildren {
   readonly selected?: boolean;
+  /** Подсветка фона, если у игрока нет подписанного договора. */
+  readonly noAgreement?: boolean;
   readonly onClick?: () => void;
   readonly className?: string;
   /** Ряд с несколькими колонками переносится на следующую строку, если не влезает по ширине. */
@@ -18,6 +20,7 @@ const SimpleListCard: FC<SimpleListCardProps> = ({
   children,
   onClick,
   selected,
+  noAgreement,
   className,
   rowWrap,
 }) => {
@@ -34,7 +37,10 @@ const SimpleListCard: FC<SimpleListCardProps> = ({
       borderRadius="m"
       border
       disableHover
-      className={clsx(simpleListCardCls({ selected }), className)}
+      className={clsx(
+        simpleListCardCls({ selected, noAgreement }),
+        className,
+      )}
     >
       {children}
     </Box>

@@ -8,7 +8,7 @@ import { Input } from "@/components/Input/Input";
 import { TextArea } from "@/components/Textarea/TextArea";
 import { Form } from "@/components/Form/Form";
 import { useForm, toCtrlParam } from "@/components/Form/useForm";
-import { Modal, WithModalProps } from "@/components/Modal/Modal";
+import { Modal, useModal, WithModalProps } from "@/components/Modal/Modal";
 
 import {
   createPlayer,
@@ -22,7 +22,8 @@ import { useEnvironment } from "@/core/states/environment/useEnvironment";
 import { refetchPlayers } from "@/core/states/players/hooks/usePlayers";
 import { Player } from "@/core/states/players/common/Player";
 import { Typography } from "@/components/Typography/Typography";
-import { Phone, User } from "lucide-react";
+import { Phone, Trash2, User } from "lucide-react";
+import { DeletePlayerConfirmModal } from "../DeletePlayerConfirmModal/DeletePlayerConfirmModal";
 
 export interface CreatePlayerModalProps extends WithModalProps {
   readonly player?: Player;
@@ -34,6 +35,9 @@ export const CreatePlayerModal: FC<CreatePlayerModalProps> = ({
   player,
 }) => {
   const environment = useEnvironment();
+  const [DeleteConfirmModal, openDeleteConfirm] = useModal(
+    DeletePlayerConfirmModal,
+  );
 
   const [isLoading, setIsLoading] = useState(false);
   const [form] = useForm<Partial<CreatePlayerRequest>>({
@@ -111,6 +115,9 @@ export const CreatePlayerModal: FC<CreatePlayerModalProps> = ({
 
   return (
     <>
+      {player ? (
+        <DeleteConfirmModal player={player} onDeleted={close} />
+      ) : null}
       <Modal.Title close={close}>
         {player ? "Редактировать игрока" : "Создать игрока"}
       </Modal.Title>
@@ -189,6 +196,20 @@ export const CreatePlayerModal: FC<CreatePlayerModalProps> = ({
               </Box>
             )}
           </Form.Control>
+
+          {player ? (
+            <Box flex={{ width: "100%" }}>
+              <Button
+                disabled={isLoading}
+                type="outline-error"
+                htmlType="button"
+                iconLeft={<Trash2 size={18} />}
+                onClick={() => openDeleteConfirm()}
+              >
+                Удалить из базы
+              </Button>
+            </Box>
+          ) : null}
 
           <Box flex={{ width: "100%", gap: 4 }}>
             <Button

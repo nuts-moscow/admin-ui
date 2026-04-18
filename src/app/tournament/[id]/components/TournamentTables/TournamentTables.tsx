@@ -582,7 +582,7 @@ export const TournamentTables: FC<TournamentTablesProps> = ({ tournament }) => {
               borderRadius: 10,
               border: "1px solid rgba(0, 0, 0, 0.08)",
               backgroundColor:
-                player.signAgreement === false
+                player.signAgreement !== true
                   ? "rgba(255, 196, 2, 0.22)"
                   : (player.entryPaymentMethod ?? player.entyPaymentMethod) == null
                     ? "rgba(220, 38, 38, 0.12)"

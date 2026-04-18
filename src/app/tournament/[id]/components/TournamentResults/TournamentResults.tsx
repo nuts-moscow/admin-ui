@@ -491,7 +491,7 @@ export const TournamentResults: FC<TournamentResultsProps> = ({
               padding: "10px 12px",
               borderTop: "1px solid rgba(0, 0, 0, 0.08)",
               backgroundColor:
-                row.signAgreement === false ? "rgba(255, 196, 2, 0.22)" : undefined,
+                row.signAgreement !== true ? "rgba(255, 196, 2, 0.22)" : undefined,
             }}
           >
             <Typography.Text>
