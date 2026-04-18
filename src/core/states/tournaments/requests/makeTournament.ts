@@ -9,6 +9,8 @@ export interface MakeTournamentRequest {
   readonly date: number;
   /** Опционально; без значения бэкенд подставит 10. */
   readonly ratingGuaranteeBonusPoints?: number;
+  /** Таблица рейтинга (POST /api/tournaments). */
+  readonly ratingTableId?: number;
   readonly structure: {
     readonly name: string;
     readonly playersLimit: number;
@@ -25,6 +27,7 @@ interface MakeTournamentBody {
   readonly name: string;
   readonly date: number;
   readonly ratingGuaranteeBonusPoints?: number;
+  readonly ratingTableId?: number;
   readonly structure: {
     readonly name: string;
     readonly playersLimit: number;
@@ -49,6 +52,7 @@ function toMakeTournamentBody(request: MakeTournamentRequest): MakeTournamentBod
   }
   const mr = request.structure.maxReentries;
   const bonus = request.ratingGuaranteeBonusPoints;
+  const rt = request.ratingTableId;
   return {
     name: request.name,
     date: request.date,
@@ -57,6 +61,12 @@ function toMakeTournamentBody(request: MakeTournamentRequest): MakeTournamentBod
     bonus >= 0 &&
     Number.isInteger(bonus)
       ? { ratingGuaranteeBonusPoints: Math.floor(bonus) }
+      : {}),
+    ...(rt != null &&
+    Number.isFinite(rt) &&
+    rt > 0 &&
+    Number.isInteger(rt)
+      ? { ratingTableId: Math.floor(rt) }
       : {}),
     structure: {
       name: request.structure.name,

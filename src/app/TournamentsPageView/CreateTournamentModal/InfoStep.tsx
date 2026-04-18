@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useEffect } from "react";
+import { FC } from "react";
 import { Box } from "@/components/Box/Box";
 import { Form } from "@/components/Form/Form";
 import { Input } from "@/components/Input/Input";
@@ -9,8 +9,13 @@ import { DateTime } from "luxon";
 import { TournamentStructure } from "@/core/states/tournamentStructures/common/TournamentStructure";
 import { BlindList } from "@/app/settings/SettingsPageView/components/StructuresView/CreateStructureModal/BlindList/BlindList";
 import { CreateTournamentForm } from "./CreateTournamentModal";
+import { useRatingTables } from "@/core/states/tournaments/hooks/useRatingTables";
+import { getRatingTableDisplayName } from "@/core/states/tournaments/common/ratingTableDisplayName";
 
 export const InfoStep: FC = () => {
+  const { data: ratingTables = [], loading: ratingTablesLoading } =
+    useRatingTables();
+
   return (
     <Box flex={{ col: true, gap: 4, width: "100%" }}>
       <Form.Control name="name">
@@ -43,6 +48,56 @@ export const InfoStep: FC = () => {
               Сколько баллов добавляется к базе при включённой гарантии для
               топ‑10; по умолчанию 10. Оставьте пустым — подставит сервер.
             </Typography.Text>
+          </Box>
+        )}
+      </Form.Control>
+
+      <Form.Control name="ratingTableId">
+        {({ value, onChange }) => (
+          <Box style={{ maxWidth: 420 }}>
+            <Typography.Text
+              size="small"
+              type="secondary"
+              style={{ display: "block", marginBottom: 6 }}
+            >
+              Таблица рейтинга
+            </Typography.Text>
+            <select
+              value={value}
+              onChange={(e) => onChange(Number(e.target.value))}
+              disabled={ratingTablesLoading || ratingTables.length === 0}
+              style={{
+                width: "100%",
+                padding: "10px 12px",
+                borderRadius: 12,
+                border: "1px solid var(--border-color-grey)",
+                backgroundColor: "var(--background-primary)",
+                fontSize: 14,
+              }}
+            >
+              {ratingTables.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {getRatingTableDisplayName(t)}
+                </option>
+              ))}
+            </select>
+            {ratingTablesLoading ? (
+              <Typography.Text
+                size="xSmall"
+                type="secondary"
+                style={{ display: "block", marginTop: 6 }}
+              >
+                Загрузка списка таблиц…
+              </Typography.Text>
+            ) : ratingTables.length === 0 ? (
+              <Typography.Text
+                size="xSmall"
+                type="error"
+                style={{ display: "block", marginTop: 6 }}
+              >
+                Список таблиц недоступен — проверьте API /api/rating-tables
+              </Typography.Text>
+            ) : null}
           </Box>
         )}
       </Form.Control>

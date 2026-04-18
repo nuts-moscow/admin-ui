@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useMemo, useState } from "react";
+import { FC, useEffect, useMemo, useRef, useState } from "react";
 import { Box } from "@/components/Box/Box";
 import { Button } from "@/components/Button/Button";
 import { useForm } from "@/components/Form/useForm";
@@ -18,6 +18,7 @@ import { makeTournament } from "@/core/states/tournaments/requests/makeTournamen
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
 import { refetchTournaments } from "@/core/states/tournaments/hooks/useTournaments";
 import { toast } from "@/components/Toast/Toast";
+import { useRatingTables } from "@/core/states/tournaments/hooks/useRatingTables";
 
 type Step = 1 | 2 | 3;
 
@@ -33,6 +34,8 @@ export interface CreateTournamentForm {
   readonly time: string;
   /** Целое ≥ 0; пусто — бэкенд подставит 10. */
   readonly ratingGuaranteeBonusPoints: string;
+  /** Справочник GET /api/rating-tables; по умолчанию — первая таблица в списке. */
+  readonly ratingTableId: number;
   readonly structure: TournamentStructure | undefined;
 }
 
@@ -40,6 +43,8 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({ close }) => {
   const [step, setStep] = useState<Step>(1);
   const [isLoading, setIsLoading] = useState(false);
   const environment = useEnvironment();
+  const { data: ratingTables } = useRatingTables();
+  const ratingTableInitRef = useRef(false);
 
   const [form] = useForm<CreateTournamentForm>({
     controls: {
@@ -47,9 +52,21 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({ close }) => {
       date: DateTime.now().toFormat("yyyy-MM-dd"),
       time: DateTime.now().toFormat("HH:mm"),
       ratingGuaranteeBonusPoints: "10",
+      ratingTableId: 1,
       structure: undefined,
     },
   });
+
+  useEffect(() => {
+    if (
+      ratingTables &&
+      ratingTables.length > 0 &&
+      !ratingTableInitRef.current
+    ) {
+      ratingTableInitRef.current = true;
+      form.setValue({ ratingTableId: ratingTables[0]!.id });
+    }
+  }, [ratingTables]);
 
   const handleNext = () => {
     if (step < 3) {
@@ -83,6 +100,7 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({ close }) => {
         return;
       }
 
+      const rtId = form.value.ratingTableId;
       await makeTournament(environment, {
         name: form.value.name,
         date: Math.floor(
@@ -95,6 +113,9 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({ close }) => {
           }).toSeconds()
         ),
         ...(bonusParsed !== undefined ? { ratingGuaranteeBonusPoints: bonusParsed } : {}),
+        ...(Number.isFinite(rtId) && rtId > 0 && Number.isInteger(rtId)
+          ? { ratingTableId: Math.floor(rtId) }
+          : {}),
         structure: {
           name: form.value.structure.name,
           playersLimit: form.value.structure.playersLimit,

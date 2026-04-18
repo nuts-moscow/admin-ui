@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 import { Box } from "@/components/Box/Box";
 import { Button } from "@/components/Button/Button";
 import { Typography } from "@/components/Typography/Typography";
@@ -8,9 +8,14 @@ import { Input } from "@/components/Input/Input";
 import { Checkbox } from "@/components/Checkbox/Checkbox";
 import { toast } from "@/components/Toast/Toast";
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
-import { TournamentInfoResponse } from "@/core/states/tournaments/requests/getTournament";
+import {
+  getTournament,
+  TournamentInfoResponse,
+} from "@/core/states/tournaments/requests/getTournament";
 import { patchTournamentRatingSettings } from "@/core/states/tournaments/requests/patchTournamentRatingSettings";
 import { refetchTournament } from "@/core/states/tournaments/hooks/useTournament";
+import { useRatingTables } from "@/core/states/tournaments/hooks/useRatingTables";
+import { getRatingTableDisplayName } from "@/core/states/tournaments/common/ratingTableDisplayName";
 
 export interface TournamentRatingSettingsProps {
   readonly tournament: TournamentInfoResponse;
@@ -20,6 +25,8 @@ export const TournamentRatingSettings: FC<TournamentRatingSettingsProps> = ({
   tournament,
 }) => {
   const environment = useEnvironment();
+  const { data: ratingTables = [], loading: ratingTablesLoading } =
+    useRatingTables();
 
   const [guaranteeEnabled, setGuaranteeEnabled] = useState(
     tournament.ratingGuaranteeEnabled ?? false,
@@ -33,7 +40,11 @@ export const TournamentRatingSettings: FC<TournamentRatingSettingsProps> = ({
   const [guaranteeBonusPoints, setGuaranteeBonusPoints] = useState(
     String(tournament.ratingGuaranteeBonusPoints ?? 10),
   );
+  const [ratingTableId, setRatingTableId] = useState(
+    () => tournament.ratingTableId ?? 1,
+  );
   const [saving, setSaving] = useState(false);
+  const ratingTableHydratedRef = useRef(false);
 
   useEffect(() => {
     setGuaranteeEnabled(tournament.ratingGuaranteeEnabled ?? false);
@@ -47,6 +58,25 @@ export const TournamentRatingSettings: FC<TournamentRatingSettingsProps> = ({
     tournament.ratingPointsCoefficient,
     tournament.ratingBountyCoefficient,
   ]);
+
+  useEffect(() => {
+    setRatingTableId(tournament.ratingTableId ?? 1);
+  }, [tournament.id]);
+
+  useEffect(() => {
+    ratingTableHydratedRef.current = false;
+  }, [tournament.id]);
+
+  useEffect(() => {
+    if (
+      !ratingTableHydratedRef.current &&
+      tournament.ratingTableId != null &&
+      Number.isFinite(tournament.ratingTableId)
+    ) {
+      ratingTableHydratedRef.current = true;
+      setRatingTableId(Math.trunc(tournament.ratingTableId));
+    }
+  }, [tournament.ratingTableId]);
 
   const handleSave = async () => {
     const parsedPoints = parseFloat(pointsCoef);
@@ -70,12 +100,27 @@ export const TournamentRatingSettings: FC<TournamentRatingSettingsProps> = ({
 
     setSaving(true);
     try {
+      const rtResolved = Math.max(
+        1,
+        Math.floor(
+          Number.isFinite(ratingTableId)
+            ? ratingTableId
+            : tournament.ratingTableId ?? 1,
+        ),
+      );
       await patchTournamentRatingSettings(environment, tournament, {
         ratingGuaranteeEnabled: guaranteeEnabled,
         ratingGuaranteeBonusPoints: parsedBonus,
         ratingPointsCoefficient: parsedPoints,
         ratingBountyCoefficient: parsedBounty,
+        ratingTableId: rtResolved,
       });
+      const fresh = await getTournament(environment, String(tournament.id));
+      if (fresh?.ratingTableId != null && Number.isFinite(fresh.ratingTableId)) {
+        setRatingTableId(Math.trunc(fresh.ratingTableId));
+      } else {
+        setRatingTableId(rtResolved);
+      }
       await refetchTournament();
       toast({ type: "success", message: "Настройки рейтинга сохранены" });
     } catch (error) {
@@ -99,6 +144,35 @@ export const TournamentRatingSettings: FC<TournamentRatingSettingsProps> = ({
       }}
     >
       <Typography.Text bold>Настройки рейтинга</Typography.Text>
+
+      <Box flex={{ col: true, gap: 1 }} style={{ maxWidth: 420 }}>
+        <Typography.Text size="small" type="secondary">
+          Таблица рейтинга
+        </Typography.Text>
+        <select
+          value={ratingTableId}
+          onChange={(e) => setRatingTableId(Number(e.target.value))}
+          disabled={ratingTablesLoading || ratingTables.length === 0}
+          style={{
+            width: "100%",
+            padding: "10px 12px",
+            borderRadius: 10,
+            border: "1px solid rgba(0,0,0,0.12)",
+            backgroundColor: "var(--background-primary)",
+            fontSize: 14,
+          }}
+        >
+          {ratingTables.map((t) => (
+            <option key={t.id} value={t.id}>
+              {getRatingTableDisplayName(t)}
+            </option>
+          ))}
+        </select>
+        <Typography.Text size="xSmall" type="secondary">
+          Сохраняется вместе с настройками ниже; на вкладке «Турнир» можно
+          сменить таблицу отдельно.
+        </Typography.Text>
+      </Box>
 
       <Box flex={{ align: "center", gap: 3 }}>
         <Checkbox

@@ -11,6 +11,7 @@ interface PatchTournamentRatingSettingsBody {
   readonly ratingGuaranteeBonusPoints?: number;
   readonly ratingPointsCoefficient?: number;
   readonly ratingBountyCoefficient?: number;
+  readonly ratingTableId?: number;
 }
 
 function statusToApi(status: TournamentStatus): string {
@@ -24,6 +25,7 @@ export interface RatingSettingsPatch {
   readonly ratingGuaranteeBonusPoints?: number;
   readonly ratingPointsCoefficient?: number;
   readonly ratingBountyCoefficient?: number;
+  readonly ratingTableId?: number;
 }
 
 export const patchTournamentRatingSettings = async (
@@ -31,14 +33,21 @@ export const patchTournamentRatingSettings = async (
   tournament: Pick<TournamentInfoResponse, "id" | "name" | "date" | "status">,
   patch: RatingSettingsPatch,
 ): Promise<void> => {
-  const body: PatchTournamentRatingSettingsBody = {
+  const rt =
+    patch.ratingTableId != null &&
+    Number.isFinite(patch.ratingTableId) &&
+    Number.isInteger(patch.ratingTableId)
+      ? Math.floor(patch.ratingTableId)
+      : undefined;
+  const body: PatchTournamentRatingSettingsBody & { rating_table_id?: number } = {
     name: tournament.name,
     date: tournament.date,
     status: statusToApi(tournament.status),
     ...patch,
+    ...(rt != null ? { rating_table_id: rt } : {}),
   };
 
-  await securedFetch<PatchTournamentRatingSettingsBody, void>({
+  await securedFetch<typeof body, void>({
     method: "PATCH",
     host: environment.apiUrl,
     path: `/v2/api/tournaments/${tournament.id}`,

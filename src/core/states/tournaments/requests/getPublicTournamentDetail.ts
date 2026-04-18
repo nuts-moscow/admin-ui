@@ -18,6 +18,7 @@ interface TournamentWithStructureResponse {
   readonly ratingGuaranteeBonusPoints?: number;
   readonly ratingPointsCoefficient?: number;
   readonly ratingBountyCoefficient?: number;
+  readonly ratingTableId?: number;
 }
 
 /**
@@ -39,6 +40,17 @@ export const getPublicTournamentDetail = async (
     mapping: {
       success: async (res) => {
         const j = (await res.toJson()) as TournamentWithStructureResponse;
+        const ratingTableIdRaw =
+          (j as { ratingTableId?: unknown }).ratingTableId ??
+          (j as { rating_table_id?: unknown }).rating_table_id;
+        const ratingTableId =
+          typeof ratingTableIdRaw === "number" && Number.isFinite(ratingTableIdRaw)
+            ? Math.trunc(ratingTableIdRaw)
+            : typeof ratingTableIdRaw === "string" &&
+                ratingTableIdRaw.trim() !== "" &&
+                Number.isFinite(Number(ratingTableIdRaw))
+              ? Math.trunc(Number(ratingTableIdRaw))
+              : undefined;
         return {
           id: j.id,
           name: j.name,
@@ -53,6 +65,7 @@ export const getPublicTournamentDetail = async (
           ),
           ratingPointsCoefficient: j.ratingPointsCoefficient,
           ratingBountyCoefficient: j.ratingBountyCoefficient,
+          ...(ratingTableId != null ? { ratingTableId } : {}),
         };
       },
       401: () => null,

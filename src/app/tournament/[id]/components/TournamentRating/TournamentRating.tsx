@@ -38,7 +38,10 @@ export const TournamentRating: FC<TournamentRatingProps> = ({ tournament }) => {
 
       {showPlayers && <TournamentRatingPlayers tournament={tournament} />}
 
-      <TournamentRatingMatrix participantCount={participantCount} />
+      <TournamentRatingMatrix
+        participantCount={participantCount}
+        defaultRatingTableId={tournament.ratingTableId}
+      />
     </Box>
   );
 };

@@ -42,7 +42,12 @@ export const TournamentPageView: FC<TournamentPageViewProps> = ({
         {
           title: "Турнирное окно",
           key: "chip-pool",
-          content: <TournamentChipPoolWindow tournament={currentTournament} />,
+          content: (
+            <TournamentChipPoolWindow
+              tournament={currentTournament}
+              enablePublicRatingPointsPreview
+            />
+          ),
         },
         {
           title: "Социальные сети",
@@ -95,7 +100,12 @@ export const TournamentPageView: FC<TournamentPageViewProps> = ({
       {
         title: "Турнирное окно",
         key: "chip-pool",
-        content: <TournamentChipPoolWindow tournament={currentTournament} />,
+        content: (
+          <TournamentChipPoolWindow
+            tournament={currentTournament}
+            enablePublicRatingPointsPreview
+          />
+        ),
       },
       {
         title: "Социальные сети",

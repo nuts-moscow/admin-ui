@@ -1,27 +1,71 @@
 "use client";
 
-import { FC, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { Box } from "@/components/Box/Box";
 import { Button } from "@/components/Button/Button";
 import { Typography } from "@/components/Typography/Typography";
+import { useRatingTableMatrix } from "@/core/states/tournaments/hooks/useRatingTableMatrix";
+import { useRatingTables } from "@/core/states/tournaments/hooks/useRatingTables";
 import {
-  useTournamentRatingMatrix,
-  refetchTournamentRatingMatrix,
-} from "@/core/states/tournaments/hooks/useTournamentRatingMatrix";
-import { matrixColumnIndex } from "@/core/states/tournaments/requests/getTournamentRatingMatrix";
+  matrixColumnIndex,
+  type RatingMatrixPlace,
+} from "@/core/states/tournaments/requests/getTournamentRatingMatrix";
+import { getRatingTableDisplayName } from "@/core/states/tournaments/common/ratingTableDisplayName";
 
 export interface TournamentRatingMatrixProps {
   /** Число участников для подсветки активного столбца. */
   readonly participantCount: number;
+  /** Таблица турнира — начальное значение переключателя. */
+  readonly defaultRatingTableId?: number;
+}
+
+function formatCell(value: number | null): string {
+  if (value === null) {
+    return "—";
+  }
+  return String(value);
 }
 
 export const TournamentRatingMatrix: FC<TournamentRatingMatrixProps> = ({
   participantCount,
+  defaultRatingTableId,
 }) => {
   const [expanded, setExpanded] = useState(false);
-  const { data: matrix, loading } = useTournamentRatingMatrix();
+  const { data: tables = [], loading: tablesLoading } = useRatingTables();
+  const [selectedTableId, setSelectedTableId] = useState<number>(() =>
+    defaultRatingTableId != null && defaultRatingTableId > 0
+      ? defaultRatingTableId
+      : 1,
+  );
 
-  const activeCol = matrixColumnIndex(participantCount);
+  useEffect(() => {
+    if (defaultRatingTableId != null && defaultRatingTableId > 0) {
+      setSelectedTableId(defaultRatingTableId);
+    }
+  }, [defaultRatingTableId]);
+
+  useEffect(() => {
+    if (
+      tables.length > 0 &&
+      !tables.some((t) => t.id === selectedTableId)
+    ) {
+      setSelectedTableId(tables[0]!.id);
+    }
+  }, [tables, selectedTableId]);
+
+  const { data: matrix, loading } = useRatingTableMatrix(
+    String(selectedTableId),
+  );
+
+  const colCount = matrix?.participantRangeLabels.length ?? 0;
+  const activeCol =
+    matrix != null
+      ? matrixColumnIndex(
+          participantCount,
+          matrix.columnRangeStart,
+          colCount,
+        )
+      : 0;
 
   return (
     <Box
@@ -34,29 +78,48 @@ export const TournamentRatingMatrix: FC<TournamentRatingMatrixProps> = ({
       }}
     >
       <Box
-        flex={{ align: "center", justify: "space-between" }}
+        flex={{ align: "center", justify: "space-between", flexWrap: "wrap", gap: 2 }}
         style={{ padding: "14px 16px" }}
       >
         <Box flex={{ col: true, gap: 1 }}>
           <Typography.Text bold>Матрица баллов</Typography.Text>
-          {participantCount > 0 && (
+          {participantCount > 0 && matrix && (
             <Typography.Text size="small" type="secondary">
               Участников: {participantCount} → столбец «
-              {matrix?.participantRangeLabels[activeCol] ?? "…"}»
+              {matrix.participantRangeLabels[activeCol] ?? "…"}»
             </Typography.Text>
           )}
         </Box>
-        <Box flex={{ gap: 2 }}>
-          <Button
-            type="secondary"
-            size="small"
-            onClick={() => {
-              refetchTournamentRatingMatrix();
-              if (!expanded) setExpanded(true);
+        <Box flex={{ gap: 2, align: "center", flexWrap: "wrap" }}>
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              fontSize: 13,
+              color: "var(--text-secondary)",
             }}
           >
-            Обновить
-          </Button>
+            <span>Таблица рейтинга</span>
+            <select
+              value={selectedTableId}
+              onChange={(e) => setSelectedTableId(Number(e.target.value))}
+              disabled={tablesLoading || tables.length === 0}
+              style={{
+                minWidth: 180,
+                padding: "6px 10px",
+                borderRadius: 8,
+                border: "1px solid rgba(0,0,0,0.12)",
+                backgroundColor: "var(--background-primary)",
+              }}
+            >
+              {tables.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {getRatingTableDisplayName(t)}
+                </option>
+              ))}
+            </select>
+          </label>
           <Button
             type="secondary"
             size="small"
@@ -110,9 +173,9 @@ export const TournamentRatingMatrix: FC<TournamentRatingMatrixProps> = ({
                   >
                     Место
                   </th>
-                  {matrix.participantRangeLabels.map((label, colIdx) => (
+                  {matrix.participantRangeLabels.map((label: string, colIdx: number) => (
                     <th
-                      key={label}
+                      key={`${label}-${colIdx}`}
                       style={{
                         padding: "6px 10px",
                         textAlign: "center",
@@ -135,7 +198,7 @@ export const TournamentRatingMatrix: FC<TournamentRatingMatrixProps> = ({
                 </tr>
               </thead>
               <tbody>
-                {matrix.places.map((row, rowIdx) => (
+                {matrix.places.map((row: RatingMatrixPlace, rowIdx: number) => (
                   <tr
                     key={row.place}
                     style={{
@@ -161,7 +224,7 @@ export const TournamentRatingMatrix: FC<TournamentRatingMatrixProps> = ({
                     >
                       {row.place}
                     </td>
-                    {row.basePoints.map((pts, colIdx) => (
+                    {row.basePoints.map((pts: number | null, colIdx: number) => (
                       <td
                         key={colIdx}
                         style={{
@@ -178,7 +241,7 @@ export const TournamentRatingMatrix: FC<TournamentRatingMatrixProps> = ({
                               : undefined,
                         }}
                       >
-                        {pts}
+                        {formatCell(pts)}
                       </td>
                     ))}
                   </tr>

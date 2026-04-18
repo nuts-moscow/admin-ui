@@ -66,6 +66,7 @@ export const TournamentDisplayShell: FC<TournamentDisplayShellProps> = ({
       <TournamentChipPoolWindow
         tournament={tournament}
         showTvBroadcastLink={false}
+        enablePublicRatingPointsPreview
         style={{ flex: "1 1 0%", minHeight: 0, width: "100%" }}
       />
     </div>

@@ -34,6 +34,8 @@ import {
 } from "./TournamentChipPoolWindow.css";
 import { CHIP_POOL_INK_MUTED } from "./chipPoolTokens";
 import { PublicRatingPointsColumn } from "./PublicRatingPointsColumn";
+import { useRatingTables } from "@/core/states/tournaments/hooks/useRatingTables";
+import { getRatingTableDisplayName } from "@/core/states/tournaments/common/ratingTableDisplayName";
 
 export interface TournamentChipPoolWindowProps {
   readonly tournament: TournamentInfoResponse;
@@ -46,8 +48,8 @@ export interface TournamentChipPoolWindowProps {
   /** Опции для useTournamentClock (напр. публичные функции запроса). */
   readonly clockOptions?: Pick<UseTournamentClockOptions, 'getClockFn' | 'wsUrlFn'>;
   /**
-   * Публичное окно: колонка предпросмотра рейтинговых баллов справа (GET без авторизации).
-   * Не показывается, если в структуре включён freeze-out.
+   * Колонка рейтинговых баллов справа (публичный GET). Не показывается, если в структуре
+   * включён «Финал игры (freeze-out)» — в т.ч. формат «финал месяца».
    */
   readonly enablePublicRatingPointsPreview?: boolean;
 }
@@ -100,6 +102,13 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
   const tid = String(tournament.id);
   const useSummaryHook = chipPoolSummaryHook ?? useTournamentChipPoolSummary;
   const { data, loading, error } = useSummaryHook(tid);
+  const { data: ratingTables = [] } = useRatingTables();
+  const ratingTableRow =
+    tournament.ratingTableId != null
+      ? ratingTables.find((t) => t.id === tournament.ratingTableId)
+      : undefined;
+  const ratingTableName =
+    ratingTableRow != null ? getRatingTableDisplayName(ratingTableRow) : undefined;
 
   /** Пока регистрация открыта — раз в секунду обновляем турнир (эфир/вкладка без F5 после старта). */
   useEffect(() => {
@@ -118,13 +127,17 @@ export const TournamentChipPoolWindow: FC<TournamentChipPoolWindowProps> = ({
 
   const rulesLine = buildRulesSubtitle(tournament);
 
-  /** На эфире/таймере рейтинговая зона не показывается при freeze-out (нет реентри). */
+  /** Рейтинговая зона скрыта для freeze-out (финал месяца и др.). */
   const showPublicRatingColumn =
     enablePublicRatingPointsPreview &&
     tournament.structure?.freezeOutEnabled !== true;
 
   const rightColumnOrSpacer = showPublicRatingColumn ? (
-    <PublicRatingPointsColumn tournamentId={tid} layout={chipPoolLayout} />
+    <PublicRatingPointsColumn
+      tournamentId={tid}
+      layout={chipPoolLayout}
+      ratingTableName={ratingTableName}
+    />
   ) : (
     <div className={chipPoolRightSpacerCls} aria-hidden />
   );

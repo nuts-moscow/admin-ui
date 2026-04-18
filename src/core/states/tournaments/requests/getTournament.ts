@@ -20,6 +20,8 @@ export interface TournamentInfoResponse {
   readonly ratingPointsCoefficient?: number;
   /** Множитель для баунти-баллов. По умолчанию 1. */
   readonly ratingBountyCoefficient?: number;
+  /** Таблица рейтинга (справочник GET /api/rating-tables). */
+  readonly ratingTableId?: number;
 }
 
 export function pickFiniteNumber(...vals: unknown[]): number | undefined {
@@ -71,6 +73,7 @@ interface TournamentWithStructureResponse {
   readonly ratingGuaranteeBonusPoints?: number;
   readonly ratingPointsCoefficient?: number;
   readonly ratingBountyCoefficient?: number;
+  readonly ratingTableId?: number;
 }
 
 /**
@@ -92,6 +95,17 @@ export const getTournament = async (
     mapping: {
       success: async (res) => {
         const j = (await res.toJson()) as TournamentWithStructureResponse;
+        const ratingTableIdRaw =
+          (j as { ratingTableId?: unknown }).ratingTableId ??
+          (j as { rating_table_id?: unknown }).rating_table_id;
+        const ratingTableId =
+          typeof ratingTableIdRaw === "number" && Number.isFinite(ratingTableIdRaw)
+            ? Math.trunc(ratingTableIdRaw)
+            : typeof ratingTableIdRaw === "string" &&
+                ratingTableIdRaw.trim() !== "" &&
+                Number.isFinite(Number(ratingTableIdRaw))
+              ? Math.trunc(Number(ratingTableIdRaw))
+              : undefined;
         return {
           id: j.id,
           name: j.name,
@@ -106,6 +120,7 @@ export const getTournament = async (
           ),
           ratingPointsCoefficient: j.ratingPointsCoefficient,
           ratingBountyCoefficient: j.ratingBountyCoefficient,
+          ...(ratingTableId != null ? { ratingTableId } : {}),
         };
       },
       404: () => null,

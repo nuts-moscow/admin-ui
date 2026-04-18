@@ -18,11 +18,14 @@ import { CHIP_POOL_INK_MUTED } from "./chipPoolTokens";
 export interface PublicRatingPointsColumnProps {
   readonly tournamentId: string;
   readonly layout: ChipPoolWindowLayout;
+  /** Подзаголовок: название таблицы рейтинга турнира (опционально). */
+  readonly ratingTableName?: string;
 }
 
 export const PublicRatingPointsColumn: FC<PublicRatingPointsColumnProps> = ({
   tournamentId,
   layout,
+  ratingTableName,
 }) => {
   const { data, loading, error } =
     usePublicTournamentRatingPointsDistribution(tournamentId);
@@ -33,6 +36,19 @@ export const PublicRatingPointsColumn: FC<PublicRatingPointsColumnProps> = ({
         <div className={chipPoolRatingTitleCls({ layout })}>
           Рейтинговая зона
         </div>
+        {ratingTableName ? (
+          <Typography.Text
+            size="xxSmall"
+            style={{
+              color: CHIP_POOL_INK_MUTED,
+              textAlign: "right",
+              display: "block",
+              marginBottom: 4,
+            }}
+          >
+            {ratingTableName}
+          </Typography.Text>
+        ) : null}
         <Typography.Text
           size="small"
           style={{ color: CHIP_POOL_INK_MUTED, textAlign: "right" }}
@@ -49,6 +65,19 @@ export const PublicRatingPointsColumn: FC<PublicRatingPointsColumnProps> = ({
         <div className={chipPoolRatingTitleCls({ layout })}>
           Рейтинговая зона
         </div>
+        {ratingTableName ? (
+          <Typography.Text
+            size="xxSmall"
+            style={{
+              color: CHIP_POOL_INK_MUTED,
+              textAlign: "right",
+              display: "block",
+              marginBottom: 4,
+            }}
+          >
+            {ratingTableName}
+          </Typography.Text>
+        ) : null}
         <Typography.Text
           type="error"
           size="small"
@@ -70,6 +99,19 @@ export const PublicRatingPointsColumn: FC<PublicRatingPointsColumnProps> = ({
         <div className={chipPoolRatingTitleCls({ layout })}>
           Рейтинговая зона
         </div>
+        {ratingTableName ? (
+          <Typography.Text
+            size="xxSmall"
+            style={{
+              color: CHIP_POOL_INK_MUTED,
+              textAlign: "right",
+              display: "block",
+              marginBottom: 4,
+            }}
+          >
+            {ratingTableName}
+          </Typography.Text>
+        ) : null}
         <Typography.Text
           size="small"
           style={{
@@ -88,6 +130,19 @@ export const PublicRatingPointsColumn: FC<PublicRatingPointsColumnProps> = ({
   return (
     <div className={chipPoolRightColumnCls({ layout })}>
       <div className={chipPoolRatingTitleCls({ layout })}>Рейтинговая зона</div>
+      {ratingTableName ? (
+        <Typography.Text
+          size="xxSmall"
+          style={{
+            color: CHIP_POOL_INK_MUTED,
+            textAlign: "right",
+            display: "block",
+            marginBottom: 6,
+          }}
+        >
+          {ratingTableName}
+        </Typography.Text>
+      ) : null}
       <table className={chipPoolRatingTableCls({ layout })}>
         <thead>
           <tr>
