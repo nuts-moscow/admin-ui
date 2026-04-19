@@ -17,6 +17,7 @@ import { useRatingTables } from "@/core/states/tournaments/hooks/useRatingTables
 import { patchTournamentRatingSettings } from "@/core/states/tournaments/requests/patchTournamentRatingSettings";
 import { toast } from "@/components/Toast/Toast";
 import { getRatingTableDisplayName } from "@/core/states/tournaments/common/ratingTableDisplayName";
+import { formatSeasonLong } from "@/core/states/tournaments/common/seasonFormatting";
 
 export interface TournamentInfoFormProps {
   readonly tournament: TournamentInfoResponse;
@@ -193,6 +194,38 @@ export const TournamentInfoForm: FC<TournamentInfoFormProps> = ({ tournament }) 
             Рейтинг
           </Typography.Text>
           <Box flex={{ col: true, gap: 1, align: "flex-start" }}>
+            <Box flex={{ align: "center", gap: 2, flexWrap: "wrap" }}>
+              <Typography.Text type="secondary" size="small">
+                Учёт в рейтинге:
+              </Typography.Text>
+              <Typography.Text size="small">
+                {tournament.ratingEnabled === false
+                  ? "выкл. (спецформат)"
+                  : tournament.ratingEnabled === true
+                    ? "вкл."
+                    : "—"}
+              </Typography.Text>
+            </Box>
+            {tournament.ratingEnabled !== false ? (
+              <Box flex={{ align: "center", gap: 2, flexWrap: "wrap" }}>
+                <Typography.Text type="secondary" size="small">
+                  Сезон:
+                </Typography.Text>
+                <Typography.Text size="small">
+                  {tournament.ratingSeasonYear != null &&
+                  tournament.ratingSeasonMonth != null
+                    ? formatSeasonLong(
+                        tournament.ratingSeasonYear,
+                        tournament.ratingSeasonMonth,
+                      )
+                    : "не задан"}
+                </Typography.Text>
+              </Box>
+            ) : (
+              <Typography.Text size="xSmall" type="secondary">
+                Сезон не применяется
+              </Typography.Text>
+            )}
             <Typography.Text type="secondary" size="small">
               Таблица рейтинга
             </Typography.Text>

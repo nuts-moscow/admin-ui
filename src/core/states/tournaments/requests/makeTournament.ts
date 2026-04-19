@@ -11,6 +11,10 @@ export interface MakeTournamentRequest {
   readonly ratingGuaranteeBonusPoints?: number;
   /** Таблица рейтинга (POST /api/tournaments). */
   readonly ratingTableId?: number;
+  /** Учёт в рейтинге; по умолчанию true на бэке. */
+  readonly ratingEnabled?: boolean;
+  readonly ratingSeasonYear?: number | null;
+  readonly ratingSeasonMonth?: number | null;
   readonly structure: {
     readonly name: string;
     readonly playersLimit: number;
@@ -28,6 +32,9 @@ interface MakeTournamentBody {
   readonly date: number;
   readonly ratingGuaranteeBonusPoints?: number;
   readonly ratingTableId?: number;
+  readonly ratingEnabled?: boolean;
+  readonly ratingSeasonYear?: number | null;
+  readonly ratingSeasonMonth?: number | null;
   readonly structure: {
     readonly name: string;
     readonly playersLimit: number;
@@ -53,6 +60,9 @@ function toMakeTournamentBody(request: MakeTournamentRequest): MakeTournamentBod
   const mr = request.structure.maxReentries;
   const bonus = request.ratingGuaranteeBonusPoints;
   const rt = request.ratingTableId;
+  const re = request.ratingEnabled;
+  const rsy = request.ratingSeasonYear;
+  const rsm = request.ratingSeasonMonth;
   return {
     name: request.name,
     date: request.date,
@@ -67,6 +77,23 @@ function toMakeTournamentBody(request: MakeTournamentRequest): MakeTournamentBod
     rt > 0 &&
     Number.isInteger(rt)
       ? { ratingTableId: Math.floor(rt) }
+      : {}),
+    ...(re === false
+      ? { ratingEnabled: false, ratingSeasonYear: null, ratingSeasonMonth: null }
+      : {}),
+    ...(re !== false &&
+    rsy != null &&
+    rsm != null &&
+    Number.isFinite(rsy) &&
+    Number.isFinite(rsm) &&
+    Math.trunc(rsy) >= 2000 &&
+    Math.trunc(rsy) <= 2100 &&
+    Math.trunc(rsm) >= 1 &&
+    Math.trunc(rsm) <= 12
+      ? {
+          ratingSeasonYear: Math.trunc(rsy),
+          ratingSeasonMonth: Math.trunc(rsm),
+        }
       : {}),
     structure: {
       name: request.structure.name,

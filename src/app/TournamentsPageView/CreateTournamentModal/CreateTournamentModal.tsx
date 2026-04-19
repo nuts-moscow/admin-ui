@@ -36,6 +36,11 @@ export interface CreateTournamentForm {
   readonly ratingGuaranteeBonusPoints: string;
   /** Справочник GET /api/rating-tables; по умолчанию — первая таблица в списке. */
   readonly ratingTableId: number;
+  /** Учитывать турнир в рейтинге (иначе спецформат). */
+  readonly ratingEnabled: boolean;
+  /** Строки полей года/месяца сезона; пусто = null. */
+  readonly ratingSeasonYear: string;
+  readonly ratingSeasonMonth: string;
   readonly structure: TournamentStructure | undefined;
 }
 
@@ -53,6 +58,9 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({ close }) => {
       time: DateTime.now().toFormat("HH:mm"),
       ratingGuaranteeBonusPoints: "10",
       ratingTableId: 1,
+      ratingEnabled: true,
+      ratingSeasonYear: "",
+      ratingSeasonMonth: "",
       structure: undefined,
     },
   });
@@ -101,6 +109,40 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({ close }) => {
       }
 
       const rtId = form.value.ratingTableId;
+      const yStr = form.value.ratingSeasonYear.trim();
+      const mStr = form.value.ratingSeasonMonth.trim();
+      const hasY = yStr !== "";
+      const hasM = mStr !== "";
+      if (form.value.ratingEnabled && hasY !== hasM) {
+        toast({
+          type: "error",
+          message:
+            "Сезон рейтинга: укажите и год, и месяц (2000–2100 и 1–12), либо оставьте оба поля пустыми",
+        });
+        setIsLoading(false);
+        return;
+      }
+      let sy: number | undefined;
+      let sm: number | undefined;
+      if (form.value.ratingEnabled && hasY && hasM) {
+        sy = parseInt(yStr, 10);
+        sm = parseInt(mStr, 10);
+        if (
+          !Number.isInteger(sy) ||
+          sy < 2000 ||
+          sy > 2100 ||
+          !Number.isInteger(sm) ||
+          sm < 1 ||
+          sm > 12
+        ) {
+          toast({
+            type: "error",
+            message: "Год сезона 2000–2100, месяц 1–12",
+          });
+          setIsLoading(false);
+          return;
+        }
+      }
       await makeTournament(environment, {
         name: form.value.name,
         date: Math.floor(
@@ -116,6 +158,15 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({ close }) => {
         ...(Number.isFinite(rtId) && rtId > 0 && Number.isInteger(rtId)
           ? { ratingTableId: Math.floor(rtId) }
           : {}),
+        ...(form.value.ratingEnabled === false
+          ? {
+              ratingEnabled: false,
+              ratingSeasonYear: null,
+              ratingSeasonMonth: null,
+            }
+          : sy != null && sm != null
+            ? { ratingSeasonYear: sy, ratingSeasonMonth: sm }
+            : {}),
         structure: {
           name: form.value.structure.name,
           playersLimit: form.value.structure.playersLimit,
@@ -179,7 +230,10 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({ close }) => {
           {STEP_TITLES[step]}
         </Typography.Title>
       </Modal.Title>
-      <Modal.Content width={708}>
+      <Modal.Content
+        width={708}
+        maxHeight="min(90vh, calc(100dvh - 40px))"
+      >
         <Form model={form}>
           <Box flex={{ col: true, gap: 4, width: "100%" }}>
             {renderStepContent()}

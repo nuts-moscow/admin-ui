@@ -8,9 +8,12 @@ import { Typography } from "@/components/Typography/Typography";
 import { DateTime } from "luxon";
 import { TournamentStructure } from "@/core/states/tournamentStructures/common/TournamentStructure";
 import { BlindList } from "@/app/settings/SettingsPageView/components/StructuresView/CreateStructureModal/BlindList/BlindList";
-import { CreateTournamentForm } from "./CreateTournamentModal";
+import {
+  CreateTournamentForm,
+} from "./CreateTournamentModal";
 import { useRatingTables } from "@/core/states/tournaments/hooks/useRatingTables";
 import { getRatingTableDisplayName } from "@/core/states/tournaments/common/ratingTableDisplayName";
+import { seasonSelectMonthOptions } from "@/core/states/tournaments/common/seasonFormatting";
 
 export const InfoStep: FC = () => {
   const { data: ratingTables = [], loading: ratingTablesLoading } =
@@ -101,6 +104,92 @@ export const InfoStep: FC = () => {
           </Box>
         )}
       </Form.Control>
+
+      <Form.Control name="ratingEnabled">
+        {({ value, onChange }) => (
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              cursor: "pointer",
+              userSelect: "none",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={value}
+              onChange={(e) => onChange(e.target.checked)}
+            />
+            <Typography.Text size="small">Учитывать в рейтинге</Typography.Text>
+          </label>
+        )}
+      </Form.Control>
+
+      <Form.Listener>
+        {({ value }: { value: CreateTournamentForm }) =>
+          value.ratingEnabled ? (
+            <Box flex={{ col: true, gap: 3 }} style={{ maxWidth: 420 }}>
+              <Typography.Text size="xSmall" type="secondary">
+                Сезон для сезонного рейтинга (необязательно): укажите год и месяц
+                вместе, либо оставьте пустым.
+              </Typography.Text>
+              <Box flex={{ gap: 3, align: "flex-start", flexWrap: "wrap" }}>
+                <Form.Control name="ratingSeasonYear">
+                  {({ value: y, onChange: onY }) => (
+                    <Box style={{ minWidth: 120 }}>
+                      <Input
+                        label="Год сезона"
+                        value={y}
+                        onChange={(e) => onY(e.target.value)}
+                        placeholder="2026"
+                        type="primary"
+                        size="medium"
+                      />
+                    </Box>
+                  )}
+                </Form.Control>
+                <Form.Control name="ratingSeasonMonth">
+                  {({ value: m, onChange: onM }) => (
+                    <Box style={{ minWidth: 160 }}>
+                      <Typography.Text
+                        size="small"
+                        type="secondary"
+                        style={{ display: "block", marginBottom: 6 }}
+                      >
+                        Месяц сезона
+                      </Typography.Text>
+                      <select
+                        value={m}
+                        onChange={(e) => onM(e.target.value)}
+                        style={{
+                          width: "100%",
+                          padding: "10px 12px",
+                          borderRadius: 12,
+                          border: "1px solid var(--border-color-grey)",
+                          backgroundColor: "var(--background-primary)",
+                          fontSize: 14,
+                        }}
+                      >
+                        <option value="">—</option>
+                        {seasonSelectMonthOptions().map((opt) => (
+                          <option key={opt.value} value={String(opt.value)}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </Box>
+                  )}
+                </Form.Control>
+              </Box>
+            </Box>
+          ) : (
+            <Typography.Text size="xSmall" type="secondary">
+              Рейтинг отключён: очки не начисляются (спецформат).
+            </Typography.Text>
+          )
+        }
+      </Form.Listener>
 
       <Box flex={{ col: true, gap: 4 }}>
         <Form.Listener>

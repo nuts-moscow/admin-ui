@@ -22,6 +22,10 @@ export interface TournamentInfoResponse {
   readonly ratingBountyCoefficient?: number;
   /** Таблица рейтинга (справочник GET /api/rating-tables). */
   readonly ratingTableId?: number;
+  /** Учёт в сезонном рейтинге; false — спецформат без очков. */
+  readonly ratingEnabled?: boolean;
+  readonly ratingSeasonYear?: number | null;
+  readonly ratingSeasonMonth?: number | null;
 }
 
 export function pickFiniteNumber(...vals: unknown[]): number | undefined {
@@ -74,6 +78,12 @@ interface TournamentWithStructureResponse {
   readonly ratingPointsCoefficient?: number;
   readonly ratingBountyCoefficient?: number;
   readonly ratingTableId?: number;
+  readonly ratingEnabled?: boolean;
+  readonly ratingSeasonYear?: number | null;
+  readonly ratingSeasonMonth?: number | null;
+  readonly rating_enabled?: boolean;
+  readonly rating_season_year?: number | null;
+  readonly rating_season_month?: number | null;
 }
 
 /**
@@ -106,6 +116,40 @@ export const getTournament = async (
                 Number.isFinite(Number(ratingTableIdRaw))
               ? Math.trunc(Number(ratingTableIdRaw))
               : undefined;
+        const ratingEnabledRaw =
+          (j as TournamentWithStructureResponse).ratingEnabled ??
+          (j as TournamentWithStructureResponse).rating_enabled;
+        const ratingEnabled =
+          typeof ratingEnabledRaw === "boolean"
+            ? ratingEnabledRaw
+            : ratingEnabledRaw === "true"
+              ? true
+              : ratingEnabledRaw === "false"
+                ? false
+                : undefined;
+        const jr = j as unknown as Record<string, unknown>;
+        const rawY = jr.ratingSeasonYear ?? jr.rating_season_year;
+        const rawM = jr.ratingSeasonMonth ?? jr.rating_season_month;
+        let ratingSeasonYear: number | null | undefined;
+        if (rawY === null) {
+          ratingSeasonYear = null;
+        } else if (rawY === undefined) {
+          ratingSeasonYear = undefined;
+        } else {
+          const n = Number(rawY);
+          ratingSeasonYear = Number.isFinite(n) ? Math.trunc(n) : undefined;
+        }
+        let ratingSeasonMonth: number | null | undefined;
+        if (rawM === null) {
+          ratingSeasonMonth = null;
+        } else if (rawM === undefined) {
+          ratingSeasonMonth = undefined;
+        } else {
+          const n = Number(rawM);
+          ratingSeasonMonth = Number.isFinite(n)
+            ? Math.min(12, Math.max(1, Math.trunc(n)))
+            : undefined;
+        }
         return {
           id: j.id,
           name: j.name,
@@ -121,6 +165,13 @@ export const getTournament = async (
           ratingPointsCoefficient: j.ratingPointsCoefficient,
           ratingBountyCoefficient: j.ratingBountyCoefficient,
           ...(ratingTableId != null ? { ratingTableId } : {}),
+          ...(ratingEnabled !== undefined ? { ratingEnabled } : {}),
+          ...(ratingSeasonYear !== undefined
+            ? { ratingSeasonYear }
+            : {}),
+          ...(ratingSeasonMonth !== undefined
+            ? { ratingSeasonMonth }
+            : {}),
         };
       },
       404: () => null,

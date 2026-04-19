@@ -13,6 +13,9 @@ export interface ShortTournament {
   readonly date: number;
   readonly ratingGuaranteeEnabled?: boolean;
   readonly ratingGuaranteeBonusPoints?: number;
+  readonly ratingEnabled?: boolean;
+  readonly ratingSeasonYear?: number | null;
+  readonly ratingSeasonMonth?: number | null;
 }
 
 /** Элемент ответа GET v2/api/tournaments (TournamentResponse). */
@@ -25,9 +28,46 @@ interface TournamentResponseItem {
   readonly ratingGuaranteeBonusPoints?: number;
   readonly rating_guarantee_enabled?: boolean;
   readonly rating_guarantee_bonus_points?: number;
+  readonly ratingEnabled?: boolean;
+  readonly rating_enabled?: boolean;
+  readonly ratingSeasonYear?: number | null;
+  readonly ratingSeasonMonth?: number | null;
+  readonly rating_season_year?: number | null;
+  readonly rating_season_month?: number | null;
 }
 
 function toShortTournament(t: TournamentResponseItem): ShortTournament {
+  const reRaw = t.ratingEnabled ?? t.rating_enabled;
+  const ratingEnabled =
+    typeof reRaw === "boolean"
+      ? reRaw
+      : reRaw === "true"
+        ? true
+        : reRaw === "false"
+          ? false
+          : undefined;
+  const rawY = t.ratingSeasonYear ?? t.rating_season_year;
+  const rawM = t.ratingSeasonMonth ?? t.rating_season_month;
+  let ratingSeasonYear: number | null | undefined;
+  if (rawY === null) {
+    ratingSeasonYear = null;
+  } else if (rawY === undefined) {
+    ratingSeasonYear = undefined;
+  } else {
+    const n = Number(rawY);
+    ratingSeasonYear = Number.isFinite(n) ? Math.trunc(n) : undefined;
+  }
+  let ratingSeasonMonth: number | null | undefined;
+  if (rawM === null) {
+    ratingSeasonMonth = null;
+  } else if (rawM === undefined) {
+    ratingSeasonMonth = undefined;
+  } else {
+    const n = Number(rawM);
+    ratingSeasonMonth = Number.isFinite(n)
+      ? Math.min(12, Math.max(1, Math.trunc(n)))
+      : undefined;
+  }
   return {
     id: String(t.id),
     name: t.name,
@@ -51,6 +91,9 @@ function toShortTournament(t: TournamentResponseItem): ShortTournament {
           ),
         }
       : {}),
+    ...(ratingEnabled !== undefined ? { ratingEnabled } : {}),
+    ...(ratingSeasonYear !== undefined ? { ratingSeasonYear } : {}),
+    ...(ratingSeasonMonth !== undefined ? { ratingSeasonMonth } : {}),
   };
 }
 

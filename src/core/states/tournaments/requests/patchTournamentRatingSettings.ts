@@ -12,6 +12,9 @@ interface PatchTournamentRatingSettingsBody {
   readonly ratingPointsCoefficient?: number;
   readonly ratingBountyCoefficient?: number;
   readonly ratingTableId?: number;
+  readonly ratingEnabled?: boolean;
+  readonly ratingSeasonYear?: number | null;
+  readonly ratingSeasonMonth?: number | null;
 }
 
 function statusToApi(status: TournamentStatus): string {
@@ -26,6 +29,9 @@ export interface RatingSettingsPatch {
   readonly ratingPointsCoefficient?: number;
   readonly ratingBountyCoefficient?: number;
   readonly ratingTableId?: number;
+  readonly ratingEnabled?: boolean;
+  readonly ratingSeasonYear?: number | null;
+  readonly ratingSeasonMonth?: number | null;
 }
 
 export const patchTournamentRatingSettings = async (
@@ -39,12 +45,22 @@ export const patchTournamentRatingSettings = async (
     Number.isInteger(patch.ratingTableId)
       ? Math.floor(patch.ratingTableId)
       : undefined;
-  const body: PatchTournamentRatingSettingsBody & { rating_table_id?: number } = {
+  const body: PatchTournamentRatingSettingsBody & {
+    rating_table_id?: number;
+    rating_season_year?: number | null;
+    rating_season_month?: number | null;
+  } = {
     name: tournament.name,
     date: tournament.date,
     status: statusToApi(tournament.status),
     ...patch,
     ...(rt != null ? { rating_table_id: rt } : {}),
+    ...(patch.ratingSeasonYear !== undefined
+      ? { rating_season_year: patch.ratingSeasonYear }
+      : {}),
+    ...(patch.ratingSeasonMonth !== undefined
+      ? { rating_season_month: patch.ratingSeasonMonth }
+      : {}),
   };
 
   await securedFetch<typeof body, void>({

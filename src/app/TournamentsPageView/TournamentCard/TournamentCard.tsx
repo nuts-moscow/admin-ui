@@ -7,6 +7,7 @@ import { ShortTournament } from "@/core/states/tournaments/requests/getTournamen
 import { SimpleList } from "@/components/SimpleList/SimpleList";
 import Link from "next/link";
 import { nextLinkCls } from "@/core/utils/style/nextLink.css";
+import { formatSeasonLong } from "@/core/states/tournaments/common/seasonFormatting";
 
 export interface TournamentCardProps {
   readonly tournament: ShortTournament;
@@ -19,6 +20,25 @@ export const TournamentCard: FC<TournamentCardProps> = ({
 }) => {
   const { name, date } = tournament;
   const ratingLine: string[] = [];
+  if (tournament.ratingEnabled === false) {
+    ratingLine.push("Рейтинг выкл.");
+  } else if (tournament.ratingEnabled === true) {
+    ratingLine.push("Рейтинг вкл.");
+  }
+  if (
+    tournament.ratingEnabled !== false &&
+    tournament.ratingSeasonYear != null &&
+    tournament.ratingSeasonMonth != null
+  ) {
+    ratingLine.push(
+      formatSeasonLong(
+        tournament.ratingSeasonYear,
+        tournament.ratingSeasonMonth,
+      ),
+    );
+  } else if (tournament.ratingEnabled !== false) {
+    ratingLine.push("сезон не задан");
+  }
   if (tournament.ratingGuaranteeEnabled === true) {
     ratingLine.push("Гарантия вкл.");
   } else if (tournament.ratingGuaranteeEnabled === false) {

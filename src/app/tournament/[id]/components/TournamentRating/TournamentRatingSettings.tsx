@@ -16,6 +16,7 @@ import { patchTournamentRatingSettings } from "@/core/states/tournaments/request
 import { refetchTournament } from "@/core/states/tournaments/hooks/useTournament";
 import { useRatingTables } from "@/core/states/tournaments/hooks/useRatingTables";
 import { getRatingTableDisplayName } from "@/core/states/tournaments/common/ratingTableDisplayName";
+import { seasonSelectMonthOptions } from "@/core/states/tournaments/common/seasonFormatting";
 
 export interface TournamentRatingSettingsProps {
   readonly tournament: TournamentInfoResponse;
@@ -43,6 +44,21 @@ export const TournamentRatingSettings: FC<TournamentRatingSettingsProps> = ({
   const [ratingTableId, setRatingTableId] = useState(
     () => tournament.ratingTableId ?? 1,
   );
+  const [ratingEnabled, setRatingEnabled] = useState(
+    () => tournament.ratingEnabled ?? true,
+  );
+  const [ratingSeasonYear, setRatingSeasonYear] = useState(
+    () =>
+      tournament.ratingSeasonYear != null
+        ? String(tournament.ratingSeasonYear)
+        : "",
+  );
+  const [ratingSeasonMonth, setRatingSeasonMonth] = useState(
+    () =>
+      tournament.ratingSeasonMonth != null
+        ? String(tournament.ratingSeasonMonth)
+        : "",
+  );
   const [saving, setSaving] = useState(false);
   const ratingTableHydratedRef = useRef(false);
 
@@ -51,12 +67,26 @@ export const TournamentRatingSettings: FC<TournamentRatingSettingsProps> = ({
     setPointsCoef(String(tournament.ratingPointsCoefficient ?? 1));
     setBountyCoef(String(tournament.ratingBountyCoefficient ?? 1));
     setGuaranteeBonusPoints(String(tournament.ratingGuaranteeBonusPoints ?? 10));
+    setRatingEnabled(tournament.ratingEnabled ?? true);
+    setRatingSeasonYear(
+      tournament.ratingSeasonYear != null
+        ? String(tournament.ratingSeasonYear)
+        : "",
+    );
+    setRatingSeasonMonth(
+      tournament.ratingSeasonMonth != null
+        ? String(tournament.ratingSeasonMonth)
+        : "",
+    );
   }, [
     tournament.id,
     tournament.ratingGuaranteeEnabled,
     tournament.ratingGuaranteeBonusPoints,
     tournament.ratingPointsCoefficient,
     tournament.ratingBountyCoefficient,
+    tournament.ratingEnabled,
+    tournament.ratingSeasonYear,
+    tournament.ratingSeasonMonth,
   ]);
 
   useEffect(() => {
@@ -98,6 +128,58 @@ export const TournamentRatingSettings: FC<TournamentRatingSettingsProps> = ({
       return;
     }
 
+    const yStr = ratingSeasonYear.trim();
+    const mStr = ratingSeasonMonth.trim();
+    const hasY = yStr !== "";
+    const hasM = mStr !== "";
+    if (ratingEnabled && hasY !== hasM) {
+      toast({
+        type: "error",
+        message:
+          "Сезон: укажите и год, и месяц (2000–2100 и 1–12), либо оставьте оба поля пустыми",
+      });
+      return;
+    }
+    let nextSeasonYear: number | null = null;
+    let nextSeasonMonth: number | null = null;
+    if (ratingEnabled && hasY && hasM) {
+      const yi = Number.parseInt(yStr, 10);
+      const mi = Number.parseInt(mStr, 10);
+      if (
+        !Number.isInteger(yi) ||
+        yi < 2000 ||
+        yi > 2100 ||
+        !Number.isInteger(mi) ||
+        mi < 1 ||
+        mi > 12
+      ) {
+        toast({
+          type: "error",
+          message: "Год сезона: 2000–2100, месяц: 1–12",
+        });
+        return;
+      }
+      nextSeasonYear = yi;
+      nextSeasonMonth = mi;
+    }
+
+    const prevY = tournament.ratingSeasonYear ?? null;
+    const prevM = tournament.ratingSeasonMonth ?? null;
+    const newY = ratingEnabled ? nextSeasonYear : null;
+    const newM = ratingEnabled ? nextSeasonMonth : null;
+    const seasonChanged =
+      prevY !== newY || prevM !== newM;
+    if (
+      tournament.status === "Completed" &&
+      seasonChanged &&
+      typeof window !== "undefined" &&
+      !window.confirm(
+        "Очки в сезонном рейтинге будут учитываться в выбранном месяце/годе",
+      )
+    ) {
+      return;
+    }
+
     setSaving(true);
     try {
       const rtResolved = Math.max(
@@ -114,6 +196,17 @@ export const TournamentRatingSettings: FC<TournamentRatingSettingsProps> = ({
         ratingPointsCoefficient: parsedPoints,
         ratingBountyCoefficient: parsedBounty,
         ratingTableId: rtResolved,
+        ...(ratingEnabled === false
+          ? {
+              ratingEnabled: false,
+              ratingSeasonYear: null,
+              ratingSeasonMonth: null,
+            }
+          : {
+              ratingEnabled: true,
+              ratingSeasonYear: newY,
+              ratingSeasonMonth: newM,
+            }),
       });
       const fresh = await getTournament(environment, String(tournament.id));
       if (fresh?.ratingTableId != null && Number.isFinite(fresh.ratingTableId)) {
@@ -144,6 +237,72 @@ export const TournamentRatingSettings: FC<TournamentRatingSettingsProps> = ({
       }}
     >
       <Typography.Text bold>Настройки рейтинга</Typography.Text>
+
+      <Box flex={{ align: "center", gap: 3 }}>
+        <Checkbox
+          size="medium"
+          checked={ratingEnabled}
+          onCheckedChange={(v) => setRatingEnabled(v === true)}
+          id="rating-enabled-main"
+        />
+        <label htmlFor="rating-enabled-main" style={{ cursor: "pointer" }}>
+          <Typography.Text size="small">Учитывать в рейтинге</Typography.Text>
+        </label>
+      </Box>
+
+      {ratingEnabled ? (
+        <Box flex={{ col: true, gap: 2 }} style={{ maxWidth: 420 }}>
+          <Typography.Text size="xSmall" type="secondary">
+            Сезон для сезонного рейтинга (необязательно): год и месяц вместе или
+            оба пусто.
+          </Typography.Text>
+          <Box flex={{ gap: 3, align: "flex-end", flexWrap: "wrap" }}>
+            <Box style={{ width: 140 }}>
+              <Input
+                label="Год сезона"
+                value={ratingSeasonYear}
+                onChange={(e) => setRatingSeasonYear(e.target.value)}
+                placeholder="2026"
+                type="primary"
+                size="medium"
+              />
+            </Box>
+            <Box style={{ minWidth: 180 }}>
+              <Typography.Text
+                size="small"
+                type="secondary"
+                style={{ display: "block", marginBottom: 6 }}
+              >
+                Месяц сезона
+              </Typography.Text>
+              <select
+                value={ratingSeasonMonth}
+                onChange={(e) => setRatingSeasonMonth(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  border: "1px solid rgba(0,0,0,0.12)",
+                  backgroundColor: "var(--background-primary)",
+                  fontSize: 14,
+                }}
+              >
+                <option value="">—</option>
+                {seasonSelectMonthOptions().map((opt) => (
+                  <option key={opt.value} value={String(opt.value)}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </Box>
+          </Box>
+        </Box>
+      ) : (
+        <Typography.Text size="small" type="secondary">
+          Рейтинг отключён: очки не начисляются (спецформат). Сезон не
+          применяется.
+        </Typography.Text>
+      )}
 
       <Box flex={{ col: true, gap: 1 }} style={{ maxWidth: 420 }}>
         <Typography.Text size="small" type="secondary">
