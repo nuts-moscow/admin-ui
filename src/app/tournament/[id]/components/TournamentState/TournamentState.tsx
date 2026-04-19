@@ -15,6 +15,8 @@ import { refetchTournament } from "@/core/states/tournaments/hooks/useTournament
 import { useTournamentClock } from "@/core/states/tournaments/hooks/useTournamentClock";
 import { useTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
 import { patchTournamentClock } from "@/core/states/tournaments/requests/patchTournamentClock";
+import { patchTournamentLateRegistration } from "@/core/states/tournaments/requests/patchTournamentLateRegistration";
+import { toast } from "@/components/Toast/Toast";
 import { TournamentInfoForm } from "./TournamentInfoForm";
 
 const IN_GAME_STATUSES = ["InGamePaid", "InGameNotPaid"] as const;
@@ -26,6 +28,10 @@ const getInGameCount = (players: { status: string }[]): number =>
 
 export interface TournamentStateProps {
   readonly tournament: TournamentInfoResponse;
+  /** Слияние в страницу турнира сразу после PATCH (до ответа GET), напр. lateRegistrationClosed. */
+  readonly onTournamentViewPatch?: (
+    patch: Partial<TournamentInfoResponse>,
+  ) => void;
 }
 
 interface LaunchTournamentConfirmModalProps extends WithModalProps {
@@ -34,6 +40,18 @@ interface LaunchTournamentConfirmModalProps extends WithModalProps {
 
 interface CompleteTournamentConfirmModalProps extends WithModalProps {
   readonly tournament: TournamentInfoResponse;
+}
+
+interface LateRegistrationInitial {
+  readonly targetClosed: boolean;
+}
+
+interface LateRegistrationConfirmModalProps
+  extends WithModalProps<LateRegistrationInitial> {
+  readonly tournament: TournamentInfoResponse;
+  readonly onTournamentViewPatch?: (
+    patch: Partial<TournamentInfoResponse>,
+  ) => void;
 }
 
 const LaunchTournamentConfirmModal: FC<LaunchTournamentConfirmModalProps> = ({
@@ -181,8 +199,86 @@ const CompleteTournamentConfirmModal: FC<CompleteTournamentConfirmModalProps> = 
   );
 };
 
+const LateRegistrationConfirmModal: FC<LateRegistrationConfirmModalProps> = ({
+  close,
+  tournament,
+  initialData,
+  onTournamentViewPatch,
+}) => {
+  const environment = useEnvironment();
+  const [loading, setLoading] = useState(false);
+  const targetClosed = initialData?.targetClosed ?? false;
+
+  const handleConfirm = async () => {
+    if (loading) {
+      return;
+    }
+    setLoading(true);
+    try {
+      await patchTournamentLateRegistration(
+        environment,
+        tournament.id,
+        targetClosed,
+      );
+      onTournamentViewPatch?.({ lateRegistrationClosed: targetClosed });
+      refetchTournament();
+      toast({
+        type: "success",
+        message: targetClosed
+          ? "Поздняя регистрация закрыта"
+          : "Поздняя регистрация снова открыта",
+      });
+      close();
+    } catch (error) {
+      toast({
+        type: "error",
+        message:
+          error instanceof Error ? error.message : "Не удалось сохранить",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <Modal.Title showCloseButton>Подтверждение</Modal.Title>
+      <Modal.Content minWidth={420}>
+        <Box flex={{ col: true, gap: 4 }}>
+          <Typography.Text type="secondary" size="small">
+            {targetClosed
+              ? `Закрыть позднюю регистрацию по турниру «${tournament.name}»?`
+              : `Снова открыть позднюю регистрацию по турниру «${tournament.name}»?`}
+          </Typography.Text>
+          <Box flex={{ gap: 4, width: "100%" }}>
+            <Button
+              type="secondary"
+              htmlType="button"
+              onClick={() => close()}
+              flexItem={{ flex: 1 }}
+              disabled={loading}
+            >
+              Отмена
+            </Button>
+            <Button
+              type="primary"
+              htmlType="button"
+              onClick={handleConfirm}
+              flexItem={{ flex: 1 }}
+              loading={loading}
+            >
+              {targetClosed ? "Закрыть лейт-регу" : "Открыть лейт-регу"}
+            </Button>
+          </Box>
+        </Box>
+      </Modal.Content>
+    </>
+  );
+};
+
 export const TournamentState: FC<TournamentStateProps> = ({
   tournament,
+  onTournamentViewPatch,
 }) => {
   const environment = useEnvironment();
   const [LaunchConfirmModal, openLaunchConfirmModal] = useModal(
@@ -190,6 +286,9 @@ export const TournamentState: FC<TournamentStateProps> = ({
   );
   const [CompleteConfirmModal, openCompleteConfirmModal] = useModal(
     CompleteTournamentConfirmModal
+  );
+  const [LateRegConfirmModal, openLateRegConfirmModal] = useModal(
+    LateRegistrationConfirmModal
   );
   const { data: players } = useTournamentPlayerState(String(tournament.id));
   const inGameCount = getInGameCount(players ?? []);
@@ -222,6 +321,10 @@ export const TournamentState: FC<TournamentStateProps> = ({
     <Box flex={{ col: true, gap: 8, width: "100%" }}>
       <LaunchConfirmModal tournament={tournament} />
       <CompleteConfirmModal tournament={tournament} />
+      <LateRegConfirmModal
+        tournament={tournament}
+        onTournamentViewPatch={onTournamentViewPatch}
+      />
       {tournament.status === "RegistrationOpen" && (
         <Box flex={{ justify: "center", width: "100%" }}>
           <Button
@@ -240,7 +343,15 @@ export const TournamentState: FC<TournamentStateProps> = ({
       )}
       {tournament.status === "InProgress" && (
         <Box flex={{ col: true, align: "center", width: "100%", gap: 2 }}>
-          <Box flex={{ justify: "center", width: "100%", gap: 3 }}>
+          <Box
+            flex={{
+              justify: "center",
+              width: "100%",
+              gap: 3,
+              align: "center",
+              flexWrap: "wrap",
+            }}
+          >
             <Button
               type="secondary"
               size="medium"
@@ -250,6 +361,25 @@ export const TournamentState: FC<TournamentStateProps> = ({
             >
               {clockTick?.paused ? "Снять паузу" : "Пауза"}
             </Button>
+            {tournament.lateRegistrationClosed === true ? (
+              <Button
+                type="secondary"
+                size="medium"
+                onClick={() =>
+                  openLateRegConfirmModal({ targetClosed: false })
+                }
+              >
+                Открыть лейт-регу
+              </Button>
+            ) : (
+              <Button
+                type="secondary"
+                size="medium"
+                onClick={() => openLateRegConfirmModal({ targetClosed: true })}
+              >
+                Закрыть лейт-регу
+              </Button>
+            )}
             <Button
               type="error"
               size="medium"

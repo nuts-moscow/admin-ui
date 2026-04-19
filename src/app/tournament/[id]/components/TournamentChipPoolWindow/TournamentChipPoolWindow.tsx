@@ -53,6 +53,7 @@ export interface TournamentChipPoolWindowProps {
   /**
    * Колонка рейтинговых баллов справа (публичный GET). Не показывается, если в структуре
    * включён «Финал игры (freeze-out)» — в т.ч. формат «финал месяца».
+   * Также скрыта, пока лейт-рега не закрыта (`lateRegistrationClosed !== true`).
    */
   readonly enablePublicRatingPointsPreview?: boolean;
 }
@@ -111,14 +112,38 @@ const TournamentChipPoolWindowInner: FC<TournamentChipPoolWindowInnerProps> = ({
   const useSummaryHook = chipPoolSummaryHook ?? useTournamentChipPoolSummary;
   const { data, loading, error } = useSummaryHook(tid);
 
-  /** Пока регистрация открыта — раз в секунду обновляем турнир (эфир/вкладка без F5 после старта). */
+  /**
+   * Фоновое обновление данных турнира без F5:
+   * - пока регистрация открыта — раз в секунду (эфир подхватывает старт);
+   * - на странице эфира (/display), игра идёт и колонка рейтинга зависит от лейт-реги —
+   *   постоянный лёгкий опрос: отдельная вкладка/ТВ не видит PATCH из админки; нужно и закрытие,
+   *   и повторное открытие лейт-реги (баллы снова скрыть).
+   */
   useEffect(() => {
-    if (tournament.status !== "RegistrationOpen") return;
+    if (tournament.status === "RegistrationOpen") {
+      const handle = window.setInterval(() => {
+        refetchTournament();
+      }, 1000);
+      return () => window.clearInterval(handle);
+    }
+    const pollInProgressBroadcastRating =
+      showTvBroadcastLink === false &&
+      tournament.status === "InProgress" &&
+      enablePublicRatingPointsPreview &&
+      tournament.structure?.freezeOutEnabled !== true;
+    if (!pollInProgressBroadcastRating) {
+      return;
+    }
     const handle = window.setInterval(() => {
       refetchTournament();
-    }, 1000);
+    }, 3000);
     return () => window.clearInterval(handle);
-  }, [tournament.status]);
+  }, [
+    tournament.status,
+    tournament.structure?.freezeOutEnabled,
+    showTvBroadcastLink,
+    enablePublicRatingPointsPreview,
+  ]);
 
   const inProgress = tournament.status === "InProgress";
   const clockBinding = useTournamentClock(tournament.id, {
@@ -128,10 +153,11 @@ const TournamentChipPoolWindowInner: FC<TournamentChipPoolWindowInnerProps> = ({
 
   const rulesLine = buildRulesSubtitle(tournament);
 
-  /** Рейтинговая зона скрыта для freeze-out (финал месяца и др.). */
+  /** Рейтинговая зона: freeze-out или пока лейт-рега открыта. */
   const showPublicRatingColumn =
     enablePublicRatingPointsPreview &&
-    tournament.structure?.freezeOutEnabled !== true;
+    tournament.structure?.freezeOutEnabled !== true &&
+    tournament.lateRegistrationClosed === true;
 
   const rightColumnOrSpacer = showPublicRatingColumn ? (
     <PublicRatingPointsColumn

@@ -80,6 +80,15 @@ export const TournamentCard: FC<TournamentCardProps> = ({
           <Typography.Text>{name}</Typography.Text>
         </SimpleList.Column>
 
+        {tournament.lateRegistrationClosed === true ? (
+          <SimpleList.Column>
+            <Typography.Text size="small" type="secondary">
+              Лейт-рега
+            </Typography.Text>
+            <Typography.Text>закрыта</Typography.Text>
+          </SimpleList.Column>
+        ) : null}
+
         {showRatingMeta ? (
           <SimpleList.Column>
             <Typography.Text size="small" type="secondary">

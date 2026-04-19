@@ -226,6 +226,18 @@ export const TournamentInfoForm: FC<TournamentInfoFormProps> = ({ tournament }) 
                 Сезон не применяется
               </Typography.Text>
             )}
+            <Box flex={{ align: "center", gap: 2, flexWrap: "wrap" }}>
+              <Typography.Text type="secondary" size="small">
+                Поздняя регистрация:
+              </Typography.Text>
+              <Typography.Text size="small">
+                {tournament.lateRegistrationClosed === true
+                  ? "закрыта"
+                  : tournament.lateRegistrationClosed === false
+                    ? "открыта"
+                    : "—"}
+              </Typography.Text>
+            </Box>
             <Typography.Text type="secondary" size="small">
               Таблица рейтинга
             </Typography.Text>

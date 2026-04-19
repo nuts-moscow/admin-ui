@@ -16,6 +16,7 @@ export interface ShortTournament {
   readonly ratingEnabled?: boolean;
   readonly ratingSeasonYear?: number | null;
   readonly ratingSeasonMonth?: number | null;
+  readonly lateRegistrationClosed?: boolean;
 }
 
 /** Элемент ответа GET v2/api/tournaments (TournamentResponse). */
@@ -34,6 +35,8 @@ interface TournamentResponseItem {
   readonly ratingSeasonMonth?: number | null;
   readonly rating_season_year?: number | null;
   readonly rating_season_month?: number | null;
+  readonly lateRegistrationClosed?: boolean;
+  readonly late_registration_closed?: boolean;
 }
 
 function toShortTournament(t: TournamentResponseItem): ShortTournament {
@@ -44,6 +47,15 @@ function toShortTournament(t: TournamentResponseItem): ShortTournament {
       : reRaw === "true"
         ? true
         : reRaw === "false"
+          ? false
+          : undefined;
+  const lateRaw = t.lateRegistrationClosed ?? t.late_registration_closed;
+  const lateRegistrationClosed =
+    typeof lateRaw === "boolean"
+      ? lateRaw
+      : lateRaw === "true"
+        ? true
+        : lateRaw === "false"
           ? false
           : undefined;
   const rawY = t.ratingSeasonYear ?? t.rating_season_year;
@@ -94,6 +106,9 @@ function toShortTournament(t: TournamentResponseItem): ShortTournament {
     ...(ratingEnabled !== undefined ? { ratingEnabled } : {}),
     ...(ratingSeasonYear !== undefined ? { ratingSeasonYear } : {}),
     ...(ratingSeasonMonth !== undefined ? { ratingSeasonMonth } : {}),
+    ...(lateRegistrationClosed !== undefined
+      ? { lateRegistrationClosed }
+      : {}),
   };
 }
 

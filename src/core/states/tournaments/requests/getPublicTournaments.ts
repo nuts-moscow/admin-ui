@@ -6,6 +6,8 @@ interface PublicTournamentResponseItem {
   readonly name: string;
   readonly status: string;
   readonly date: string | number;
+  readonly lateRegistrationClosed?: boolean;
+  readonly late_registration_closed?: boolean;
 }
 
 function toTimestamp(date: string | number): number {
@@ -32,12 +34,26 @@ export const getPublicTournaments = async (
           ? ((data as { tournaments: PublicTournamentResponseItem[] })
               .tournaments)
           : [];
-    return items.map((t) => ({
-      id: String(t.id),
-      name: t.name,
-      status: normalizeTournamentStatus(t.status),
-      date: toTimestamp(t.date),
-    }));
+    return items.map((t) => {
+      const lateRaw = t.lateRegistrationClosed ?? t.late_registration_closed;
+      const lateRegistrationClosed =
+        typeof lateRaw === "boolean"
+          ? lateRaw
+          : lateRaw === "true"
+            ? true
+            : lateRaw === "false"
+              ? false
+              : undefined;
+      return {
+        id: String(t.id),
+        name: t.name,
+        status: normalizeTournamentStatus(t.status),
+        date: toTimestamp(t.date),
+        ...(lateRegistrationClosed !== undefined
+          ? { lateRegistrationClosed }
+          : {}),
+      };
+    });
   } catch {
     return [];
   }

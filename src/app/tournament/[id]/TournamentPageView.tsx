@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useMemo, useState } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 import { Box } from "@/components/Box/Box";
 import { PageHeader } from "@/components/PageHeader/PageHeader";
 import { PageLayout } from "@/components/PageLayout/PageLayout";
@@ -19,6 +19,7 @@ import { TournamentRating } from "./components/TournamentRating/TournamentRating
 import { Formatter } from "@/components/Formatter/Formatter";
 import { tournamentStatusLabels } from "@/core/states/tournaments/common/TournamentStatus";
 import { useTournament } from "@/core/states/tournaments/hooks/useTournament";
+import { TournamentInfoResponse } from "@/core/states/tournaments/requests/getTournament";
 
 export interface TournamentPageViewProps {
   readonly tournamentId: string;
@@ -29,22 +30,48 @@ export const TournamentPageView: FC<TournamentPageViewProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<string>("players");
   const { data: currentTournament } = useTournament(tournamentId);
+  const [tournamentViewPatch, setTournamentViewPatch] = useState<
+    Partial<TournamentInfoResponse>
+  >({});
+
+  const displayTournament = useMemo((): TournamentInfoResponse | null => {
+    if (!currentTournament) {
+      return null;
+    }
+    return { ...currentTournament, ...tournamentViewPatch };
+  }, [currentTournament, tournamentViewPatch]);
+
+  /** Когда GET догоняет оптимистичный патч — сбрасываем слой, чтобы не расходиться с сервером. */
+  useEffect(() => {
+    if (!currentTournament || Object.keys(tournamentViewPatch).length === 0) {
+      return;
+    }
+    const keys = Object.keys(tournamentViewPatch) as (keyof TournamentInfoResponse)[];
+    const serverMatchesPatch = keys.every((k) => {
+      const pv = tournamentViewPatch[k];
+      const cv = currentTournament[k];
+      return pv === cv;
+    });
+    if (serverMatchesPatch) {
+      setTournamentViewPatch({});
+    }
+  }, [currentTournament, tournamentViewPatch]);
 
   const tabs = useMemo(() => {
-    if (!currentTournament) return [];
-    if (currentTournament.status === "Completed") {
+    if (!displayTournament) return [];
+    if (displayTournament.status === "Completed") {
       return [
         {
           title: "Касса",
           key: "cash",
-          content: <TournamentCash tournament={currentTournament} />,
+          content: <TournamentCash tournament={displayTournament} />,
         },
         {
           title: "Турнирное окно",
           key: "chip-pool",
           content: (
             <TournamentChipPoolWindow
-              tournament={currentTournament}
+              tournament={displayTournament}
               enablePublicRatingPointsPreview
             />
           ),
@@ -52,17 +79,17 @@ export const TournamentPageView: FC<TournamentPageViewProps> = ({
         {
           title: "Социальные сети",
           key: "social",
-          content: <TournamentSocial tournament={currentTournament} />,
+          content: <TournamentSocial tournament={displayTournament} />,
         },
         {
           title: "Результаты",
           key: "results",
-          content: <TournamentResults tournament={currentTournament} />,
+          content: <TournamentResults tournament={displayTournament} />,
         },
         {
           title: "Рейтинг",
           key: "rating",
-          content: <TournamentRating tournament={currentTournament} />,
+          content: <TournamentRating tournament={displayTournament} />,
         },
       ];
     }
@@ -71,38 +98,43 @@ export const TournamentPageView: FC<TournamentPageViewProps> = ({
       {
         title: "Игроки",
         key: "players",
-        content: <TournamentPlayers tournament={currentTournament} />,
+        content: <TournamentPlayers tournament={displayTournament} />,
       },
       {
         title: "Столы",
         key: "tables",
-        content: <TournamentTables tournament={currentTournament} />,
+        content: <TournamentTables tournament={displayTournament} />,
       },
       {
         title: "Турнир",
         key: "state",
-        content: <TournamentState tournament={currentTournament} />,
+        content: (
+          <TournamentState
+            tournament={displayTournament}
+            onTournamentViewPatch={setTournamentViewPatch}
+          />
+        ),
       },
-      ...(currentTournament.status !== "RegistrationOpen"
+      ...(displayTournament.status !== "RegistrationOpen"
         ? [
             {
               title: "Ребай",
               key: "reentries",
-              content: <TournamentReentries tournament={currentTournament} />,
+              content: <TournamentReentries tournament={displayTournament} />,
             },
           ]
         : []),
       {
         title: "Касса",
         key: "cash",
-        content: <TournamentCash tournament={currentTournament} />,
+        content: <TournamentCash tournament={displayTournament} />,
       },
       {
         title: "Турнирное окно",
         key: "chip-pool",
         content: (
           <TournamentChipPoolWindow
-            tournament={currentTournament}
+            tournament={displayTournament}
             enablePublicRatingPointsPreview
           />
         ),
@@ -110,22 +142,22 @@ export const TournamentPageView: FC<TournamentPageViewProps> = ({
       {
         title: "Социальные сети",
         key: "social",
-        content: <TournamentSocial tournament={currentTournament} />,
+        content: <TournamentSocial tournament={displayTournament} />,
       },
       {
         title: "Результаты",
         key: "results",
-        content: <TournamentResults tournament={currentTournament} />,
+        content: <TournamentResults tournament={displayTournament} />,
       },
       {
         title: "Рейтинг",
         key: "rating",
-        content: <TournamentRating tournament={currentTournament} />,
+        content: <TournamentRating tournament={displayTournament} />,
       },
     ];
-  }, [currentTournament]);
+  }, [displayTournament]);
 
-  if (!currentTournament) {
+  if (!displayTournament) {
     return null;
   }
 
@@ -141,11 +173,11 @@ export const TournamentPageView: FC<TournamentPageViewProps> = ({
         <PageHeader
           title={
             <>
-              {currentTournament.name}{" "}
-              <Formatter.dateTime value={currentTournament.date} type="date" />
+              {displayTournament.name}{" "}
+              <Formatter.dateTime value={displayTournament.date} type="date" />
             </>
           }
-          subtitle={`Статус: ${tournamentStatusLabels[currentTournament.status]}`}
+          subtitle={`Статус: ${tournamentStatusLabels[displayTournament.status]}`}
           extra={
             <Box flex={{ gap: 2, align: "center" }}>
               <Link href="/">

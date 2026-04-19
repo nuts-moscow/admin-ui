@@ -19,6 +19,8 @@ interface TournamentWithStructureResponse {
   readonly ratingPointsCoefficient?: number;
   readonly ratingBountyCoefficient?: number;
   readonly ratingTableId?: number;
+  readonly lateRegistrationClosed?: boolean;
+  readonly late_registration_closed?: boolean;
 }
 
 /**
@@ -40,6 +42,17 @@ export const getPublicTournamentDetail = async (
     mapping: {
       success: async (res) => {
         const j = (await res.toJson()) as TournamentWithStructureResponse;
+        const ju = j as unknown as Record<string, unknown>;
+        const lateRaw =
+          ju.lateRegistrationClosed ?? ju.late_registration_closed;
+        const lateRegistrationClosed =
+          typeof lateRaw === "boolean"
+            ? lateRaw
+            : lateRaw === "true"
+              ? true
+              : lateRaw === "false"
+                ? false
+                : undefined;
         const ratingTableIdRaw =
           (j as { ratingTableId?: unknown }).ratingTableId ??
           (j as { rating_table_id?: unknown }).rating_table_id;
@@ -66,6 +79,9 @@ export const getPublicTournamentDetail = async (
           ratingPointsCoefficient: j.ratingPointsCoefficient,
           ratingBountyCoefficient: j.ratingBountyCoefficient,
           ...(ratingTableId != null ? { ratingTableId } : {}),
+          ...(lateRegistrationClosed !== undefined
+            ? { lateRegistrationClosed }
+            : {}),
         };
       },
       401: () => null,
