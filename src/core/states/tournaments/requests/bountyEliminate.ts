@@ -17,6 +17,17 @@ export interface BountyEliminateResponse {
   readonly eventId: string;
 }
 
+/**
+ * Результат записи выбивания:
+ * - `ok` — событие записано, есть `eventId`;
+ * - `already_out` — бэкенд вернул 409 `{ error: "already_out" }`: игрок уже выбыл,
+ *   повторное выбивание НЕ записано. С точки зрения UX это идемпотентный успех
+ *   (типичный результат двойного клика), а не ошибка.
+ */
+export type BountyEliminateResult =
+  | { readonly outcome: "ok"; readonly eventId: string }
+  | { readonly outcome: "already_out" };
+
 export interface BountyEliminateUndoBody {
   readonly eventId: string;
 }
@@ -26,24 +37,46 @@ const tournamentBountyPath = (tid: string, suffix: string) =>
   `/v2/api/tournaments/${tid}/bounty/${suffix}`;
 
 /**
- * POST …/bounty/eliminate — успех 200, тело { eventId }.
+ * POST …/bounty/eliminate.
+ * Успех 200 → `{ outcome: "ok", eventId }`.
+ * 409 `{ error: "already_out" }` → `{ outcome: "already_out" }` (идемпотентный
+ * успех: игрок уже выбыл, повтор не записан). Остальные 409 — обычная ошибка.
  */
 export const bountyEliminate = async (
   environment: Environment,
   tournamentId: number | string,
   body: BountyEliminateBody,
-): Promise<BountyEliminateResponse> => {
+): Promise<BountyEliminateResult> => {
   const tid = encodeURIComponent(String(tournamentId));
-  return securedFetch<BountyEliminateBody, BountyEliminateResponse>({
+  return securedFetch<
+    BountyEliminateBody,
+    BountyEliminateResponse,
+    BountyEliminateResult
+  >({
     method: "POST",
     host: environment.apiUrl,
     path: tournamentBountyPath(tid, "eliminate"),
     withCredentials: true,
     body,
     mapping: {
-      success: (res) => res.toJson(),
+      success: async (res) => ({
+        outcome: "ok" as const,
+        eventId: (await res.toJson()).eventId,
+      }),
       400: () => new Error("Некорректные данные выбивания"),
       404: () => new Error("Игрок не найден в турнире"),
+      409: async (res) => {
+        const parsed = (await res.toJson().catch(() => null)) as {
+          error?: string;
+        } | null;
+        if (parsed?.error === "already_out") {
+          return { outcome: "already_out" as const };
+        }
+        // Прочие конфликты 409 — обычная ошибка (тело сохраняем для formatApiErrorForUser).
+        throw new Error(
+          parsed ? JSON.stringify(parsed) : "Конфликт записи выбивания",
+        );
+      },
       500: () => new Error("Server error"),
     },
   });

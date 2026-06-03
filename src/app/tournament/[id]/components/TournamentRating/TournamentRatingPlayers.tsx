@@ -83,7 +83,7 @@ const AdjustRow: FC<AdjustRowProps> = ({ player, tournamentId, onSaved }) => {
       await patchPlayerRatingManualAdjustment(
         environment,
         tournamentId,
-        player.tournamentPlayerId,
+        player.playerId,
         parsed,
       );
       onSaved();
@@ -156,7 +156,7 @@ const NonPlacementAdjustRow: FC<NonPlacementAdjustRowProps> = ({
       await patchTournamentPlayerRatingNonPlacement(
         environment,
         tournamentId,
-        player.tournamentPlayerId,
+        player.playerId,
         delta,
       );
       setDeltaInput("");

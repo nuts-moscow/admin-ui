@@ -259,13 +259,19 @@ const SetOutPlayerModal: FC<SetOutPlayerModalProps> = ({
       }
       setIsLoading(true);
       try {
-        await bountyEliminate(environment, Number(tournamentId), {
+        const result = await bountyEliminate(environment, Number(tournamentId), {
           eliminatedPlayerId: bustedPlayer.playerId,
           type: "Out",
           burnedStack: true,
           burnedChips: chips,
           killerPlayerIds: [],
         });
+        if (result.outcome === "already_out") {
+          toast({
+            type: "info",
+            message: "Игрок уже выбыл — повторное выбивание не требуется",
+          });
+        }
         refetchTournamentPlayerState();
         close();
       } catch (error) {
@@ -281,11 +287,17 @@ const SetOutPlayerModal: FC<SetOutPlayerModalProps> = ({
     }
     setIsLoading(true);
     try {
-      await bountyEliminate(environment, Number(tournamentId), {
+      const result = await bountyEliminate(environment, Number(tournamentId), {
         eliminatedPlayerId: bustedPlayer.playerId,
         killerPlayerIds: killerIds,
         type: "Out",
       });
+      if (result.outcome === "already_out") {
+        toast({
+          type: "info",
+          message: "Игрок уже выбыл — повторное выбивание не требуется",
+        });
+      }
       refetchTournamentPlayerState();
       close();
     } catch (error) {
