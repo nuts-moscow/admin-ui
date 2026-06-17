@@ -23,6 +23,10 @@ export interface TournamentClockTick {
   /** Секунды до следующего шага Break после currentStepIndex; иначе null. */
   readonly secondsUntilNextBreak: number | null;
   readonly structureFinished: boolean;
+  /** Поздняя регистрация закрыта (бэк закрыл по перерыву с endsLateRegistration). undefined — поля нет в тике. */
+  readonly lateRegistrationClosed?: boolean;
+  /** Турнирный экран должен показывать рейтинговые очки. undefined — поля нет в тике. */
+  readonly showRatingPoints?: boolean;
 }
 
 function asRecord(v: unknown): Record<string, unknown> | null {
@@ -214,6 +218,17 @@ export function tryParseTournamentClockTick(
   const secondsUntilNextBreak =
     parseSecondsUntilNextBreak(o) ?? null;
 
+  const lateRegistrationClosed = pickBool(
+    o,
+    "lateRegistrationClosed",
+    "late_registration_closed"
+  );
+  const showRatingPoints = pickBool(
+    o,
+    "showRatingPoints",
+    "show_rating_points"
+  );
+
   return {
     type: tickMessageType(o),
     tournamentId,
@@ -227,6 +242,8 @@ export function tryParseTournamentClockTick(
     secondsRemaining,
     secondsUntilNextBreak,
     structureFinished,
+    lateRegistrationClosed,
+    showRatingPoints,
   };
 }
 

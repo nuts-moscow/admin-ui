@@ -15,6 +15,7 @@ import {
   useTournamentPlayerState,
 } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
 import { addPlayerToTournament } from "@/core/states/tournaments/requests/addPlayerToTournament";
+import { useTournament } from "@/core/states/tournaments/hooks/useTournament";
 
 export interface AddPlayerButtonProps {
   readonly tournamentId: string;
@@ -114,12 +115,19 @@ const AddPlayerModalContent: FC<AddPlayerModalContentProps> = ({
 
 export const AddPlayerButton: FC<AddPlayerButtonProps> = ({ tournamentId }) => {
   const [AddPlayerModal, openAddPlayerModal] = useModal(AddPlayerModalContent);
+  const { data: tournament } = useTournament(tournamentId);
+  const lateRegistrationClosed = tournament?.lateRegistrationClosed === true;
 
   return (
     <>
       <AddPlayerModal tournamentId={tournamentId} />
-      <Button type="secondary" size="xxSmall" onClick={() => openAddPlayerModal()}>
-        Добавить игрока
+      <Button
+        type="secondary"
+        size="xxSmall"
+        onClick={() => openAddPlayerModal()}
+        disabled={lateRegistrationClosed}
+      >
+        {lateRegistrationClosed ? "Регистрация закрыта" : "Добавить игрока"}
       </Button>
     </>
   );

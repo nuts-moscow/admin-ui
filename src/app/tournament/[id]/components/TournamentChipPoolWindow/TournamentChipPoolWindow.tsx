@@ -255,9 +255,11 @@ const TournamentChipPoolWindowInner: FC<TournamentChipPoolWindowInnerProps> = ({
               <Formatter.number value={data.playersArrived} type="withoutDecimals" />
             </>
           </LeftStat>
-          <LeftStat label="Re-entry" layout={chipPoolLayout}>
-            <Formatter.number value={data.rebuyCount} type="withoutDecimals" />
-          </LeftStat>
+          {chipPoolLayout === "admin" ? (
+            <LeftStat label="Re-entry" layout={chipPoolLayout}>
+              <Formatter.number value={data.rebuyCount} type="withoutDecimals" />
+            </LeftStat>
+          ) : null}
           <LeftStat label="Фишки в игре" layout={chipPoolLayout}>
             <Formatter.number value={data.totalChips} type="withoutDecimals" />
           </LeftStat>

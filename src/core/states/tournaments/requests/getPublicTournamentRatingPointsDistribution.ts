@@ -7,6 +7,8 @@ export interface RatingPlaceRow {
 }
 
 export interface RatingPointsDistributionResponse {
+  /** false — турнир не идёт в рейтинг (ratingEnabled выключен): блок очков скрывать. По умолчанию true для старого бэка. */
+  readonly rated: boolean;
   readonly tournamentId: number;
   readonly playersInTournament: number;
   readonly prizePlacesDepth: number;
@@ -55,7 +57,19 @@ function normalizePlaceRow(raw: Record<string, unknown>): RatingPlaceRow | null 
 function normalizeResponse(raw: unknown): RatingPointsDistributionResponse | null {
   if (!raw || typeof raw !== "object") return null;
   const o = raw as Record<string, unknown>;
+  // rated отсутствует у старого бэка — считаем true.
+  const rated = typeof o.rated === "boolean" ? o.rated : true;
   const tournamentId = asFiniteNumber(o.tournamentId ?? o.tournament_id);
+  // Турнир не идёт в рейтинг: тело может быть { rated: false, places: [] } без прочих полей.
+  if (rated === false) {
+    return {
+      rated: false,
+      tournamentId: tournamentId ?? 0,
+      playersInTournament: 0,
+      prizePlacesDepth: 0,
+      places: [],
+    };
+  }
   const playersInTournament = asFiniteNumber(
     o.playersInTournament ?? o.players_in_tournament,
   );
@@ -79,6 +93,7 @@ function normalizeResponse(raw: unknown): RatingPointsDistributionResponse | nul
     }
   }
   return {
+    rated: true,
     tournamentId,
     playersInTournament,
     prizePlacesDepth,

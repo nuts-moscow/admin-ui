@@ -59,6 +59,11 @@ export const PublicRatingPointsColumn: FC<PublicRatingPointsColumnProps> = ({
     );
   }
 
+  // Турнир не идёт в рейтинг (ratingEnabled выключен) — блок очков скрываем целиком.
+  if (data && data.rated === false) {
+    return null;
+  }
+
   if (error) {
     return (
       <div className={chipPoolRightColumnCls({ layout })}>

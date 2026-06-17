@@ -46,6 +46,10 @@ export interface BountyEliminationEventState {
   readonly eventId: string;
   readonly eliminatedPlayerId: string;
   readonly killerPlayerIds: readonly string[];
+  /** Тип выбивания: "Out" — финальный вылет, "Rebuy" — выбивание на ребае. Опционально для совместимости со старым бэком. */
+  readonly type?: "Rebuy" | "Out";
+  /** Время записи события, epoch ms (null/undefined для legacy-записей без отметки времени). */
+  readonly recordedAt?: number | null;
 }
 
 export type BurnedStackSource = "Rebuy" | "Out";

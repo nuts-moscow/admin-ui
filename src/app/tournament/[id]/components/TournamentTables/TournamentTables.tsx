@@ -19,7 +19,10 @@ import {
   setPlayerTableId,
 } from "@/core/states/tournaments/requests/updatePlayerState";
 import { refetchTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
-import { bountyEliminate } from "@/core/states/tournaments/requests/bountyEliminate";
+import {
+  bountyEliminate,
+  BountyEliminateBody,
+} from "@/core/states/tournaments/requests/bountyEliminate";
 import { toast } from "@/components/Toast/Toast";
 import { formatApiErrorForUser } from "@/core/utils/misc/formatApiErrorForUser";
 import { parseEntryPaidAmountForApi } from "@/core/states/tournaments/common/tournamentPaymentAmounts";
@@ -252,53 +255,52 @@ const SetOutPlayerModal: FC<SetOutPlayerModalProps> = ({
     if (eliminationLocked || !bustedPlayer || !canSave || isLoading) {
       return;
     }
+    let payload: BountyEliminateBody;
     if (burnedStack) {
       const chips = Number.parseInt(burnedChipsInput.trim(), 10);
       if (!Number.isFinite(chips) || chips < 0) {
         return;
       }
-      setIsLoading(true);
-      try {
-        const result = await bountyEliminate(environment, Number(tournamentId), {
-          eliminatedPlayerId: bustedPlayer.playerId,
-          type: "Out",
-          burnedStack: true,
-          burnedChips: chips,
-          killerPlayerIds: [],
-        });
-        if (result.outcome === "already_out") {
-          toast({
-            type: "info",
-            message: "Игрок уже выбыл — повторное выбивание не требуется",
-          });
-        }
-        refetchTournamentPlayerState();
-        close();
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setIsLoading(false);
+      payload = {
+        eliminatedPlayerId: bustedPlayer.playerId,
+        type: "Out",
+        burnedStack: true,
+        burnedChips: chips,
+        killerPlayerIds: [],
+      };
+    } else {
+      const killerIds = [...new Set(selectedKillerIds.filter(Boolean))];
+      if (killerIds.length < 1) {
+        return;
       }
-      return;
-    }
-    const killerIds = [...new Set(selectedKillerIds.filter(Boolean))];
-    if (killerIds.length < 1) {
-      return;
-    }
-    setIsLoading(true);
-    try {
-      const result = await bountyEliminate(environment, Number(tournamentId), {
+      payload = {
         eliminatedPlayerId: bustedPlayer.playerId,
         killerPlayerIds: killerIds,
         type: "Out",
-      });
+      };
+    }
+    // Один ключ на клик: ретрай того же действия не создаст дубль.
+    const idempotencyKey = crypto.randomUUID();
+    setIsLoading(true);
+    try {
+      const result = await bountyEliminate(
+        environment,
+        Number(tournamentId),
+        payload,
+        idempotencyKey,
+      );
+      refetchTournamentPlayerState();
+      if (result.outcome === "late_registration_closed") {
+        toast({ type: "warning", message: "Поздняя регистрация закрыта" });
+        return;
+      }
       if (result.outcome === "already_out") {
         toast({
           type: "info",
           message: "Игрок уже выбыл — повторное выбивание не требуется",
         });
       }
-      refetchTournamentPlayerState();
+      // outcome "ok" | "in_progress" — без ошибки, действие принято.
       close();
     } catch (error) {
       console.error(error);

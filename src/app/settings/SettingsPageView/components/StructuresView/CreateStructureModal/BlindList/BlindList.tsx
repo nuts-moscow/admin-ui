@@ -41,6 +41,7 @@ interface PartialBlind {
 interface PartialBreak {
   readonly id: number;
   readonly duration?: number;
+  readonly endsLateRegistration?: boolean;
 }
 
 type PartialBlindType = PartialBlind | PartialBreak;
@@ -355,6 +356,25 @@ export const BlindList: FC<
                           )
                         }
                       />
+                    </Box>
+                  </SimpleList.Column>
+                  <SimpleList.Column minWidth={220}>
+                    <Box flex={{ gap: 2, align: "center" }}>
+                      <Checkbox
+                        disabled={readOnly}
+                        size="small"
+                        checked={!!item.endsLateRegistration}
+                        onCheckedChange={() =>
+                          changeBreakItem(
+                            index,
+                            "endsLateRegistration",
+                            !item.endsLateRegistration
+                          )
+                        }
+                      />
+                      <Typography.Text size="xSmall">
+                        Завершает позднюю регистрацию
+                      </Typography.Text>
                     </Box>
                   </SimpleList.Column>
                 </>
