@@ -12,6 +12,8 @@ export interface Break {
   readonly type?: "Break";
   readonly id: number;
   readonly duration: number;
+  /** Перерыв завершает позднюю регистрацию (бэк закроет рег/ребай при достижении этого перерыва). */
+  readonly endsLateRegistration?: boolean;
 }
 
 export type BlindType = Blind | Break;
@@ -34,6 +36,7 @@ export interface BreakApiItem {
   readonly type: "Break";
   readonly id: number;
   readonly duration: number;
+  readonly endsLateRegistration?: boolean;
 }
 
 export type BlindTypeApiItem = BlindApiItem | BreakApiItem;
@@ -58,6 +61,8 @@ export function normalizeBlindsForApi(blinds: Blinds): BlindTypeApiItem[] {
       type: "Break" as const,
       id: br.id,
       duration: br.duration,
+      // Шлём флаг только когда true; по умолчанию бэк считает false.
+      ...(br.endsLateRegistration ? { endsLateRegistration: true } : {}),
     };
   });
 }

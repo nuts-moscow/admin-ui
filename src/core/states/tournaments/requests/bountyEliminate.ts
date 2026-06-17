@@ -19,14 +19,16 @@ export interface BountyEliminateResponse {
 
 /**
  * Результат записи выбивания:
- * - `ok` — событие записано, есть `eventId`;
- * - `already_out` — бэкенд вернул 409 `{ error: "already_out" }`: игрок уже выбыл,
- *   повторное выбивание НЕ записано. С точки зрения UX это идемпотентный успех
- *   (типичный результат двойного клика), а не ошибка.
+ * - `ok` — событие записано, есть `eventId` (включая реплей того же действия по Idempotency-Key — бэк отдаёт то же тело);
+ * - `already_out` — 409 `{ error: "already_out" }`: игрок уже выбыл, повтор НЕ записан (идемпотентный успех, не ошибка);
+ * - `in_progress` — 409 `{ error: "in_progress" }`: то же действие ещё выполняется (двойной сабмит), не ошибка;
+ * - `late_registration_closed` — 409 `{ error: "late_registration_closed" }`: поздняя регистрация закрыта, ребай недоступен.
  */
 export type BountyEliminateResult =
   | { readonly outcome: "ok"; readonly eventId: string }
-  | { readonly outcome: "already_out" };
+  | { readonly outcome: "already_out" }
+  | { readonly outcome: "in_progress" }
+  | { readonly outcome: "late_registration_closed" };
 
 export interface BountyEliminateUndoBody {
   readonly eventId: string;
@@ -38,14 +40,17 @@ const tournamentBountyPath = (tid: string, suffix: string) =>
 
 /**
  * POST …/bounty/eliminate.
- * Успех 200 → `{ outcome: "ok", eventId }`.
- * 409 `{ error: "already_out" }` → `{ outcome: "already_out" }` (идемпотентный
- * успех: игрок уже выбыл, повтор не записан). Остальные 409 — обычная ошибка.
+ * Идемпотентность: на каждое действие шлём заголовок `Idempotency-Key`. По умолчанию
+ * генерируется новый ключ на вызов; передавай явный `idempotencyKey` только чтобы
+ * переиспользовать ключ при ретрае ТОГО ЖЕ действия.
+ * Коды: 200 → `ok`; 409 `already_out` / `in_progress` / `late_registration_closed`
+ * (см. `BountyEliminateResult`); прочие 409 — обычная ошибка.
  */
 export const bountyEliminate = async (
   environment: Environment,
   tournamentId: number | string,
   body: BountyEliminateBody,
+  idempotencyKey: string = crypto.randomUUID(),
 ): Promise<BountyEliminateResult> => {
   const tid = encodeURIComponent(String(tournamentId));
   return securedFetch<
@@ -58,6 +63,7 @@ export const bountyEliminate = async (
     path: tournamentBountyPath(tid, "eliminate"),
     withCredentials: true,
     body,
+    headers: { "Idempotency-Key": idempotencyKey },
     mapping: {
       success: async (res) => ({
         outcome: "ok" as const,
@@ -69,13 +75,19 @@ export const bountyEliminate = async (
         const parsed = (await res.toJson().catch(() => null)) as {
           error?: string;
         } | null;
-        if (parsed?.error === "already_out") {
-          return { outcome: "already_out" as const };
+        switch (parsed?.error) {
+          case "already_out":
+            return { outcome: "already_out" as const };
+          case "in_progress":
+            return { outcome: "in_progress" as const };
+          case "late_registration_closed":
+            return { outcome: "late_registration_closed" as const };
+          default:
+            // Прочие конфликты 409 — обычная ошибка (тело сохраняем для formatApiErrorForUser).
+            throw new Error(
+              parsed ? JSON.stringify(parsed) : "Конфликт записи выбивания",
+            );
         }
-        // Прочие конфликты 409 — обычная ошибка (тело сохраняем для formatApiErrorForUser).
-        throw new Error(
-          parsed ? JSON.stringify(parsed) : "Конфликт записи выбивания",
-        );
       },
       500: () => new Error("Server error"),
     },

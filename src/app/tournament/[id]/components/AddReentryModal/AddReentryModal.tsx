@@ -5,10 +5,12 @@ import { Box } from "@/components/Box/Box";
 import { Button } from "@/components/Button/Button";
 import { Modal, WithModalProps } from "@/components/Modal/Modal";
 import { Typography } from "@/components/Typography/Typography";
+import { toast } from "@/components/Toast/Toast";
 import { InGamePlayerState } from "@/core/states/tournaments/common/InGamePlayerState";
 import { TournamentsStructureResponse } from "@/core/states/tournaments/common/TournamentsStructureResponse";
 import { getReentryRemaining } from "@/core/states/tournaments/common/reentryLimits";
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
+import { useTournament } from "@/core/states/tournaments/hooks/useTournament";
 import { refetchTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
 import {
   bountyEliminate,
@@ -41,6 +43,8 @@ export const AddReentryModal: FC<AddReentryModalProps> = ({
   allowBountyEdits = true,
 }) => {
   const environment = useEnvironment();
+  const { data: tournament } = useTournament(tournamentId);
+  const lateRegistrationClosed = tournament?.lateRegistrationClosed === true;
   const [count, setCount] = useState<number>(1);
   const [burnedStack, setBurnedStack] = useState(false);
   const [burnedChipsInput, setBurnedChipsInput] = useState("");
@@ -93,7 +97,7 @@ export const AddReentryModal: FC<AddReentryModalProps> = ({
   }, [player?.playerId, killerCandidateIdsKey]);
 
   const handleSave = async () => {
-    if (!allowBountyEdits) {
+    if (!allowBountyEdits || lateRegistrationClosed) {
       return;
     }
     if (
@@ -132,8 +136,18 @@ export const AddReentryModal: FC<AddReentryModalProps> = ({
     setIsSaving(true);
     try {
       const iterations = Math.min(count, remainingReentries);
+      // Каждый ребай — отдельное действие, поэтому отдельный Idempotency-Key
+      // (генерируется по умолчанию внутри bountyEliminate на каждый вызов).
       for (let i = 0; i < iterations; i += 1) {
-        await bountyEliminate(environment, Number(tournamentId), payload);
+        const result = await bountyEliminate(
+          environment,
+          Number(tournamentId),
+          payload,
+        );
+        if (result.outcome === "late_registration_closed") {
+          toast({ type: "warning", message: "Поздняя регистрация закрыта" });
+          break;
+        }
       }
       refetchTournamentPlayerState();
       refetchTournamentRebuyCount();
@@ -153,6 +167,10 @@ export const AddReentryModal: FC<AddReentryModalProps> = ({
           {!allowBountyEdits ? (
             <Typography.Text type="secondary" size="small">
               Турнир завершён — добавление ребаев и выбиваний недоступно.
+            </Typography.Text>
+          ) : lateRegistrationClosed ? (
+            <Typography.Text type="error" size="small">
+              Поздняя регистрация закрыта — ребай недоступен.
             </Typography.Text>
           ) : null}
           <Typography.Text type="secondary" size="small">
@@ -328,6 +346,7 @@ export const AddReentryModal: FC<AddReentryModalProps> = ({
               loading={isSaving}
               disabled={
                 !allowBountyEdits ||
+                lateRegistrationClosed ||
                 !player ||
                 count <= 0 ||
                 isSaving ||

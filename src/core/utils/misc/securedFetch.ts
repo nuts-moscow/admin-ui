@@ -136,6 +136,8 @@ export interface SecuredFetchConfig<B, JR, R = JR> {
   readonly withCredentials: boolean;
   /** Request body (undefined for GET requests) */
   readonly body: B | undefined;
+  /** Extra request headers (e.g. `Idempotency-Key`). Merged after content-type, before auth. */
+  readonly headers?: Record<string, string>;
   /** Response handling handlers for each status code */
   readonly mapping: {
     /** Handler for successful responses (2xx status) */
@@ -261,6 +263,7 @@ export const securedFetch = async <B, JR, R = JR>({
   withCredentials,
   mapping,
   body,
+  headers: customHeaders,
 }: SecuredFetchConfig<B, JR, R>): Promise<R> => {
   const contentHeaders =
     body instanceof FormData
@@ -270,7 +273,7 @@ export const securedFetch = async <B, JR, R = JR>({
   const mergeHeaders = (
     base: Record<string, string> | undefined,
   ): HeadersInit | undefined => {
-    const merged = { ...base, ...authHeaders };
+    const merged = { ...base, ...customHeaders, ...authHeaders };
     return Object.keys(merged).length ? merged : undefined;
   };
   let response: Response;
