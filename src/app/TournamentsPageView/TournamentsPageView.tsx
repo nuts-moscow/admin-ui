@@ -8,7 +8,7 @@ import { TournamentCard } from "@/app/TournamentsPageView/TournamentCard/Tournam
 import { ToggleGroup } from "@/components/ToggleGroup/ToggleGroup";
 import { useModal } from "@/components/Modal/Modal";
 import { CreateTournamentModalContent } from "@/app/TournamentsPageView/CreateTournamentModal/CreateTournamentModal";
-import { BarChart2, LogOut, Settings } from "lucide-react";
+import { BarChart2, LogOut, Settings, Smartphone } from "lucide-react";
 import { TournamentStatus } from "@/core/states/tournaments/common/TournamentStatus";
 import { useTournaments } from "@/core/states/tournaments/hooks/useTournaments";
 import { SimpleList } from "@/components/SimpleList/SimpleList";
@@ -74,6 +74,13 @@ export const TournamentsPageView: FC<TournamentsPageViewProps> = ({
           title="Турниры"
           extra={
             <Box flex={{ gap: 2, align: "center" }}>
+              <Link href="/m" title="Мобильная версия">
+                <Button
+                  type="accent"
+                  size="small"
+                  iconRight={<Smartphone size={24} />}
+                />
+              </Link>
               <Link href="/seasonal-rating" title="Сезонный рейтинг">
                 <Button
                   type="accent"
