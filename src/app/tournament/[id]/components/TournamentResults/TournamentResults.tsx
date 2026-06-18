@@ -22,6 +22,7 @@ import {
 import { bountyEliminateUndo } from "@/core/states/tournaments/requests/bountyEliminate";
 import { TournamentInfoResponse } from "@/core/states/tournaments/requests/getTournament";
 import { useTournament } from "@/core/states/tournaments/hooks/useTournament";
+import { EventMetaLine } from "../EventMetaLine";
 import { Copy, X } from "lucide-react";
 
 export interface TournamentResultsProps {
@@ -138,6 +139,7 @@ const BountyListModal: FC<BountyListModalProps> = ({
                         {co.map((id) => playerNameById(id)).join(", ")}
                       </Typography.Text>
                     ) : null}
+                    <EventMetaLine type={ev.type} recordedAt={ev.recordedAt} />
                   </Box>
                   {!readOnly ? (
                     <Button
@@ -287,9 +289,12 @@ const EliminatedByModal: FC<EliminatedByModalProps> = ({
                   border: "1px solid var(--border-color)",
                 }}
               >
-                <Typography.Text size="small">
-                  {killerNames(ev.killerPlayerIds)}
-                </Typography.Text>
+                <Box flex={{ col: true, gap: 0 }}>
+                  <Typography.Text size="small">
+                    {killerNames(ev.killerPlayerIds)}
+                  </Typography.Text>
+                  <EventMetaLine type={ev.type} recordedAt={ev.recordedAt} />
+                </Box>
                 {!readOnly ? (
                   <Button
                     type="ghost"

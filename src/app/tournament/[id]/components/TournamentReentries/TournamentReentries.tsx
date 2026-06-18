@@ -38,7 +38,7 @@ import {
   useTournamentRebuyCount,
 } from "@/core/states/tournaments/hooks/useTournamentRebuyCount";
 import { Formatter } from "@/components/Formatter/Formatter";
-import { DateTime } from "luxon";
+import { EventMetaLine } from "../EventMetaLine";
 import { AddReentryModal } from "../AddReentryModal/AddReentryModal";
 
 export interface TournamentReentriesProps {
@@ -56,36 +56,6 @@ const getPlayerLabel = (player?: InGamePlayerState): string => {
     return "-";
   }
   return player.playerName || player.playerId || "-";
-};
-
-const ELIMINATION_TYPE_LABEL: Record<"Rebuy" | "Out", string> = {
-  Out: "Аут",
-  Rebuy: "Ребай",
-};
-
-/** Вторичная строка под именами в модалках баунти: тип выбивания (Аут/Ребай) и время (HH:mm). */
-const EventMetaLine: FC<{
-  type?: "Rebuy" | "Out";
-  recordedAt?: number | null;
-}> = ({ type, recordedAt }) => {
-  const typeLabel = type ? ELIMINATION_TYPE_LABEL[type] : null;
-  const hasTime =
-    typeof recordedAt === "number" && Number.isFinite(recordedAt);
-  if (!typeLabel && !hasTime) {
-    return null;
-  }
-  return (
-    <Typography.Text type="secondary" size="xxSmall">
-      {typeLabel}
-      {typeLabel && hasTime ? " · " : null}
-      {hasTime ? (
-        <Formatter.dateTime
-          value={DateTime.fromMillis(recordedAt as number)}
-          type="time"
-        />
-      ) : null}
-    </Typography.Text>
-  );
 };
 
 interface PayReentriesModalProps extends WithModalProps {

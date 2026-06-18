@@ -4,7 +4,7 @@ import { FC, useEffect, useMemo, useState } from "react";
 import { Box } from "@/components/Box/Box";
 import { PageHeader } from "@/components/PageHeader/PageHeader";
 import { PageLayout } from "@/components/PageLayout/PageLayout";
-import { Home } from "lucide-react";
+import { Home, Smartphone } from "lucide-react";
 import { Button } from "@/components/Button/Button";
 import Link from "next/link";
 import { TournamentPlayers } from "./components/TournamentPlayers/TournamentPlayers";
@@ -180,6 +180,13 @@ export const TournamentPageView: FC<TournamentPageViewProps> = ({
           subtitle={`Статус: ${tournamentStatusLabels[displayTournament.status]}`}
           extra={
             <Box flex={{ gap: 2, align: "center" }}>
+              <Link href={`/m/tournament/${tournamentId}`} title="Мобильная версия">
+                <Button
+                  type="accent"
+                  size="small"
+                  iconRight={<Smartphone size={24} />}
+                />
+              </Link>
               <Link href="/">
                 <Button
                   type="accent"
