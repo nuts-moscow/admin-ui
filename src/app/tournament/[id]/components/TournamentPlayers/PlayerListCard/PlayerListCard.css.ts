@@ -79,12 +79,17 @@ export const playerListRowNameBlockCls = style({
 });
 
 export const playerListRowActionsCls = style({
+  // Действия — отдельной строкой под именем, равномерной сеткой: кнопки
+  // одинаковой ширины выстраиваются в колонки и аккуратно переносятся
+  // (auto-fill — постоянное число колонок при равной ширине строк, поэтому
+  // кнопки выравниваются между строками; без «висящих» одиночных кнопок).
+  // Действия — отдельной строкой под именем, компактным рядом с переносом:
+  // кнопки своей естественной (небольшой) ширины, прижаты влево, без растягивания
+  // и без «висящих» одиночных кнопок справа.
+  flex: "1 1 100%",
   display: "flex",
-  alignItems: "center",
   flexWrap: "wrap",
+  alignItems: "center",
+  justifyContent: "flex-start",
   gap: getGutter(2),
-  flex: "0 1 auto",
-  minWidth: 0,
-  maxWidth: "100%",
-  justifyContent: "flex-end",
 });
