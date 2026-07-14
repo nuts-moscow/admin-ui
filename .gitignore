@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# archi (local-only; spec is cloud-backed)
+.archi/
+.fractal/
+.agents/
+.claude/skills/
