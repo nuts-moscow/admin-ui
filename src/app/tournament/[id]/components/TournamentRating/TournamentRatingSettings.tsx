@@ -394,11 +394,14 @@ export const TournamentRatingSettings: FC<TournamentRatingSettingsProps> = ({
 
       <Box flex={{ align: "center", gap: 3 }}>
         <Typography.Text size="small" type="secondary">
+          {/* Баунти стоит 0.5 балла × коэффициент — показываем фактическую
+              цену одного баунти, а не голый коэффициент. */}
           Итог: (база
           {guaranteeEnabled
             ? ` + ${guaranteeBonusPoints.trim() || "10"} для топ-10`
             : ""}
-          ) × {pointsCoef || "1"} + баунти × {bountyCoef || "1"}
+          ) × {pointsCoef || "1"} +{" "}
+          {0.5 * (Number.parseFloat(bountyCoef) || 1)} за каждое баунти
         </Typography.Text>
       </Box>
 
