@@ -69,6 +69,7 @@ export const PlayerCard: FC<PlayerCardProps> = ({
     <SimpleList.Card
       onClick={onClick}
       noAgreement={player.signAgreement !== true}
+      rowWrap
     >
       <SimpleList.Column>
         <Typography.Text size="small" type="secondary">
