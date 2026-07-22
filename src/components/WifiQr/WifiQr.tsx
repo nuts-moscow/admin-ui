@@ -14,37 +14,24 @@ export interface WifiQrProps {
   readonly style?: CSSProperties;
 }
 
-const INK = "#2b2119";
-const GOLD = "#b58a3c";
+const INK = "#3a2f24";
 
-export const WifiQr: FC<WifiQrProps> = ({ size = 104, style }) => {
+export const WifiQr: FC<WifiQrProps> = ({ size = 84, style }) => {
   return (
     <div
       style={{
         display: "inline-flex",
         flexDirection: "column",
         alignItems: "center",
-        gap: size * 0.06,
-        padding: `${size * 0.12}px ${size * 0.14}px`,
-        borderRadius: 14,
-        background: "#f5efe1",
-        border: `1px solid ${GOLD}`,
-        boxShadow: `0 6px 22px -10px rgba(43, 33, 25, 0.45), inset 0 0 0 3px rgba(245, 239, 225, 1), inset 0 0 0 4px ${GOLD}33`,
+        gap: size * 0.07,
+        padding: size * 0.1,
+        borderRadius: 10,
+        // Just enough light backing for the code to scan on the warm
+        // gradient — no frame, shadow or heavy chrome.
+        background: "rgba(247, 242, 232, 0.6)",
         ...style,
       }}
     >
-      <div
-        style={{
-          fontFamily: "var(--display-font-family)",
-          fontSize: size * 0.19,
-          fontWeight: 600,
-          letterSpacing: "0.04em",
-          color: INK,
-          lineHeight: 1,
-        }}
-      >
-        Wi-Fi
-      </div>
       <svg
         width={size}
         height={size}
@@ -58,15 +45,15 @@ export const WifiQr: FC<WifiQrProps> = ({ size = 104, style }) => {
       <div
         style={{
           fontFamily: "var(--primary-font-family)",
-          fontSize: size * 0.11,
+          fontSize: size * 0.13,
           fontWeight: 600,
           textTransform: "uppercase",
-          letterSpacing: "0.08em",
-          color: `${INK}99`,
+          letterSpacing: "0.14em",
+          color: `${INK}80`,
           lineHeight: 1,
         }}
       >
-        Наведи камеру
+        Wi-Fi
       </div>
     </div>
   );
