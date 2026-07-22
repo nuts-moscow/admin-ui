@@ -14,39 +14,24 @@ export interface WifiQrProps {
   readonly style?: CSSProperties;
 }
 
-// Match the broadcast left-column ink so it reads as another stat, not a sticker.
 const INK = "#3d3a36";
-const INK_SOFT = "rgba(61, 58, 54, 0.78)";
 
-export const WifiQr: FC<WifiQrProps> = ({ size = 82, style }) => {
+/**
+ * Just the code — small, no label, no frame. A tight white quiet-zone is the
+ * only chrome (a QR needs it to scan on the warm background).
+ */
+export const WifiQr: FC<WifiQrProps> = ({ size = 64, style }) => {
   return (
-    <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "flex-start", ...style }}>
-      <div
-        style={{
-          fontFamily: "var(--primary-font-family)",
-          fontSize: "var(--chip-broadcast-stat-label-size, 0.95rem)",
-          fontWeight: 600,
-          textTransform: "uppercase",
-          letterSpacing: "0.05em",
-          color: INK_SOFT,
-          marginBottom: 8,
-        }}
-      >
-        Wi-Fi
-      </div>
-      {/* The code keeps a tight white quiet-zone (QR needs it to scan); no
-          card, border or shadow — it lines up under the label like a value. */}
-      <svg
-        width={size}
-        height={size}
-        viewBox="-2 -2 37 37"
-        xmlns="http://www.w3.org/2000/svg"
-        shapeRendering="crispEdges"
-        style={{ display: "block", borderRadius: 6 }}
-      >
-        <rect x="-2" y="-2" width="37" height="37" rx="1.5" fill="#fbf8f1" />
-        <path stroke={INK} d={QR_PATH} />
-      </svg>
-    </div>
+    <svg
+      width={size}
+      height={size}
+      viewBox="-2 -2 37 37"
+      xmlns="http://www.w3.org/2000/svg"
+      shapeRendering="crispEdges"
+      style={{ display: "block", borderRadius: 6, ...style }}
+    >
+      <rect x="-2" y="-2" width="37" height="37" rx="1.5" fill="#fbf8f1" />
+      <path stroke={INK} d={QR_PATH} />
+    </svg>
   );
 };
