@@ -64,8 +64,8 @@ export const PublicTournamentDisplayShell: FC<PublicTournamentDisplayShellProps>
       <WifiQr
         style={{
           position: 'absolute',
-          top: 'clamp(12px, 2vh, 32px)',
-          right: 'clamp(12px, 2vw, 32px)',
+          left: 'clamp(20px, 3vw, 56px)',
+          top: 'calc(var(--chip-broadcast-logo-height) + clamp(28px, 5vh, 72px))',
           zIndex: 10,
         }}
       />
