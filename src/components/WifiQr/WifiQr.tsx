@@ -14,47 +14,39 @@ export interface WifiQrProps {
   readonly style?: CSSProperties;
 }
 
-const INK = "#3a2f24";
+// Match the broadcast left-column ink so it reads as another stat, not a sticker.
+const INK = "#3d3a36";
+const INK_SOFT = "rgba(61, 58, 54, 0.78)";
 
-export const WifiQr: FC<WifiQrProps> = ({ size = 84, style }) => {
+export const WifiQr: FC<WifiQrProps> = ({ size = 82, style }) => {
   return (
-    <div
-      style={{
-        display: "inline-flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: size * 0.07,
-        padding: size * 0.1,
-        borderRadius: 10,
-        // Just enough light backing for the code to scan on the warm
-        // gradient — no frame, shadow or heavy chrome.
-        background: "rgba(247, 242, 232, 0.6)",
-        ...style,
-      }}
-    >
-      <svg
-        width={size}
-        height={size}
-        viewBox="0 0 33 33"
-        xmlns="http://www.w3.org/2000/svg"
-        shapeRendering="crispEdges"
-        style={{ display: "block" }}
-      >
-        <path stroke={INK} d={QR_PATH} />
-      </svg>
+    <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "flex-start", ...style }}>
       <div
         style={{
           fontFamily: "var(--primary-font-family)",
-          fontSize: size * 0.13,
+          fontSize: "var(--chip-broadcast-stat-label-size, 0.95rem)",
           fontWeight: 600,
           textTransform: "uppercase",
-          letterSpacing: "0.14em",
-          color: `${INK}80`,
-          lineHeight: 1,
+          letterSpacing: "0.05em",
+          color: INK_SOFT,
+          marginBottom: 8,
         }}
       >
         Wi-Fi
       </div>
+      {/* The code keeps a tight white quiet-zone (QR needs it to scan); no
+          card, border or shadow — it lines up under the label like a value. */}
+      <svg
+        width={size}
+        height={size}
+        viewBox="-2 -2 37 37"
+        xmlns="http://www.w3.org/2000/svg"
+        shapeRendering="crispEdges"
+        style={{ display: "block", borderRadius: 6 }}
+      >
+        <rect x="-2" y="-2" width="37" height="37" rx="1.5" fill="#fbf8f1" />
+        <path stroke={INK} d={QR_PATH} />
+      </svg>
     </div>
   );
 };
