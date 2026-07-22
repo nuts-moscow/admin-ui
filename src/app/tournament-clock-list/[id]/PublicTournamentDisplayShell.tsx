@@ -2,6 +2,7 @@
 
 import { CSSProperties, FC } from 'react';
 import { PublicTournamentChipPoolWindow } from './PublicTournamentChipPoolWindow';
+import { WifiQr } from '@/components/WifiQr/WifiQr';
 import { usePublicTournament } from '@/core/states/tournaments/hooks/usePublicTournament';
 
 export interface PublicTournamentDisplayShellProps {
@@ -59,6 +60,14 @@ export const PublicTournamentDisplayShell: FC<PublicTournamentDisplayShellProps>
       <PublicTournamentChipPoolWindow
         tournament={tournament}
         style={{ flex: '1 1 0%', minHeight: 0, width: '100%' }}
+      />
+      <WifiQr
+        style={{
+          position: 'absolute',
+          top: 'clamp(20px, 3vh, 44px)',
+          right: 'clamp(24px, 3vw, 64px)',
+          zIndex: 10,
+        }}
       />
     </div>
   );
