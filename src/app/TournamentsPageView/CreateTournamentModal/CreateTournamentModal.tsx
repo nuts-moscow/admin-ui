@@ -41,6 +41,8 @@ export interface CreateTournamentForm {
   /** Строки полей года/месяца сезона; пусто = null. */
   readonly ratingSeasonYear: string;
   readonly ratingSeasonMonth: string;
+  /** Финал месяца: турнир по приглашению, самозапись снимается. */
+  readonly monthFinal: boolean;
   readonly structure: TournamentStructure | undefined;
 }
 
@@ -61,6 +63,7 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({ close }) => {
       ratingEnabled: true,
       ratingSeasonYear: "",
       ratingSeasonMonth: "",
+      monthFinal: false,
       structure: undefined,
     },
   });
@@ -167,6 +170,7 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({ close }) => {
           : sy != null && sm != null
             ? { ratingSeasonYear: sy, ratingSeasonMonth: sm }
             : {}),
+        ...(form.value.monthFinal === true ? { monthFinal: true } : {}),
         structure: {
           name: form.value.structure.name,
           playersLimit: form.value.structure.playersLimit,

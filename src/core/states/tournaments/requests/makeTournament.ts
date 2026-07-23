@@ -15,6 +15,8 @@ export interface MakeTournamentRequest {
   readonly ratingEnabled?: boolean;
   readonly ratingSeasonYear?: number | null;
   readonly ratingSeasonMonth?: number | null;
+  /** Финал месяца; при true самозаписавшиеся игроки снимаются с записи. */
+  readonly monthFinal?: boolean;
   readonly structure: {
     readonly name: string;
     readonly playersLimit: number;
@@ -35,6 +37,7 @@ interface MakeTournamentBody {
   readonly ratingEnabled?: boolean;
   readonly ratingSeasonYear?: number | null;
   readonly ratingSeasonMonth?: number | null;
+  readonly monthFinal?: boolean;
   readonly structure: {
     readonly name: string;
     readonly playersLimit: number;
@@ -95,6 +98,7 @@ function toMakeTournamentBody(request: MakeTournamentRequest): MakeTournamentBod
           ratingSeasonMonth: Math.trunc(rsm),
         }
       : {}),
+    ...(request.monthFinal === true ? { monthFinal: true } : {}),
     structure: {
       name: request.structure.name,
       playersLimit: request.structure.playersLimit,
