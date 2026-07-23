@@ -28,6 +28,8 @@ export interface TournamentInfoResponse {
   readonly ratingSeasonMonth?: number | null;
   /** true — поздняя регистрация закрыта; false — ещё открыта. */
   readonly lateRegistrationClosed?: boolean;
+  /** true — турнир-финал месяца (по приглашению); самозапись снимается. */
+  readonly monthFinal?: boolean;
 }
 
 export function pickFiniteNumber(...vals: unknown[]): number | undefined {
@@ -88,6 +90,8 @@ interface TournamentWithStructureResponse {
   readonly rating_season_month?: number | null;
   readonly lateRegistrationClosed?: boolean;
   readonly late_registration_closed?: boolean;
+  readonly monthFinal?: boolean;
+  readonly month_final?: boolean;
 }
 
 /**
@@ -142,6 +146,15 @@ export const getTournament = async (
               : lateRaw === "false"
                 ? false
                 : undefined;
+        const monthFinalRaw = jr.monthFinal ?? jr.month_final;
+        const monthFinal =
+          typeof monthFinalRaw === "boolean"
+            ? monthFinalRaw
+            : monthFinalRaw === "true"
+              ? true
+              : monthFinalRaw === "false"
+                ? false
+                : undefined;
         const rawY = jr.ratingSeasonYear ?? jr.rating_season_year;
         const rawM = jr.ratingSeasonMonth ?? jr.rating_season_month;
         let ratingSeasonYear: number | null | undefined;
@@ -189,6 +202,7 @@ export const getTournament = async (
           ...(lateRegistrationClosed !== undefined
             ? { lateRegistrationClosed }
             : {}),
+          ...(monthFinal !== undefined ? { monthFinal } : {}),
         };
       },
       404: () => null,

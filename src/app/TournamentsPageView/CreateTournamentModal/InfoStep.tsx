@@ -126,6 +126,27 @@ export const InfoStep: FC = () => {
         )}
       </Form.Control>
 
+      <Form.Control name="monthFinal">
+        {({ value, onChange }) => (
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              cursor: "pointer",
+              userSelect: "none",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={value}
+              onChange={(e) => onChange(e.target.checked)}
+            />
+            <Typography.Text size="small">Финал месяца</Typography.Text>
+          </label>
+        )}
+      </Form.Control>
+
       <Form.Listener>
         {({ value }: { value: CreateTournamentForm }) =>
           value.ratingEnabled ? (

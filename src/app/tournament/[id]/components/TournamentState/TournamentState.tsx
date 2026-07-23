@@ -16,6 +16,7 @@ import { useTournamentClock } from "@/core/states/tournaments/hooks/useTournamen
 import { useTournamentPlayerState } from "@/core/states/tournaments/hooks/useTournamentPlayerState";
 import { patchTournamentClock } from "@/core/states/tournaments/requests/patchTournamentClock";
 import { patchTournamentLateRegistration } from "@/core/states/tournaments/requests/patchTournamentLateRegistration";
+import { patchTournamentMonthFinal } from "@/core/states/tournaments/requests/patchTournamentMonthFinal";
 import { toast } from "@/components/Toast/Toast";
 import { TournamentInfoForm } from "./TournamentInfoForm";
 
@@ -48,6 +49,18 @@ interface LateRegistrationInitial {
 
 interface LateRegistrationConfirmModalProps
   extends WithModalProps<LateRegistrationInitial> {
+  readonly tournament: TournamentInfoResponse;
+  readonly onTournamentViewPatch?: (
+    patch: Partial<TournamentInfoResponse>,
+  ) => void;
+}
+
+interface MonthFinalInitial {
+  readonly targetMonthFinal: boolean;
+}
+
+interface MonthFinalConfirmModalProps
+  extends WithModalProps<MonthFinalInitial> {
   readonly tournament: TournamentInfoResponse;
   readonly onTournamentViewPatch?: (
     patch: Partial<TournamentInfoResponse>,
@@ -276,6 +289,85 @@ const LateRegistrationConfirmModal: FC<LateRegistrationConfirmModalProps> = ({
   );
 };
 
+const MonthFinalConfirmModal: FC<MonthFinalConfirmModalProps> = ({
+  close,
+  tournament,
+  initialData,
+  onTournamentViewPatch,
+}) => {
+  const environment = useEnvironment();
+  const [loading, setLoading] = useState(false);
+  const targetMonthFinal = initialData?.targetMonthFinal ?? false;
+
+  const handleConfirm = async () => {
+    if (loading) {
+      return;
+    }
+    setLoading(true);
+    try {
+      await patchTournamentMonthFinal(
+        environment,
+        tournament.id,
+        targetMonthFinal,
+      );
+      onTournamentViewPatch?.({ monthFinal: targetMonthFinal });
+      refetchTournament();
+      toast({
+        type: "success",
+        message: targetMonthFinal
+          ? "Турнир помечен как финал месяца"
+          : "Признак финала месяца снят",
+      });
+      close();
+    } catch (error) {
+      toast({
+        type: "error",
+        message:
+          error instanceof Error ? error.message : "Не удалось сохранить",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <Modal.Title showCloseButton>Подтверждение</Modal.Title>
+      <Modal.Content minWidth={420}>
+        <Box flex={{ col: true, gap: 4 }}>
+          <Typography.Text type="secondary" size="small">
+            {targetMonthFinal
+              ? "Сделать турнир финалом месяца? Самостоятельно записавшиеся игроки будут сняты с записи."
+              : "Убрать признак финала месяца?"}
+          </Typography.Text>
+          <Box flex={{ gap: 4, width: "100%" }}>
+            <Button
+              type="secondary"
+              htmlType="button"
+              onClick={() => close()}
+              flexItem={{ flex: 1 }}
+              disabled={loading}
+            >
+              Отмена
+            </Button>
+            <Button
+              type="primary"
+              htmlType="button"
+              onClick={handleConfirm}
+              flexItem={{ flex: 1 }}
+              loading={loading}
+            >
+              {targetMonthFinal
+                ? "Сделать финалом месяца"
+                : "Убрать признак"}
+            </Button>
+          </Box>
+        </Box>
+      </Modal.Content>
+    </>
+  );
+};
+
 export const TournamentState: FC<TournamentStateProps> = ({
   tournament,
   onTournamentViewPatch,
@@ -289,6 +381,9 @@ export const TournamentState: FC<TournamentStateProps> = ({
   );
   const [LateRegConfirmModal, openLateRegConfirmModal] = useModal(
     LateRegistrationConfirmModal
+  );
+  const [MonthFinalModal, openMonthFinalConfirmModal] = useModal(
+    MonthFinalConfirmModal
   );
   const { data: players } = useTournamentPlayerState(String(tournament.id));
   const inGameCount = getInGameCount(players ?? []);
@@ -325,8 +420,20 @@ export const TournamentState: FC<TournamentStateProps> = ({
         tournament={tournament}
         onTournamentViewPatch={onTournamentViewPatch}
       />
+      <MonthFinalModal
+        tournament={tournament}
+        onTournamentViewPatch={onTournamentViewPatch}
+      />
       {tournament.status === "RegistrationOpen" && (
-        <Box flex={{ justify: "center", width: "100%" }}>
+        <Box
+          flex={{
+            justify: "center",
+            align: "center",
+            width: "100%",
+            gap: 3,
+            flexWrap: "wrap",
+          }}
+        >
           <Button
             type="success"
             size="medium"
@@ -339,6 +446,27 @@ export const TournamentState: FC<TournamentStateProps> = ({
           >
             Начать турнир
           </Button>
+          {tournament.monthFinal === true ? (
+            <Button
+              type="secondary"
+              size="medium"
+              onClick={() =>
+                openMonthFinalConfirmModal({ targetMonthFinal: false })
+              }
+            >
+              Убрать финал месяца
+            </Button>
+          ) : (
+            <Button
+              type="secondary"
+              size="medium"
+              onClick={() =>
+                openMonthFinalConfirmModal({ targetMonthFinal: true })
+              }
+            >
+              Сделать финалом месяца
+            </Button>
+          )}
         </Box>
       )}
       {tournament.status === "InProgress" && (
