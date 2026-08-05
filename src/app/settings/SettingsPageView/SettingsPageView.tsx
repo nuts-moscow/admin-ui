@@ -11,6 +11,7 @@ import { StructuresView } from "./components/StructuresView/StructuresView";
 import { TournamentStructure } from "@/core/states/tournamentStructures/common/TournamentStructure";
 import { PlayersView } from "./components/PlayersView/PlayersView";
 import { Player } from "@/core/states/players/common/Player";
+import { AvatarModerationView } from "./components/AvatarModerationView/AvatarModerationView";
 
 export interface SettingsPageViewProps {
   readonly initialTournamentStructures: TournamentStructure[];
@@ -21,7 +22,7 @@ export const SettingsPageView: FC<SettingsPageViewProps> = ({
   initialTournamentStructures,
   initialPlayers,
 }) => {
-  const [activeTab, setActiveTab] = useState<"structures" | "players">(
+  const [activeTab, setActiveTab] = useState<"structures" | "players" | "avatars">(
     "structures"
   );
   const [searchQuery, setSearchQuery] = useState("");
@@ -77,7 +78,7 @@ export const SettingsPageView: FC<SettingsPageViewProps> = ({
           <Box
             width="100%"
             onTabChange={(tabKey) =>
-              setActiveTab(tabKey as "structures" | "players")
+              setActiveTab(tabKey as "structures" | "players" | "avatars")
             }
             tabsType="tab"
             tabs={[
@@ -100,6 +101,11 @@ export const SettingsPageView: FC<SettingsPageViewProps> = ({
                     searchQuery={searchQuery}
                   />
                 ),
+              },
+              {
+                title: "Фото на проверке",
+                key: "avatars",
+                content: <AvatarModerationView />,
               },
             ]}
           ></Box>

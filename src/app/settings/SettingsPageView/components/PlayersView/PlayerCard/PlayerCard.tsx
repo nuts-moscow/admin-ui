@@ -9,6 +9,7 @@ import { SimpleList } from "@/components/SimpleList/SimpleList";
 import { useEnvironment } from "@/core/states/environment/useEnvironment";
 import { updatePlayerFreeEntries } from "@/core/states/players/requests/updatePlayerFreeEntries";
 import { updatePlayerFreeReentries } from "@/core/states/players/requests/updatePlayerFreeReentries";
+import { deletePlayerAvatar } from "@/core/states/avatarModeration/requests/deletePlayerAvatar";
 export interface PlayerCardProps {
   readonly player: Player;
   readonly onClick?: () => void;
@@ -32,6 +33,19 @@ export const PlayerCard: FC<PlayerCardProps> = ({
   const [freeReentriesInput, setFreeReentriesInput] = useState("");
   const [freeEntriesLoading, setFreeEntriesLoading] = useState(false);
   const [freeReentriesLoading, setFreeReentriesLoading] = useState(false);
+  const [avatarLoading, setAvatarLoading] = useState(false);
+
+  // Снятие аватара: игрок возвращается к инициалам, действие уходит в аудит.
+  // Очередь это не трогает — там решается про ждущее, здесь про показанное.
+  const handleTakedown = async () => {
+    setAvatarLoading(true);
+    try {
+      await deletePlayerAvatar(environment, Number(player.id));
+      onUpdated?.();
+    } finally {
+      setAvatarLoading(false);
+    }
+  };
 
   const handleFreeEntries = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -171,6 +185,17 @@ export const PlayerCard: FC<PlayerCardProps> = ({
             disabled={!freeReentriesInput.trim()}
           >
             Изменить
+          </Button>
+        </Box>
+
+        <Box flex={{ gap: 2, align: "center" }} onClick={(e) => e.stopPropagation()}>
+          <Button
+            type="secondary"
+            size="xxSmall"
+            onClick={() => void handleTakedown()}
+            loading={avatarLoading}
+          >
+            Снять аватар
           </Button>
         </Box>
       </Box>
