@@ -74,7 +74,28 @@ export const PendingAvatarRow: FC<PendingAvatarRowProps> = ({
       )}
 
       <Box flex={{ col: true, gap: 1 }} style={{ flex: 1, minWidth: 0 }}>
-        <span style={{ color: "var(--text-primary)" }}>Игрок #{entry.playerId}</span>
+        {/* Ник первым: решение принимается про человека, а не про номер строки. */}
+        <span
+          style={{
+            color: "var(--text-primary)",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {entry.nickname ?? `Игрок #${entry.playerId}`}
+        </span>
+        <span
+          style={{
+            fontSize: 13,
+            color: "var(--text-secondary)",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {entry.email ?? `#${entry.playerId}`}
+        </span>
         <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>
           {new Date(entry.submittedAt).toLocaleString("ru-RU")}
           {entry.refusalCount > 0
