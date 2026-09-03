@@ -149,13 +149,21 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({ close }) => {
       await makeTournament(environment, {
         name: form.value.name,
         date: Math.floor(
-          DateTime.fromObject({
-            year: Number(year),
-            month: Number(month),
-            day: Number(day),
-            hour: Number(hour),
-            minute: Number(minute),
-          }).toSeconds()
+          DateTime.fromObject(
+            {
+              year: Number(year),
+              month: Number(month),
+              day: Number(day),
+              hour: Number(hour),
+              minute: Number(minute),
+            },
+            // Without this, luxon reads the fields against whatever
+            // timezone the admin's own browser/OS happens to be in —
+            // right most of the time (if that machine is set to Moscow),
+            // but silently wrong otherwise, and the wrong side always
+            // lands on the following calendar day for evening starts.
+            { zone: "Europe/Moscow" }
+          ).toSeconds()
         ),
         ...(bonusParsed !== undefined ? { ratingGuaranteeBonusPoints: bonusParsed } : {}),
         ...(Number.isFinite(rtId) && rtId > 0 && Number.isInteger(rtId)
