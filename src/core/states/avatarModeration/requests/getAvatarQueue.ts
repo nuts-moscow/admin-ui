@@ -4,6 +4,8 @@ import { securedFetch } from "@/core/utils/misc/securedFetch";
 /** Одна ждущая заявка: чья, когда пришла, и сколько раз этому игроку уже отказывали. */
 export interface PendingAvatar {
   readonly playerId: number;
+  /** Уже приходит с бэкенда (AvatarModerationService.queue), null если у игрока его нет. */
+  readonly nickname: string | null;
   /**
    * Идентичность заявки. Её же клик отправляет обратно — если игрок успел
    * подменить картинку, вердикт не применится, и строка перерисуется.
