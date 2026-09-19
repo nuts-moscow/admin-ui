@@ -72,7 +72,8 @@ export const AppQr: FC<AppQrProps> = ({ style }) => {
             lineHeight: 1.15,
           }}
         >
-          Наведи камеру и заходи в наше приложение
+          Наведи камеру и заходи
+          <br />в наше приложение
         </div>
         <div
           style={{
