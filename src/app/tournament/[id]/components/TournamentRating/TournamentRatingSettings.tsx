@@ -38,6 +38,9 @@ export const TournamentRatingSettings: FC<TournamentRatingSettingsProps> = ({
   const [bountyCoef, setBountyCoef] = useState(
     String(tournament.ratingBountyCoefficient ?? 1),
   );
+  const [bountyRebuyOnly, setBountyRebuyOnly] = useState(
+    tournament.ratingBountyRebuyOnly ?? false,
+  );
   const [guaranteeBonusPoints, setGuaranteeBonusPoints] = useState(
     String(tournament.ratingGuaranteeBonusPoints ?? 10),
   );
@@ -66,6 +69,7 @@ export const TournamentRatingSettings: FC<TournamentRatingSettingsProps> = ({
     setGuaranteeEnabled(tournament.ratingGuaranteeEnabled ?? false);
     setPointsCoef(String(tournament.ratingPointsCoefficient ?? 1));
     setBountyCoef(String(tournament.ratingBountyCoefficient ?? 1));
+    setBountyRebuyOnly(tournament.ratingBountyRebuyOnly ?? false);
     setGuaranteeBonusPoints(String(tournament.ratingGuaranteeBonusPoints ?? 10));
     setRatingEnabled(tournament.ratingEnabled ?? true);
     setRatingSeasonYear(
@@ -84,6 +88,7 @@ export const TournamentRatingSettings: FC<TournamentRatingSettingsProps> = ({
     tournament.ratingGuaranteeBonusPoints,
     tournament.ratingPointsCoefficient,
     tournament.ratingBountyCoefficient,
+    tournament.ratingBountyRebuyOnly,
     tournament.ratingEnabled,
     tournament.ratingSeasonYear,
     tournament.ratingSeasonMonth,
@@ -195,6 +200,7 @@ export const TournamentRatingSettings: FC<TournamentRatingSettingsProps> = ({
         ratingGuaranteeBonusPoints: parsedBonus,
         ratingPointsCoefficient: parsedPoints,
         ratingBountyCoefficient: parsedBounty,
+        ratingBountyRebuyOnly: bountyRebuyOnly,
         ratingTableId: rtResolved,
         ...(ratingEnabled === false
           ? {
@@ -392,6 +398,27 @@ export const TournamentRatingSettings: FC<TournamentRatingSettingsProps> = ({
         </Box>
       </Box>
 
+      <Box flex={{ col: true, gap: 1 }}>
+        <Box flex={{ align: "center", gap: 3 }}>
+          <Checkbox
+            size="medium"
+            checked={bountyRebuyOnly}
+            onCheckedChange={(v) => setBountyRebuyOnly(v === true)}
+            id="rating-bounty-rebuy-only"
+          />
+          <label htmlFor="rating-bounty-rebuy-only" style={{ cursor: "pointer" }}>
+            <Typography.Text size="small">
+              Mystery: баунти только за нокаут на ребай
+            </Typography.Text>
+          </label>
+        </Box>
+        <Typography.Text size="xSmall" type="secondary">
+          За нокаут, после которого игрок вылетает из турнира, баллы не
+          начисляются. Сам нокаут остаётся в статистике игрока. При сохранении
+          баллы турнира пересчитываются, в том числе для завершённого.
+        </Typography.Text>
+      </Box>
+
       <Box flex={{ align: "center", gap: 3 }}>
         <Typography.Text size="small" type="secondary">
           {/* Коэффициент масштабирует только базу; гарантия — поверх. Баунти
@@ -401,6 +428,7 @@ export const TournamentRatingSettings: FC<TournamentRatingSettingsProps> = ({
             ? ` + ${guaranteeBonusPoints.trim() || "10"} для топ-10`
             : ""}{" "}
           + {0.5 * (Number.parseFloat(bountyCoef) || 1)} за каждое баунти
+          {bountyRebuyOnly ? " на ребай" : ""}
         </Typography.Text>
       </Box>
 
