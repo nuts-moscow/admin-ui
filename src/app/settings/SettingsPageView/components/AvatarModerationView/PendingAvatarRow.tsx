@@ -74,7 +74,9 @@ export const PendingAvatarRow: FC<PendingAvatarRowProps> = ({
       )}
 
       <Box flex={{ col: true, gap: 1 }} style={{ flex: 1, minWidth: 0 }}>
-        <span style={{ color: "var(--text-primary)" }}>Игрок #{entry.playerId}</span>
+        <span style={{ color: "var(--text-primary)" }}>
+          {entry.nickname ?? `Игрок #${entry.playerId}`}
+        </span>
         <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>
           {new Date(entry.submittedAt).toLocaleString("ru-RU")}
           {entry.refusalCount > 0

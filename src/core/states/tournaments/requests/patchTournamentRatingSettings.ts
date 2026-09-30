@@ -11,6 +11,7 @@ interface PatchTournamentRatingSettingsBody {
   readonly ratingGuaranteeBonusPoints?: number;
   readonly ratingPointsCoefficient?: number;
   readonly ratingBountyCoefficient?: number;
+  readonly ratingBountyRebuyOnly?: boolean;
   readonly ratingTableId?: number;
   readonly ratingEnabled?: boolean;
   readonly ratingSeasonYear?: number | null;
@@ -28,6 +29,7 @@ export interface RatingSettingsPatch {
   readonly ratingGuaranteeBonusPoints?: number;
   readonly ratingPointsCoefficient?: number;
   readonly ratingBountyCoefficient?: number;
+  readonly ratingBountyRebuyOnly?: boolean;
   readonly ratingTableId?: number;
   readonly ratingEnabled?: boolean;
   readonly ratingSeasonYear?: number | null;

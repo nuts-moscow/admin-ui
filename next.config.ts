@@ -5,12 +5,18 @@ const withVanillaExtract = createVanillaExtractPlugin();
 
 const isDev = process.env.NODE_ENV !== 'production';
 
+// Same override as applicationConfig.ts — must stay in sync with it, since a
+// non-default API origin needs both the fetch target *and* CSP allowance
+// changed, or the browser blocks the request regardless of apiUrl.
+const apiOrigin = process.env.NEXT_PUBLIC_API_URL ?? 'https://nuts.moscow';
+const wsOrigin = apiOrigin.replace(/^https:/, 'wss:');
+
 // In dev mode Next.js uses eval (source maps) and ws://localhost (HMR),
 // both of which would be blocked by a strict CSP.
 const cspValue = isDev
   ? [
       "default-src 'self'",
-      "connect-src 'self' https://nuts.moscow wss://nuts.moscow ws://localhost:* wss://localhost:*",
+      `connect-src 'self' ${apiOrigin} ${wsOrigin} ws://localhost:* wss://localhost:*`,
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob:",
@@ -22,7 +28,7 @@ const cspValue = isDev
     ].join('; ')
   : [
       "default-src 'self'",
-      "connect-src 'self' https://nuts.moscow wss://nuts.moscow",
+      `connect-src 'self' ${apiOrigin} ${wsOrigin}`,
       "script-src 'self' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob:",

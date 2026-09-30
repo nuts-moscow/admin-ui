@@ -20,6 +20,8 @@ export interface TournamentInfoResponse {
   readonly ratingPointsCoefficient?: number;
   /** Множитель для баунти-баллов. По умолчанию 1. */
   readonly ratingBountyCoefficient?: number;
+  /** Mystery: баунти-баллы только за нокаут на ребай; за вылет — 0. */
+  readonly ratingBountyRebuyOnly?: boolean;
   /** Таблица рейтинга (справочник GET /api/rating-tables). */
   readonly ratingTableId?: number;
   /** Учёт в сезонном рейтинге; false — спецформат без очков. */
@@ -81,6 +83,7 @@ interface TournamentWithStructureResponse {
   readonly ratingGuaranteeBonusPoints?: number;
   readonly ratingPointsCoefficient?: number;
   readonly ratingBountyCoefficient?: number;
+  readonly ratingBountyRebuyOnly?: boolean;
   readonly ratingTableId?: number;
   readonly ratingEnabled?: boolean;
   readonly ratingSeasonYear?: number | null;
@@ -191,6 +194,7 @@ export const getTournament = async (
           ),
           ratingPointsCoefficient: j.ratingPointsCoefficient,
           ratingBountyCoefficient: j.ratingBountyCoefficient,
+          ratingBountyRebuyOnly: j.ratingBountyRebuyOnly === true,
           ...(ratingTableId != null ? { ratingTableId } : {}),
           ...(ratingEnabled !== undefined ? { ratingEnabled } : {}),
           ...(ratingSeasonYear !== undefined
