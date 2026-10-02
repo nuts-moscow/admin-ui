@@ -1,5 +1,6 @@
 "use client";
 
+import { TournamentVenueEditor } from "@/components/TournamentVenueSelect/TournamentVenueEditor";
 import { FC, useState } from "react";
 import { Box } from "@/components/Box/Box";
 import { Button } from "@/components/Button/Button";
@@ -74,6 +75,9 @@ export const MobileStateSection: FC<{
 
   return (
     <>
+      <div className={mobileCardCls}>
+        <TournamentVenueEditor key={tournament.id} tournamentId={tournament.id} venueId={tournament.venueId} />
+      </div>
       <div className={mobileCardCls}>
         <Typography.Text type="secondary" size="small">
           Часы

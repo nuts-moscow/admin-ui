@@ -1,5 +1,6 @@
 "use client";
 
+import { TournamentVenueSelect } from "@/components/TournamentVenueSelect/TournamentVenueSelect";
 import { FC } from "react";
 import { Box } from "@/components/Box/Box";
 import { Form } from "@/components/Form/Form";
@@ -30,6 +31,10 @@ export const InfoStep: FC = () => {
             placeholder="Введите имя"
           />
         )}
+      </Form.Control>
+
+      <Form.Control name="venueId">
+        {({ value, onChange }) => <TournamentVenueSelect value={value} onChange={onChange} />}
       </Form.Control>
 
       <Form.Control name="ratingGuaranteeBonusPoints">

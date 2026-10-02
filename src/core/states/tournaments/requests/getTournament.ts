@@ -7,6 +7,7 @@ import {
 import { TournamentsStructureResponse } from "../common/TournamentsStructureResponse";
 
 export interface TournamentInfoResponse {
+  readonly venueId?: string;
   readonly id: number;
   readonly name: string;
   readonly status: TournamentStatus;
@@ -74,6 +75,7 @@ export function normalizeStructure(
 
 /** Ответ GET /v2/api/tournaments/{id} (TournamentWithStructureResponse). */
 interface TournamentWithStructureResponse {
+  readonly venueId?: string;
   readonly id: number;
   readonly name: string;
   readonly status: string;
@@ -181,6 +183,7 @@ export const getTournament = async (
             : undefined;
         }
         return {
+          venueId: j.venueId,
           id: j.id,
           name: j.name,
           status: normalizeTournamentStatus(j.status),

@@ -5,6 +5,7 @@ import { normalizeTournamentStatus } from "../common/TournamentStatus";
 import { ShortTournament } from "./getTournaments";
 
 export interface MakeTournamentRequest {
+  readonly venueId?: string;
   readonly name: string;
   readonly date: number;
   /** Опционально; без значения бэкенд подставит 10. */
@@ -30,6 +31,7 @@ export interface MakeTournamentRequest {
 
 /** Body for POST v2/api/tournaments (MakeTournamentBody). */
 interface MakeTournamentBody {
+  readonly venueId?: string;
   readonly name: string;
   readonly date: number;
   readonly ratingGuaranteeBonusPoints?: number;
@@ -67,6 +69,7 @@ function toMakeTournamentBody(request: MakeTournamentRequest): MakeTournamentBod
   const rsy = request.ratingSeasonYear;
   const rsm = request.ratingSeasonMonth;
   return {
+    venueId: request.venueId,
     name: request.name,
     date: request.date,
     ...(bonus != null &&

@@ -1,5 +1,6 @@
 "use client";
 
+import { TournamentVenueEditor } from "@/components/TournamentVenueSelect/TournamentVenueEditor";
 import { FC, useEffect, useRef, useState } from "react";
 import { Box } from "@/components/Box/Box";
 import { Button } from "@/components/Button/Button";
@@ -136,6 +137,7 @@ export const TournamentInfoForm: FC<TournamentInfoFormProps> = ({ tournament }) 
           padding: "20px 24px",
         }}
       >
+        <TournamentVenueEditor key={tournament.id} tournamentId={tournament.id} venueId={tournament.venueId} />
         <Box flex={{ align: "center", gap: 2 }}>
           <Typography.Text type="secondary">Имя турнира:</Typography.Text>
           <Typography.Text>{tournament.name}</Typography.Text>

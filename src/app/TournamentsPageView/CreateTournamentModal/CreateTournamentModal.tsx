@@ -20,6 +20,8 @@ import { refetchTournaments } from "@/core/states/tournaments/hooks/useTournamen
 import { toast } from "@/components/Toast/Toast";
 import { useRatingTables } from "@/core/states/tournaments/hooks/useRatingTables";
 
+import { DEFAULT_TOURNAMENT_VENUE_ID } from "@/core/states/tournaments/requests/tournamentVenues";
+
 type Step = 1 | 2 | 3;
 
 const STEP_TITLES: Record<Step, string> = {
@@ -29,6 +31,7 @@ const STEP_TITLES: Record<Step, string> = {
 };
 
 export interface CreateTournamentForm {
+  readonly venueId: string;
   readonly name: string;
   readonly date: string;
   readonly time: string;
@@ -56,6 +59,7 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({ close }) => {
   const [form] = useForm<CreateTournamentForm>({
     controls: {
       name: "",
+      venueId: DEFAULT_TOURNAMENT_VENUE_ID,
       date: DateTime.now().toFormat("yyyy-MM-dd"),
       time: DateTime.now().toFormat("HH:mm"),
       ratingGuaranteeBonusPoints: "10",
@@ -148,6 +152,7 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({ close }) => {
       }
       await makeTournament(environment, {
         name: form.value.name,
+        venueId: form.value.venueId,
         date: Math.floor(
           DateTime.fromObject(
             {
