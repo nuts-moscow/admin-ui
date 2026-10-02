@@ -23,14 +23,15 @@ export function TournamentVenueSelect({ value, onChange, disabled = false }: {
           border: "1px solid var(--border-color-grey)", background: "var(--background-primary)",
           color: "var(--text-primary)", fontSize: 14 }}
       >
-        {!selected && <option value={value}>{loading ? "Загрузка..." : "Место недоступно"}</option>}
+        {!selected && value !== "custom" && <option value={value}>{loading ? "Загрузка..." : "Место недоступно"}</option>}
         {venues.map((venue) => <option key={venue.id} value={venue.id}>{venue.name}</option>)}
+        <option value="custom">Другое</option>
       </select>
       {selected ? (
         <a href={selected.mapsUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: "var(--text-secondary)", overflowWrap: "anywhere" }}>
           {selected.address}
         </a>
-      ) : !loading ? (
+      ) : !loading && value !== "custom" ? (
         <span role="status" style={{ fontSize: 13 }}>Не удалось загрузить места проведения. Обновите страницу.</span>
       ) : null}
     </div>

@@ -76,7 +76,7 @@ export const MobileStateSection: FC<{
   return (
     <>
       <div className={mobileCardCls}>
-        <TournamentVenueEditor key={tournament.id} tournamentId={tournament.id} venueId={tournament.venueId} />
+        <TournamentVenueEditor key={tournament.id} tournamentId={tournament.id} venueId={tournament.venueId} customVenue={tournament.customVenue} />
       </div>
       <div className={mobileCardCls}>
         <Typography.Text type="secondary" size="small">

@@ -137,7 +137,7 @@ export const TournamentInfoForm: FC<TournamentInfoFormProps> = ({ tournament }) 
           padding: "20px 24px",
         }}
       >
-        <TournamentVenueEditor key={tournament.id} tournamentId={tournament.id} venueId={tournament.venueId} />
+        <TournamentVenueEditor key={tournament.id} tournamentId={tournament.id} venueId={tournament.venueId} customVenue={tournament.customVenue} />
         <Box flex={{ align: "center", gap: 2 }}>
           <Typography.Text type="secondary">Имя турнира:</Typography.Text>
           <Typography.Text>{tournament.name}</Typography.Text>

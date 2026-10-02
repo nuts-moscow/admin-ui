@@ -20,7 +20,7 @@ import { refetchTournaments } from "@/core/states/tournaments/hooks/useTournamen
 import { toast } from "@/components/Toast/Toast";
 import { useRatingTables } from "@/core/states/tournaments/hooks/useRatingTables";
 
-import { DEFAULT_TOURNAMENT_VENUE_ID } from "@/core/states/tournaments/requests/tournamentVenues";
+import { DEFAULT_TOURNAMENT_VENUE_ID, EMPTY_CUSTOM_VENUE, customVenueError, normalizeCustomVenue, type CustomTournamentVenue } from "@/core/states/tournaments/requests/tournamentVenues";
 
 type Step = 1 | 2 | 3;
 
@@ -32,6 +32,7 @@ const STEP_TITLES: Record<Step, string> = {
 
 export interface CreateTournamentForm {
   readonly venueId: string;
+  readonly customVenue: CustomTournamentVenue;
   readonly name: string;
   readonly date: string;
   readonly time: string;
@@ -60,6 +61,7 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({ close }) => {
     controls: {
       name: "",
       venueId: DEFAULT_TOURNAMENT_VENUE_ID,
+      customVenue: EMPTY_CUSTOM_VENUE,
       date: DateTime.now().toFormat("yyyy-MM-dd"),
       time: DateTime.now().toFormat("HH:mm"),
       ratingGuaranteeBonusPoints: "10",
@@ -92,7 +94,7 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({ close }) => {
   };
 
   const handleSubmit = async () => {
-    if (!form.value.structure) {
+    if (!form.value.structure || (form.value.venueId === "custom" && customVenueError(form.value.customVenue))) {
       return;
     }
     setIsLoading(true);
@@ -153,6 +155,7 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({ close }) => {
       await makeTournament(environment, {
         name: form.value.name,
         venueId: form.value.venueId,
+        customVenue: form.value.venueId === "custom" ? normalizeCustomVenue(form.value.customVenue) : undefined,
         date: Math.floor(
           DateTime.fromObject(
             {
@@ -235,7 +238,8 @@ export const CreateTournamentModalContent: FC<WithModalProps> = ({ close }) => {
           form.value.structure &&
           form.value.date &&
           form.value.time &&
-          form.value.name
+          form.value.name &&
+          (step !== 3 || form.value.venueId !== "custom" || !customVenueError(form.value.customVenue))
         );
     }
   }, [form.value, step]);

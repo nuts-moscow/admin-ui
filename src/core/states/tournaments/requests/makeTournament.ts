@@ -1,3 +1,4 @@
+import type { CustomTournamentVenue } from "./tournamentVenues";
 import { Environment } from "@/core/states/environment/Environment";
 import { securedFetch } from "@/core/utils/misc/securedFetch";
 import { Blinds, normalizeBlindsForApi } from "../../tournamentStructures/common/BlindType";
@@ -6,6 +7,7 @@ import { ShortTournament } from "./getTournaments";
 
 export interface MakeTournamentRequest {
   readonly venueId?: string;
+  readonly customVenue?: CustomTournamentVenue | null;
   readonly name: string;
   readonly date: number;
   /** Опционально; без значения бэкенд подставит 10. */
@@ -32,6 +34,7 @@ export interface MakeTournamentRequest {
 /** Body for POST v2/api/tournaments (MakeTournamentBody). */
 interface MakeTournamentBody {
   readonly venueId?: string;
+  readonly customVenue?: CustomTournamentVenue | null;
   readonly name: string;
   readonly date: number;
   readonly ratingGuaranteeBonusPoints?: number;
@@ -70,6 +73,7 @@ function toMakeTournamentBody(request: MakeTournamentRequest): MakeTournamentBod
   const rsm = request.ratingSeasonMonth;
   return {
     venueId: request.venueId,
+    customVenue: request.venueId === "custom" ? request.customVenue : undefined,
     name: request.name,
     date: request.date,
     ...(bonus != null &&

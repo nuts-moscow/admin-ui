@@ -1,3 +1,4 @@
+import type { CustomTournamentVenue } from "./tournamentVenues";
 import { securedFetch } from "@/core/utils/misc/securedFetch";
 import { Environment } from "../../environment/Environment";
 import {
@@ -8,6 +9,7 @@ import { TournamentsStructureResponse } from "../common/TournamentsStructureResp
 
 export interface TournamentInfoResponse {
   readonly venueId?: string;
+  readonly customVenue?: CustomTournamentVenue | null;
   readonly id: number;
   readonly name: string;
   readonly status: TournamentStatus;
@@ -76,6 +78,7 @@ export function normalizeStructure(
 /** Ответ GET /v2/api/tournaments/{id} (TournamentWithStructureResponse). */
 interface TournamentWithStructureResponse {
   readonly venueId?: string;
+  readonly customVenue?: CustomTournamentVenue | null;
   readonly id: number;
   readonly name: string;
   readonly status: string;
@@ -184,6 +187,7 @@ export const getTournament = async (
         }
         return {
           venueId: j.venueId,
+          customVenue: j.customVenue,
           id: j.id,
           name: j.name,
           status: normalizeTournamentStatus(j.status),
